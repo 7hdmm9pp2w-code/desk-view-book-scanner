@@ -72,6 +72,15 @@ DeskViewQuelle ──► Erfassung ──► Verarbeitung ──► Session ─�
   auch nicht; ein Absturz bei Seite 280 kostet nichts.
 - Löschen verschiebt in einen `Papierkorb`-Unterordner der Session. Nichts wird
   gelöscht.
+- **Ordnername aus dem Titel** (beschlossen 26.09.2026, nach Schritt 1): Die erste
+  Aufnahme zeigt in der Regel den Umschlag mit Titel und Autor, bei Zeitschriften
+  Heftnummer und Jahr. Sobald die OCR aus Schritt 2 da ist, schlägt das Tool aus den
+  Beobachtungen der ersten Seite einen Titel vor: die Zeilen mit der größten Boxhöhe,
+  sortiert von oben nach unten, höchstens drei. Der Vorschlag erscheint im
+  Session-Fenster als vorausgefülltes Titelfeld, nicht als Dialog; der Ordner wird erst
+  umbenannt, wenn der Titel bestätigt oder geändert wird. Der Zeitstempel bleibt vorn
+  (`2026-09-26 14-03 Der Zauberberg`), damit der Finder chronologisch sortiert. Das
+  Umbenennen selbst (`setTitleAndRenameDirectory`) ist seit Schritt 1 im Kit.
 
 ### 5. Export
 
@@ -133,6 +142,23 @@ PDF-Export wieder durchsuchbar sein. Screenshot und Desk View bleiben Handprobe.
    beide von denselben OCR-Beobachtungen leben.
 3. Teilen und Zuschnitt.
 4. Auto-Auslöser.
+
+## Stand der Umsetzung
+
+- **Schritt 1 fertig (26.09.2026):** Quelle, Screenshot, Session-Ordner, Menüleiste,
+  Session-Fenster, Hotkey, Einstellungen, Build-Skript, String-Katalog de/en. Befunde
+  aus dem SDK, die vom Konzept abweichen:
+  - Desk View heißt intern `com.apple.DeskCam`; die App matcht daran.
+  - ScreenCaptureKit hat seit macOS 26 `SCScreenshotConfiguration` mit
+    `captureScreenshot(contentFilter:configuration:)`. Breite und Höhe sind dort Pixel;
+    wir setzen sie trotzdem explizit aus Fenstergröße × Backing-Faktor, den wir über
+    `CGDisplayCopyDisplayMode` (pixelWidth / width) des Bildschirms unter dem Fenster
+    bestimmen.
+  - Das Package-Manifest kennt `.macOS(.v26)`, aber kein `.v27`; wir bleiben bei `.v26`.
+  - Der Auto-Auslöser-Schalter fehlt bewusst in der Menüleiste, bis Schritt 4 ihn
+    füllt; ein toter Schalter wäre schlechter als keiner.
+  - Zeitstempel in `session.json` sind ISO 8601 mit Millisekunden; Werte werden beim
+    Anlegen durch dasselbe Format normalisiert, damit Speicher und Platte exakt gleich sind.
 
 ## Bekannte Risiken
 

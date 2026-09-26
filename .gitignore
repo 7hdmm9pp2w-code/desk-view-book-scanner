@@ -5,3 +5,4 @@
 *.app
 *.xcodeproj
 .swiftpm/
+build/
