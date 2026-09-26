@@ -7,6 +7,35 @@ durchsuchbares PDF macht. Das Konzept steht in [doc/KONZEPT.md](doc/KONZEPT.md),
 Zielplattform: aktuelles macOS (27) auf Apple Silicon, kein Xcode-Projekt, nur ein
 Swift Package.
 
+## Kamera und Auflösung
+
+Was die Texterkennung braucht, ist Pixel pro Buchstabe. Ein Taschenbuchtext ist ab
+etwa 20 Pixel Zeilenhöhe zuverlässig lesbar, unter 12 wird es Raten. Gemessen über
+AVFoundation, nicht geschätzt:
+
+| Quelle | Echte Auflösung | Reicht für |
+|---|---|---|
+| iPhone-Dokumentenscanner | ca. 1700 × 2700 pro Seite | Fließtext, der empfohlene Weg |
+| 4K-Kamera über dem Buch (z. B. Insta360 Link) | 3840 × 2160 | Fließtext, freihändig mit Auto-Auslöser |
+| Desk View (Mac oder iPhone) | 1920 × 1440, mehr gibt es nicht | Umschläge, Überschriften, Großdruck |
+| iPhone als Webcam | 1920 × 1440 | wie Desk View |
+
+Das Desk-View-Fenster zeigt mehr Pixel, als der Feed hat; das ist Hochskalierung.
+Und der Feed ist nicht überall gleich scharf: Desk View schneidet den unteren Teil
+des Ultraweitwinkel-Bildes aus und entzerrt ihn zu einer Draufsicht. Der ferne Rand
+des Schreibtischs wird dabei am stärksten gestreckt und ist am unschärfsten, die
+Zone an der Tastaturkante am schärfsten. Darum:
+
+- **Buch nah ans Gerät**, an die Tastaturkante, nicht in die Tischmitte.
+- **Trapez in der Desk-View-Einrichtung eng ums Buch ziehen**, damit die 1920 Pixel
+  nicht den halben Tisch abdecken.
+- **Für ganze Bücher** eine 4K-Kamera senkrecht über dem Buch oder der iPhone-Scan.
+  Der Auto-Auslöser erfasst nach jedem Umblättern, sobald das Bild anderthalb
+  Sekunden ruhig liegt und sich von der letzten Seite unterscheidet.
+- Eine unscharfe Seite muss nicht neu einsortiert werden: auswählen, ⇧⌘R, neu erfassen.
+
+`scripts/ocr_stats.py` zeigt je Aufnahme die Zeilenhöhen und Konfidenzen einer Session.
+
 ## Bauen und starten
 
 ```bash
