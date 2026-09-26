@@ -71,6 +71,10 @@ struct DeskViewBookScannerApp: App {
                     .keyboardShortcut("r")
                     .disabled(model.selectedPageID == nil || model.sessionArchived)
                 Divider()
+                Button(L("Seite nachscannen")) { model.rescanSelectedPage() }
+                    .keyboardShortcut("r", modifiers: [.command, .shift])
+                    .disabled(!model.canRescan)
+                Divider()
                 Button(L("Seite löschen")) { model.trashSelectedPage() }
                     .keyboardShortcut(.delete, modifiers: [.command])
                     .disabled(model.selectedPageID == nil)

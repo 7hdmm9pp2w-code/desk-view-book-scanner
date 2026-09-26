@@ -136,3 +136,8 @@ vom Konzept abwich und den Grund. Neueste Einträge unten.
     `PageDetail`. Reine Verschiebungen, Tests unverändert grün.
   - Das Änderungsprotokoll ist aus dem Konzept hierher gewandert; das Konzept bleibt
     der Plan, diese Datei die Chronik.
+- **Seite nachscannen (26.09.2026):** ⇧⌘R merkt sich die ausgewählte Seite; das nächste
+  Ergebnis der gewählten Quelle (iPhone-Scan, Dateiimport, Desk-View-Aufnahme) ersetzt
+  sie an Ort und Stelle über `replacePage`, die alte wandert in den Papierkorb der
+  Session. Kommen mehrere Seiten (Doppelseite geteilt, mehrere Scans), rücken alle an
+  die Stelle. Ein Abbruch (Dialog, iPhone-Timeout) verwirft das Ziel.

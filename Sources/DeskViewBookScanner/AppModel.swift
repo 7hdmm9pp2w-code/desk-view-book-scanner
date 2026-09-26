@@ -50,6 +50,8 @@ final class AppModel {
     var sessionSettings = SessionSettings()
     var trashedCount = 0
     var captureSource: CaptureSource = .iPhone
+    /// Seite, die der nächste Scan, Import oder die nächste Aufnahme ersetzt statt anzuhängen.
+    var rescanTargetID: UUID?
     var titleSuggestionDismissed = false
     var summaries: [SessionSummary] = []
     var sessionArchived = false
@@ -262,11 +264,19 @@ final class AppModel {
                 let store = try await ensureSession()
                 let result = try await source.captureImage()
                 let settings = await store.document.settings
+                let prepared = await processor.prepare(result.image, settings: settings)
                 var lastPage: PageRecord?
-                for image in await processor.prepare(result.image, settings: settings) {
-                    let page = try await store.addPage(image)
-                    recognizeText(for: page)
-                    lastPage = page
+                if let target = takeRescanTarget() {
+                    let records = try await store.replacePage(target, with: prepared)
+                    forgetPage(target)
+                    for record in records { recognizeText(for: record) }
+                    lastPage = records.first
+                } else {
+                    for image in prepared {
+                        let page = try await store.addPage(image)
+                        recognizeText(for: page)
+                        lastPage = page
+                    }
                 }
                 pages = await store.orderedPages
                 selectedPageID = lastPage?.id
@@ -332,5 +342,40 @@ final class AppModel {
         }.value
         if let image { imageCache[key] = image }
         return image
+    }
+}
+
+// MARK: - Nachscannen
+
+extension AppModel {
+    /// Ersetzt die ausgewählte Seite durch das nächste Ergebnis der gewählten Quelle:
+    /// iPhone-Scan, Dateiimport oder Desk-View-Aufnahme. Kommen mehrere Seiten,
+    /// rücken sie alle an die Stelle der alten.
+    func rescanSelectedPage() {
+        guard let page = selectedPage, canRescan else { return }
+        rescanTargetID = page.id
+        switch captureSource {
+        case .iPhone: scanWithiPhone(.scanDocuments)
+        case .files: importFiles()
+        case .deskView: capturePage()
+        }
+        // Ein abgebrochener Dateidialog lässt das Ziel nicht stehen.
+        if captureSource == .files, exportStatus == nil { rescanTargetID = nil }
+    }
+
+    var canRescan: Bool {
+        selectedPageID != nil && exportStatus == nil && !sessionArchived && !iPhoneWaiting
+    }
+
+    func takeRescanTarget() -> UUID? {
+        defer { rescanTargetID = nil }
+        return rescanTargetID
+    }
+
+    /// Cache und Text einer ersetzten Seite vergessen; sie liegt jetzt im Papierkorb.
+    func forgetPage(_ id: UUID) {
+        imageCache.removeAll { $0.hasPrefix(id.uuidString) }
+        texts[id] = nil
+        trashedCount += 1
     }
 }

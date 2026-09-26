@@ -41,6 +41,13 @@ struct SessionWindow: View {
             ToolbarItemGroup(placement: .primaryAction) {
                 ExportButtons()
                 Button {
+                    model.rescanSelectedPage()
+                } label: {
+                    Label(L("Seite nachscannen"), systemImage: "arrow.triangle.2.circlepath.camera")
+                }
+                .help(L("Ersetzt die ausgewählte Seite durch das nächste Ergebnis der gewählten Quelle (⇧⌘R)"))
+                .disabled(!model.canRescan)
+                Button {
                     model.splitSelectedPage()
                 } label: {
                     Label(L("Seite teilen"), systemImage: "rectangle.split.2x1")
