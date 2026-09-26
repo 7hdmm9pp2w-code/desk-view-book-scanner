@@ -3,7 +3,12 @@ import Foundation
 /// HTML aus dem Blockmodell. Seitenwechsel als Marker-Absatz, weil Pandoc
 /// HTML-Kommentare verschluckt; `PageMarker.restore` macht daraus Kommentare.
 public enum HTMLRenderer {
-    public static func render(_ document: StructuredDocument, language: String = "de") -> String {
+    /// Wie Seitenmarker und Notizen ins HTML kommen: als Platzhalter-Absätze, die
+    /// `PageMarker.restore` nach Pandoc zu Kommentaren macht (Markdown-Weg), oder als
+    /// HTML-Kommentare, die Pandoc still verschluckt (DOCX, EPUB).
+    public enum MarkerStyle: Sendable { case placeholders, comments }
+
+    public static func render(_ document: StructuredDocument, language: String = "de", markers: MarkerStyle = .placeholders) -> String {
         var out = "<!DOCTYPE html>\n<html lang=\"\(language)\">\n<head>\n<meta charset=\"utf-8\">\n"
         if let title = document.title {
             out += "<title>\(escape(title))</title>\n"
@@ -20,7 +25,10 @@ public enum HTMLRenderer {
             if case .listItem = block {} else { closeList() }
             switch block {
             case .pageBreak(let number, let printed):
-                out += "<p>\(PageMarker.marker(for: number, printed: printed))</p>\n"
+                switch markers {
+                case .placeholders: out += "<p>\(PageMarker.marker(for: number, printed: printed))</p>\n"
+                case .comments: out += "\(PageMarker.comment(for: number, printed: printed))\n"
+                }
             case .heading(let level, let text):
                 let tag = "h\(min(level + 1, 6))"
                 out += "<\(tag)>\(escape(text))</\(tag)>\n"
@@ -32,7 +40,10 @@ public enum HTMLRenderer {
             case .footnote(let text):
                 out += "<blockquote><p>\(escape(text))</p></blockquote>\n"
             case .note(let text):
-                out += "<p>\(PageMarker.noteMarker(text))</p>\n"
+                switch markers {
+                case .placeholders: out += "<p>\(PageMarker.noteMarker(text))</p>\n"
+                case .comments: out += "<!-- \(escape(text).replacingOccurrences(of: "--", with: "- -")) -->\n"
+                }
             }
         }
         closeList()

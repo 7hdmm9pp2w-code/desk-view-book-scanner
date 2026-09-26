@@ -105,7 +105,10 @@ public struct DocumentStructurer: Sendable {
             recentPages.append((page.number, keys))
             if recentPages.count > 3 { recentPages.removeFirst() }
 
-            let analysis = analyze(page: page.text, stats: stats, tocTitles: tocTitles)
+            var analysis = analyze(page: page.text, stats: stats, tocTitles: tocTitles)
+            if page.number == pages.first?.number, let title {
+                analysis.blocks = Self.demoteCoverHeadings(analysis.blocks, title: title)
+            }
             let marker = DocumentBlock.pageBreak(number: page.number, printed: analysis.printedNumber)
 
             var pageBlocks = analysis.blocks
@@ -126,6 +129,20 @@ public struct DocumentStructurer: Sendable {
             blocks.append(contentsOf: pageBlocks)
         }
         return StructuredDocument(title: title, blocks: blocks)
+    }
+
+    /// Umschlag: Überschriften, die im Dokumenttitel stecken oder Verlagszeilen sind,
+    /// werden Absätze; der Titel steht schon über allem.
+    static func demoteCoverHeadings(_ blocks: [DocumentBlock], title: String) -> [DocumentBlock] {
+        let titleKey = normalized(title)
+        return blocks.map { block in
+            guard case .heading(_, let text) = block else { return block }
+            let key = normalized(text)
+            if titleKey.contains(key) || key.contains(titleKey) || TitleSuggester.isExcluded(text) {
+                return .paragraph(text: text)
+            }
+            return block
+        }
     }
 
     /// Ab dieser Ähnlichkeit der Zeilen gilt eine Seite als Duplikat einer der letzten drei.
@@ -252,7 +269,10 @@ public struct DocumentStructurer: Sendable {
                 if matchesToc {
                     kinds.append(.heading(allCaps ? 1 : 2)); continue
                 }
-                if allCaps, short, line.text.filter(\.isLetter).count >= 6 {
+                // Versalien: mindestens zwei Wörter oder acht Buchstaben, sonst ist es
+                // eher Kolumnentitel-Schrott („BOROPE /").
+                let words = line.text.split(whereSeparator: { $0.isWhitespace }).filter { $0.contains { $0.isLetter } }.count
+                if allCaps, short, words >= 2 || line.text.filter(\.isLetter).count >= 8 {
                     kinds.append(.heading(2)); continue
                 }
             }

@@ -233,9 +233,11 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
         let doc = DocumentStructurer().structure(pages: [(1, toc), (2, chapter), (3, section)])
         #expect(doc.blocks.contains(.heading(level: 1, text: "DIE PRÄZESSION DER SIMULAKRA")))
         #expect(doc.blocks.contains(.heading(level: 2, text: "Die göttliche Referenzlosigkeit der Bilder")))
-        // Versalienzeile ohne Verzeichnis ist ebenfalls Überschrift.
+        // Versalienzeile ohne Verzeichnis ist ebenfalls Überschrift; Schrott wie „BOROPE /" nicht.
         let alone = DocumentStructurer().structure(page: pageText([line("DER POLITISCHE ZAUBER", top: 0.95, width: 0.4)] + bodyLines("Allein")))
         #expect(alone.first == .heading(level: 2, text: "DER POLITISCHE ZAUBER"))
+        let junk = DocumentStructurer().structure(page: pageText([line("BOROPE /", top: 0.95, width: 0.15)] + bodyLines("Schrott")))
+        #expect(junk.first == .paragraph(text: "BOROPE /"))
     }
 
     @Test func pageNumbersFootnotesAndCrossPageParagraphs() {
@@ -380,6 +382,28 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
         #expect(html.contains("<h2>Kapitel &lt;1&gt;</h2>"))
         #expect(html.contains("<p>@@SEITE 2@@</p>"))
         #expect(PageMarker.restore(in: "x\n\n@@SEITE 12@@\n\ny \\@@SEITE 3@@") == "x\n\n<!-- Seite 12 -->\n\ny <!-- Seite 3 -->")
+    }
+
+    @Test func commentsMarkerStyleForDocxAndEpub() {
+        let html = HTMLRenderer.render(doc, markers: .comments)
+        #expect(!html.contains("@@SEITE"))
+        #expect(html.contains("<!-- Seite 1 -->"))
+        let withNote = StructuredDocument(blocks: [.note(text: "unsicher: „x“")])
+        #expect(HTMLRenderer.render(withNote, markers: .comments).contains("<!-- unsicher: „x“ -->"))
+        #expect(!HTMLRenderer.render(withNote, markers: .comments).contains("@@NOTIZ"))
+    }
+
+    @Test func coverHeadingsAreDemotedWhenTheyRepeatTheTitle() {
+        let cover = pageText([
+            line("Jean Baudrillard", top: 0.75, height: 0.05, width: 0.5),
+            line("Agonie des Realen", top: 0.69, height: 0.05, width: 0.5),
+            line("Merve Verlag Berlin", top: 0.25, height: 0.09, width: 0.6),
+            line("klein", top: 0.1, height: 0.02, width: 0.1),
+        ])
+        let doc = DocumentStructurer().structure(pages: [(1, cover)], title: "Jean Baudrillard – Agonie des Realen")
+        #expect(!doc.blocks.contains { if case .heading = $0 { return true } else { return false } })
+        let untitled = DocumentStructurer().structure(pages: [(1, cover)], title: nil)
+        #expect(untitled.blocks.contains { if case .heading = $0 { return true } else { return false } })
     }
 
     @Test func exportWithoutPandocWritesMarkdown() throws {
