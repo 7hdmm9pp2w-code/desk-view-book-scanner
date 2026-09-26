@@ -15,8 +15,7 @@ Swift Package.
 
 Das Skript baut `build/DeskViewBookScanner.app`, signiert es mit der
 Apple-Development-Identität aus dem Schlüsselbund (sonst ad hoc) und startet es.
-Beim ersten Start fragt macOS nach der Freigabe für Bildschirmaufnahme; danach die
-App einmal beenden und neu starten.
+Die Kamera-Quelle fragt beim ersten Start nach der Kamera-Freigabe.
 
 Beim ersten Build lädt `scripts/fetch_pandoc.sh` Pandoc 3.11 für Apple Silicon
 (40 MB Archiv, 181 MB ausgepackt) samt Quell-Tarball nach `build/vendor/` und prüft die
@@ -34,7 +33,9 @@ swift test
 - Seiten kommen aus drei Quellen: **„Mit iPhone scannen"** ⇧⌘S öffnet Apples
   Dokumentenscanner auf dem iPhone (Continuity Camera), der Scan landet direkt in der
   Session; **Import** ⇧⌘I von PDFs und Bildern (Scans aus Notizen, vFlat, Fotos);
-  **Desk View** ⌥⌘S für Umschläge und Großdruck. Für Buchtext braucht es das iPhone.
+  **Kamera** ⌥⌘S holt ein Bild aus jeder Kamera, die AVFoundation sieht, im größten
+  Format: eine 4K-Kamera über dem Buch liefert 3840 × 2160 und lesbaren Fließtext, Desk
+  View bleibt bei 1920 × 1440. Der Auto-Auslöser erfasst nach jedem Umblättern.
 - Vor dem Speichern wird jede Seite aufrecht gedreht und eine Doppelseite am Falz
   geteilt (Menü „Aufnahme": automatisch, Mitte oder gar nicht). Vorhandene Seiten:
   „Seite teilen" ⌘T, drehen ⌘L / ⌘R.

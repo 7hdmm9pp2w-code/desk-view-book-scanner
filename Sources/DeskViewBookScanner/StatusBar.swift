@@ -13,7 +13,7 @@ struct StatusBar: View {
             )) {
                 Label(L("iPhone"), systemImage: "iphone").tag(AppModel.CaptureSource.iPhone)
                 Label(L("Dateien"), systemImage: "doc.on.doc").tag(AppModel.CaptureSource.files)
-                Label(L("Desk View"), systemImage: "camera.macro").tag(AppModel.CaptureSource.deskView)
+                Label(L("Kamera"), systemImage: "camera").tag(AppModel.CaptureSource.camera)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -49,38 +49,57 @@ struct StatusBar: View {
         case .files:
             Text(L("Scans aus Notizen, vFlat oder Fotos, PDF oder Bilder."))
                 .foregroundStyle(.secondary)
-        case .deskView:
-            switch model.status {
-            case .permissionMissing:
-                HStack(spacing: 8) {
-                    Label(L("Bildschirmaufnahme nicht freigegeben"), systemImage: "xmark.octagon.fill")
+        case .camera:
+            HStack(spacing: 10) {
+                cameraPicker
+                if !model.cameraAuthorized {
+                    Label(L("Kamerazugriff nicht freigegeben"), systemImage: "xmark.octagon.fill")
                         .foregroundStyle(.red)
-                    Button(L("Freigabe erteilen…")) { model.requestPermission() }
-                }
-            case .notRunning:
-                HStack(spacing: 8) {
-                    Label(L("Desk View läuft nicht"), systemImage: "camera.slash")
-                        .foregroundStyle(.secondary)
-                    if model.isLaunchingDeskView {
-                        ProgressView().controlSize(.small)
-                    } else {
-                        Button(L("Desk View starten")) { model.launchDeskView() }
-                    }
-                }
-            case .found(let window):
-                HStack(spacing: 8) {
-                    Label(L("Desk View gefunden"), systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                    Text(verbatim: "\(window.pixelWidth) × \(window.pixelHeight) px")
+                    Button(L("Freigabe erteilen…")) { model.requestCameraAccess() }
+                } else if let device = model.selectedCamera, model.cameraRunning {
+                    Text(verbatim: "\(device.maxWidth) × \(device.maxHeight) px")
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
-                    if window.isTooSmall {
-                        Label(L("Fenster größer ziehen"), systemImage: "arrow.up.left.and.arrow.down.right")
-                            .foregroundStyle(.orange)
-                    }
+                } else if model.cameraDevices.isEmpty {
+                    Text(L("Keine Kamera gefunden")).foregroundStyle(.secondary)
+                }
+                Toggle(L("Auto-Auslöser"), isOn: Binding(get: { model.autoTrigger }, set: { model.setAutoTrigger($0) }))
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                    .disabled(!model.cameraRunning)
+                    .help(L("Löst nach dem Umblättern aus, sobald das Bild 1,5 Sekunden ruhig liegt und sich von der letzten Seite unterscheidet."))
+                if model.autoTrigger, model.motionState != .idle {
+                    Label(L("Seiten glatt halten, Hände raus"), systemImage: "hand.raised")
+                        .foregroundStyle(.orange)
                 }
             }
         }
+    }
+
+    private var cameraPicker: some View {
+        Menu {
+            ForEach(model.cameraDevices) { device in
+                Button {
+                    model.selectCamera(device.id)
+                } label: {
+                    if device.id == model.selectedCameraID {
+                        Label(deviceTitle(device), systemImage: "checkmark")
+                    } else {
+                        Text(deviceTitle(device))
+                    }
+                }
+            }
+            Divider()
+            Button(L("Kameras neu suchen")) { model.refreshCameraDevices() }
+        } label: {
+            Label(model.selectedCamera.map(deviceTitle) ?? L("Kamera wählen"), systemImage: "camera")
+        }
+        .fixedSize()
+    }
+
+    private func deviceTitle(_ device: CameraDeviceInfo) -> String {
+        let size = String(format: "%.1f MP", device.megapixels)
+        return "\(device.name) (\(size))"
     }
 
     @ViewBuilder
@@ -137,7 +156,7 @@ struct StatusBar: View {
         switch model.captureSource {
         case .iPhone: return model.iPhoneWaiting ? L("Warte auf das iPhone…") : L("Mit iPhone scannen")
         case .files: return L("Bilder oder PDF importieren…")
-        case .deskView: return model.isCapturing ? L("Wird erfasst…") : L("Seite erfassen")
+        case .camera: return model.isCapturing ? L("Wird erfasst…") : L("Seite erfassen")
         }
     }
 
@@ -145,7 +164,7 @@ struct StatusBar: View {
         switch model.captureSource {
         case .iPhone: return "iphone.and.arrow.forward"
         case .files: return "square.and.arrow.down"
-        case .deskView: return "camera.viewfinder"
+        case .camera: return "camera.viewfinder"
         }
     }
 
@@ -153,7 +172,7 @@ struct StatusBar: View {
         switch model.captureSource {
         case .iPhone: return L("Öffnet den Dokumentenscanner auf dem iPhone; die Seiten landen in dieser Session (⇧⌘S).")
         case .files: return L("Scans aus Notizen, vFlat oder Fotos als Seiten anhängen (⇧⌘I)")
-        case .deskView: return L("Tastenkürzel \(HotKey.captureDisplayName), auch wenn Desk View vorn liegt.")
+        case .camera: return L("Bild aus der gewählten Kamera erfassen (\(HotKey.captureDisplayName), auch aus anderen Apps)")
         }
     }
 
@@ -162,7 +181,7 @@ struct StatusBar: View {
         switch model.captureSource {
         case .iPhone: return !model.iPhoneWaiting && model.exportStatus == nil
         case .files: return model.exportStatus == nil
-        case .deskView: return model.canCapture
+        case .camera: return model.canCapture
         }
     }
 }

@@ -85,8 +85,9 @@ cat > "$OUT/Contents/Info.plist" <<PLIST
   <key>CFBundleVersion</key><string>$VERSION</string>
   <key>LSMinimumSystemVersion</key><string>$MIN_OS</string>
   <key>NSHighResolutionCapable</key><true/>
-  <key>NSScreenCaptureUsageDescription</key>
-  <string>Der Buchscanner fotografiert das Fenster von Desk View, um daraus Seiten zu machen.</string>
+  <key>NSCameraUsageDescription</key>
+  <string>Der Buchscanner erfasst Buchseiten mit der gewählten Kamera, etwa Desk View oder einer 4K-Kamera über dem Buch.</string>
+  <key>NSCameraUseContinuityCameraDeviceType</key><true/>
 </dict>
 </plist>
 PLIST

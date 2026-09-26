@@ -52,12 +52,12 @@ struct DeskViewBookScannerApp: App {
                     Button(L("Bilder oder PDF importieren…")) { model.importFiles() }
                         .keyboardShortcut("i", modifiers: [.command, .shift])
                 }
-                Section(L("Desk View")) {
+                Section(L("Kamera")) {
                     Button(L("Seite erfassen")) { model.capturePage() }
                         .keyboardShortcut("s", modifiers: [.command, .option])
                         .disabled(!model.canCapture)
-                    Button(L("Desk View starten")) { model.launchDeskView() }
-                        .disabled(model.isLaunchingDeskView)
+                    Toggle(L("Auto-Auslöser"), isOn: Binding(get: { model.autoTrigger }, set: { model.setAutoTrigger($0) }))
+                        .disabled(!model.cameraRunning)
                 }
             }
             CommandMenu(L("Seite")) {

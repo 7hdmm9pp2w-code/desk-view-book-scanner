@@ -10,7 +10,7 @@ struct PageGrid: View {
         switch model.captureSource {
         case .iPhone: return L("Der Dokumentenscanner des iPhones liefert die Seiten, ausgelöst vom Mac. Quelle oben wechseln für Dateien oder Desk View.")
         case .files: return L("PDFs und Bilder aus Notizen, vFlat oder Fotos werden Seiten dieser Session.")
-        case .deskView: return L("Desk View fotografiert das Buch von oben. Die Kameraauflösung reicht heute für Umschläge und Großdruck, nicht für Fließtext.")
+        case .camera: return L("Eine Kamera über dem Buch, 4K reicht für Fließtext. Der Auto-Auslöser erfasst nach jedem Umblättern.")
         }
     }
 
@@ -18,7 +18,7 @@ struct PageGrid: View {
         switch model.captureSource {
         case .iPhone: return L("Mit iPhone scannen")
         case .files: return L("Bilder oder PDF importieren…")
-        case .deskView: return L("Seite erfassen")
+        case .camera: return L("Seite erfassen")
         }
     }
 
@@ -26,7 +26,7 @@ struct PageGrid: View {
         switch model.captureSource {
         case .iPhone: return "iphone.and.arrow.forward"
         case .files: return "square.and.arrow.down"
-        case .deskView: return "camera.viewfinder"
+        case .camera: return "camera.viewfinder"
         }
     }
 
