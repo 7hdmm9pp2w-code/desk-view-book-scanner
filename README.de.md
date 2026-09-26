@@ -3,6 +3,8 @@
 Bücher am Mac digitalisieren: Seite für Seite scannen, den Text erkennen lassen und
 das Ergebnis als durchsuchbares PDF, Markdown, Word oder EPUB mitnehmen.
 
+![Auto-Auslöser mit Desk View: umblättern, die App erfasst die Seite von selbst](doc/media/demo.gif)
+
 ## Was die App macht
 
 Du blätterst ein Buch durch und nimmst jede Seite auf, am besten mit dem iPhone über

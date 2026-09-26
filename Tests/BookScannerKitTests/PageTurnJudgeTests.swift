@@ -66,6 +66,27 @@ import Foundation
         #expect(!judge.isNewPage(PageSnapshot(frame: page(seed: 9), lines: [half])))
     }
 
+    /// Wörter aus zwei Erkennungen derselben Seite und einer anderen, aus einem Mitschnitt.
+    @Test func misreadWordsStillMatch() {
+        let first = ["erlaubten", "lorenzo", "sohn", "piero", "medici", "welche", "gunst", "eines", "fursten", "erwerben", "trachten", "pflegen"]
+        let second = ["erlandten", "lorcazo", "sohn", "piero", "meilici", "welcte", "ganst", "eines", "färsten", "erwerhen", "trachten", "pflegen"]
+        let other = ["denn", "wolle", "sache", "sich", "selbst", "ehre", "aber", "mannigfaltigkeit", "stoffes", "ernst", "gegenstandes", "arten"]
+        #expect(PageTurnJudge.sharedWordShare(first, second) >= PageTurnJudge().sameTextShare)
+        #expect(PageTurnJudge.sharedWordShare(first, other) < PageTurnJudge().sameTextShare)
+        #expect(PageTurnJudge.editDistance(Array("fürsten"), Array("fursten"), limit: 2) == 1)
+    }
+
+    @Test func fewForeignWordsMakeANewPage() {
+        let frame = page(seed: 1)
+        let text = PageSnapshot(frame: frame, lines: ["Wer diese Übungen regelmäßig wiederholt, entwickelt schnell ein Gefühl für Bildausschnitt, Perspektive, Bewegung und Licht."])
+        let title = PageSnapshot(frame: frame, lines: ["Der Fürst", "Zueignung an Lorenzo"])
+        let titleAgain = PageSnapshot(frame: frame, lines: ["Der Fürst", "Zueignung an"])
+        // Zwischentitel nach einer Textseite: Kacheln gleich (Hände, Buchrand), Wörter fremd.
+        #expect(!PageTurnJudge().isSamePage(text, title))
+        // Derselbe Zwischentitel, einmal schlechter gelesen: Kacheln entscheiden, gleich.
+        #expect(PageTurnJudge().isSamePage(title, titleAgain))
+    }
+
     @Test func turningBackIsNotANewPage() {
         var judge = PageTurnJudge()
         let a = PageSnapshot(frame: page(seed: 1), words: [])

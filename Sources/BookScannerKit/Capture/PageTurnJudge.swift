@@ -39,7 +39,8 @@ public struct PageSnapshot: Sendable, Equatable {
 /// erfasste: dieselbe Seite, eine Hand darauf, das Buch verrutscht, das Licht anders
 /// oder zurückgeblättert.
 ///
-/// Mit genug Text zählen die Wörter. Die sind gegen Licht, Verschieben und eine Hand
+/// Mit genug Text zählen die Wörter. Mit wenigen Wörtern (Zwischentitel, Widmung) zählen
+/// sie nur, wenn sie ganz andere sind; sonst entscheiden die Kacheln. Die sind gegen Licht, Verschieben und eine Hand
 /// am Rand unempfindlich. Eine halb verdeckte Seite hat weniger Wörter, aber fast nur
 /// alte. Ohne Text (Bildtafel, leere Seite) werden Kacheln verglichen: jedes Bild auf
 /// Mittelwert und Kontrast normiert, dann um ein paar Pixel gegeneinander verschoben,
@@ -48,8 +49,14 @@ public struct PageSnapshot: Sendable, Equatable {
 public struct PageTurnJudge: Sendable {
     /// Ab so vielen Wörtern auf beiden Seiten entscheidet der Text.
     public var minWords = 12
+    /// Ab so vielen Wörtern auf beiden Seiten zeigen fremde Wörter eine neue Seite an.
+    /// Bei wenig Text gelten die Kacheln wenig: Hände und Buchrand bleiben gleich, die
+    /// paar Zeilen fallen im kleinen Graubild kaum auf.
+    public var fewWords = 3
     /// Anteil gemeinsamer Wörter, ab dem es dieselbe Seite ist, bezogen auf die kürzere.
-    public var sameTextShare = 0.5
+    /// Gemessen an Bildern aus einem Mitschnitt: dieselbe Seite 0,53 bis 0,60, eine andere
+    /// höchstens 0,31.
+    public var sameTextShare = 0.45
     /// Anteil geänderter Kacheln mit Struktur, ab dem die Seite neu ist.
     public var changedTileShare = 0.4
     /// Mittlere normierte Differenz einer Kachel, ab der sie als geändert gilt.
@@ -86,25 +93,50 @@ public struct PageTurnJudge: Sendable {
     }
 
     public func isSamePage(_ a: PageSnapshot, _ b: PageSnapshot) -> Bool {
-        if a.words.count >= minWords, b.words.count >= minWords {
-            return Self.sharedWordShare(a.words, b.words) >= sameTextShare
+        let fewer = min(a.words.count, b.words.count)
+        if fewer >= fewWords {
+            let sameText = Self.sharedWordShare(a.words, b.words) >= sameTextShare
+            if fewer >= minWords || !sameText { return sameText }
         }
         return changedShare(a.frame, b.frame) < changedTileShare
     }
 
-    /// Gemeinsame Wörter (mit Vielfachheit) im Verhältnis zur kürzeren Liste.
+    /// Anteil der Wörter der kürzeren Liste, die in der anderen vorkommen, bis auf einen
+    /// Buchstaben (ab sieben Buchstaben zwei). Die Texterkennung auf dem ganzen Kamerabild
+    /// liest dieselbe Seite nicht zweimal gleich: „fursten“, „färsten“, „Fürsten“.
     public static func sharedWordShare(_ a: [String], _ b: [String]) -> Double {
-        guard !a.isEmpty, !b.isEmpty else { return 0 }
-        var counts: [String: Int] = [:]
-        for word in a { counts[word, default: 0] += 1 }
+        let (short, long) = a.count <= b.count ? (a, b) : (b, a)
+        guard !short.isEmpty else { return 0 }
+        let exact = Set(long)
+        let candidates = long.map { Array($0) }
         var shared = 0
-        for word in b {
-            if let n = counts[word], n > 0 {
+        for word in short {
+            if exact.contains(word) { shared += 1; continue }
+            let letters = Array(word)
+            let tolerance = letters.count >= 7 ? 2 : 1
+            if candidates.contains(where: { abs($0.count - letters.count) <= tolerance && editDistance(letters, $0, limit: tolerance) <= tolerance }) {
                 shared += 1
-                counts[word] = n - 1
             }
         }
-        return Double(shared) / Double(min(a.count, b.count))
+        return Double(shared) / Double(short.count)
+    }
+
+    /// Levenshtein-Abstand; bricht ab, sobald er `limit` sicher übersteigt.
+    static func editDistance(_ a: [Character], _ b: [Character], limit: Int) -> Int {
+        if a.isEmpty || b.isEmpty { return max(a.count, b.count) }
+        var previous = Array(0...b.count)
+        var current = previous
+        for i in 1...a.count {
+            current[0] = i
+            var rowMin = i
+            for j in 1...b.count {
+                current[j] = min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + (a[i - 1] == b[j - 1] ? 0 : 1))
+                rowMin = min(rowMin, current[j])
+            }
+            if rowMin > limit { return rowMin }
+            swap(&previous, &current)
+        }
+        return previous[b.count]
     }
 
     /// Anteil der Kacheln mit Struktur, die sich nach bester Ausrichtung geändert haben.

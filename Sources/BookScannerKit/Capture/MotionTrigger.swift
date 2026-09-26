@@ -29,6 +29,8 @@ public struct MotionTrigger: Sendable {
     public var settleSeconds: TimeInterval = 1.5
 
     public private(set) var state: State = .idle
+    /// Bewegungsmaß des letzten Bildes, fürs Log beim Einstellen der Schwellen.
+    public private(set) var lastLevel: Double = 0
     private var previous: [UInt8]?
     private var stillSince: TimeInterval?
 
@@ -40,6 +42,7 @@ public struct MotionTrigger: Sendable {
         defer { previous = frame }
         guard let previous, previous.count == frame.count else { return false }
         let diff = motionLevel(previous, frame, width: width)
+        lastLevel = diff
 
         if diff > motionThreshold {
             state = .moving

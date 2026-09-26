@@ -75,3 +75,87 @@ import Foundation
         #expect(CameraSource.availableDevices().allSatisfy { !$0.name.isEmpty })
     }
 }
+
+/// Wie die Kamera eine Buchseite liefert: volle Auflösung, feine Schrift, Rauschen des
+/// Sensors, und die Seite verrutscht einmal um ein Pixel.
+@Suite struct MotionTriggerCameraTests {
+    static let width = 960, height = 720
+
+    /// Zufallszahlen mit festem Startwert, damit der Test immer gleich läuft.
+    struct Random {
+        var state: UInt64
+        mutating func next() -> UInt64 {
+            state = state &* 6364136223846793005 &+ 1442695040888963407
+            return state >> 33
+        }
+        /// Ungefähr normalverteilt, Mittel 0, Streuung `sigma`.
+        mutating func noise(_ sigma: Double) -> Int {
+            var sum = 0.0
+            for _ in 0..<4 { sum += Double(next() % 1000) / 1000 }
+            return Int(((sum - 2) * 1.73 * sigma).rounded())
+        }
+    }
+
+    /// Schriftbild einer Seite: Zeilen aus zufälligen, zwei Pixel breiten Strichen.
+    static func text(seed: UInt64) -> [UInt8] {
+        var random = Random(state: seed)
+        var ink = [UInt8](repeating: 0, count: width * height)
+        for y in stride(from: 40, to: height - 40, by: 14) {
+            var x = width / 5
+            while x < width * 4 / 5 {
+                if random.next() % 3 != 0 {
+                    for dy in 0..<8 { for dx in 0..<2 { ink[(y + dy) * width + x + dx] = 1 } }
+                }
+                x += 3
+            }
+        }
+        return ink
+    }
+
+    /// Ein Kamerabild als BGRA: Seite in Hellgrau, Schrift dunkel, verschoben und verrauscht.
+    static func cameraFrame(_ ink: [UInt8], shiftX: Int, shiftY: Int, random: inout Random) -> [UInt8] {
+        var bgra = [UInt8](repeating: 255, count: width * height * 4)
+        for y in 0..<height {
+            for x in 0..<width {
+                let sx = min(max(x - shiftX, 0), width - 1), sy = min(max(y - shiftY, 0), height - 1)
+                let base = ink[sy * width + sx] == 1 ? 40 : 225
+                let v = UInt8(min(255, max(0, base + random.noise(3))))
+                let i = (y * width + x) * 4
+                bgra[i] = v; bgra[i + 1] = v; bgra[i + 2] = v
+            }
+        }
+        return bgra
+    }
+
+    static func thumbnail(_ bgra: [UInt8]) -> [UInt8] {
+        bgra.withUnsafeBytes {
+            CameraSource.grayThumbnail(bgra: $0.baseAddress!, width: width, height: height, bytesPerRow: width * 4, targetWidth: 160)
+        }
+    }
+
+    /// Nur jedes n-te Pixel genommen, lag hier schon das Rauschen über der Ruheschwelle:
+    /// Eine ruhig liegende Textseite galt als bewegt, der Auslöser kam nie.
+    @Test func textPageSettlesDespiteNoise() {
+        var trigger = MotionTrigger()
+        var random = Random(state: 7)
+        var t: TimeInterval = 0
+        let thumbWidth = Self.width / (Self.width / 160)
+        func step(_ ink: [UInt8], shiftY: Int = 0) -> Bool {
+            t += 0.25
+            let frame = Self.cameraFrame(ink, shiftX: 0, shiftY: shiftY, random: &random)
+            return trigger.feed(Self.thumbnail(frame), width: thumbWidth, at: t)
+        }
+        let before = Self.text(seed: 1), after = Self.text(seed: 2)
+        // Ruhig liegende Seite: keine Bewegung.
+        for _ in 0..<6 { #expect(!step(before)) }
+        #expect(trigger.state == .idle)
+        // Umblättern: neue Schrift.
+        _ = step(after)
+        #expect(trigger.state == .moving)
+        // Die neue Seite liegt und rauscht, verrutscht einmal: danach nach 1,5 s melden.
+        var fired = false
+        for _ in 0..<3 { fired = step(after) || fired }
+        for _ in 0..<9 { fired = step(after, shiftY: 1) || fired }
+        #expect(fired)
+    }
+}

@@ -194,3 +194,16 @@ vom Konzept abwich und den Grund. Neueste Einträge unten.
 - **Leertaste (27.09.2026):** Im Seitenraster löst die Leertaste bei Kamera und iPhone die
   Aufnahme aus (`captureWithSpace`), beim Dateiimport nicht. Bewusst kein Menü-Kürzel:
   ein Tastenkürzel ohne Modifier im Menü würde die Leertaste auch im Titelfeld schlucken.
+- **Auto-Auslöser an Textseiten (27.09.2026):** Ein Mitschnitt zeigte: Bei Textseiten löste
+  nichts aus, der Hinweis „Umblättern erkannt" leuchtete auch bei stillem Buch. Das Graubild
+  für den Auslöser nahm nur jedes zwölfte Pixel; Sensorrauschen und Schriftflimmern ergaben
+  auf einer ruhenden Textseite ein Bewegungsmaß von 3,6 (Ruhe unter 2,5), die Ruhezeit lief
+  nie ab. Jetzt Blockmittel (`grayThumbnail`): 0,6 in Ruhe, rund 24 beim Umblättern, am
+  Buch 0,6–0,9. Danach verwarf `PageTurnJudge` neue Textseiten als „schon erfasst": Die
+  schnelle OCR las auf dem ganzen Kamerabild 0–10 Wörter, der Kachelvergleich bei 320 px
+  sieht vor allem Hände und Buchrand. Jetzt genaue OCR ohne Sprachkorrektur (rund 100 ms,
+  33–198 Wörter; beim Einschalten vorgewärmt, das erste Laden dauert bis 25 s), Wörter
+  fehlertolerant verglichen (ein Buchstabe Abstand, ab sieben Buchstaben zwei; an
+  Mitschnittbildern dieselbe Seite 0,53–0,60, andere höchstens 0,31, Grenze 0,45). Ab drei
+  Wörtern zeigen fremde Wörter eine neue Seite an, etwa Zwischentitel nach einer Textseite.
+  Log-Kategorie „Auslöser": Bewegungsmaß (debug) und Urteil je ruhiger Seite.
