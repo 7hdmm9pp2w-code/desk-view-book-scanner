@@ -1,67 +1,78 @@
 # Desk View Book Scanner
 
-Eine macOS-App, die Buchseiten aus dem Fenster der Schreibtischansicht
-(Desk View) fotografiert und daraus eine Session mit Seiten, später OCR-Text und ein
-durchsuchbares PDF macht. Das Konzept steht in [doc/KONZEPT.md](doc/KONZEPT.md), die Befunde aus der Umsetzung in [doc/UMSETZUNG.md](doc/UMSETZUNG.md).
+A macOS app that turns book pages into a session of images, recognized text and
+exports: a searchable PDF, Markdown, Word or EPUB. Pages come from the iPhone's
+document scanner (triggered from the Mac), from imported PDFs and images, or from
+Apple's Desk View camera.
 
-Zielplattform: aktuelles macOS (27) auf Apple Silicon, kein Xcode-Projekt, nur ein
-Swift Package.
+Deutsche Fassung: [README.de.md](README.de.md). Design notes and the implementation
+log are in German: [doc/KONZEPT.md](doc/KONZEPT.md), [doc/UMSETZUNG.md](doc/UMSETZUNG.md).
 
-## Bauen und starten
+Target platform: current macOS (27) on Apple silicon. No Xcode project, just a Swift
+package and a build script.
+
+## What it does
+
+- **Sources.** *iPhone* (⇧⌘S) opens Apple's document scanner on your iPhone via
+  Continuity Camera; the scan lands in the session as pages. *Files* (⇧⌘I) imports PDFs
+  and images, for example scans from Notes or vFlat, rendered at their embedded
+  resolution. *Desk View* (⌥⌘S) captures the Desk View window; good enough for covers
+  and large print, not for body text (the feed is 1920 × 1440).
+- **Before saving**, every page is rotated upright (Vision reads the text direction) and
+  double pages are split at the gutter, using the text-free gap between the two text
+  blocks. Existing pages can be split (⌘T), rotated (⌘L/⌘R) or rescanned in place (⇧⌘R).
+- **OCR** runs in the background after every page (Vision, German and English), keeping
+  bounding boxes. The **PDF** gets an invisible text layer placed exactly where the words
+  are in the image, so Preview finds and highlights them in place.
+- **Markdown, Word, EPUB** are built from a block model: paragraphs from line spacing and
+  indents, headings from the table of contents, uppercase lines and size, footnotes,
+  page markers (`<!-- Seite 12, Scan 10 -->`), de-hyphenation, duplicate-scan detection,
+  and notes for low-confidence lines. Pandoc is bundled for Word and EPUB and for better
+  Markdown; without it the app writes Markdown itself.
+- **Sessions** are folders on disk: every page is saved immediately as HEIC, `session.json`
+  holds the order and settings, OCR results sit next to the images, deleted pages go to
+  the session's own `Papierkorb` folder. The sidebar lists all sessions with size and
+  exports; the context menu empties trashes, archives (removes images, keeps text) or
+  deletes sessions, always into the macOS Trash.
+
+## Build and run
 
 ```bash
 ./build_app.sh --run
 ```
 
-Das Skript baut `build/DeskViewBookScanner.app`, signiert es mit der
-Apple-Development-Identität aus dem Schlüsselbund (sonst ad hoc) und startet es.
-Beim ersten Start fragt macOS nach der Freigabe für Bildschirmaufnahme; danach die
-App einmal beenden und neu starten.
+The script builds `build/DeskViewBookScanner.app`, signs it with the Apple Development
+identity in your keychain (ad hoc otherwise) and launches it. On first launch macOS asks
+for screen-recording access (only needed for Desk View); quit and reopen the app once
+after granting it.
 
-Beim ersten Build lädt `scripts/fetch_pandoc.sh` Pandoc 3.11 für Apple Silicon
-(40 MB Archiv, 181 MB ausgepackt) samt Quell-Tarball nach `build/vendor/` und prüft die
-SHA-256. `./build_app.sh --without-pandoc` baut ohne, dann nutzt die App ein
-installiertes Pandoc oder schreibt Markdown selbst.
+The first build downloads Pandoc 3.11 for Apple silicon (40 MB archive, 181 MB unpacked)
+plus its source tarball into `build/vendor/` and verifies the SHA-256. Use
+`./build_app.sh --without-pandoc` for a smaller bundle; the app then uses an installed
+Pandoc or falls back to its own Markdown writer.
 
-Tests laufen gegen den Kit ohne UI:
+Tests run against the kit, without UI:
 
 ```bash
 swift test
 ```
 
-## Bedienung
+## Layout
 
-- Seiten kommen aus drei Quellen: **„Mit iPhone scannen"** ⇧⌘S öffnet Apples
-  Dokumentenscanner auf dem iPhone (Continuity Camera), der Scan landet direkt in der
-  Session; **Import** ⇧⌘I von PDFs und Bildern (Scans aus Notizen, vFlat, Fotos);
-  **Desk View** ⌥⌘S für Umschläge und Großdruck. Für Buchtext braucht es das iPhone.
-- Vor dem Speichern wird jede Seite aufrecht gedreht und eine Doppelseite am Falz
-  geteilt (Menü „Aufnahme": automatisch, Mitte oder gar nicht). Vorhandene Seiten:
-  „Seite teilen" ⌘T, drehen ⌘L / ⌘R.
-- Seitenleiste links mit allen Sessions, Größe und Exporten; Rechtsklick für
-  Papierkorb leeren, Archivieren (Bilder weg, Text bleibt) und Löschen, alles in den
-  macOS-Papierkorb.
-- Hauptfenster: Quellenleiste mit dem Hauptknopf der gewählten Quelle, darunter
-  die Seiten der Session; rechts die Detailansicht.
-- ⌥⌘S erfasst das Desk-View-Fenster als Seite, auch wenn Desk View vorn liegt.
-- Menü „Ablage": Neue Session ⌘N, Session-Ordner öffnen ⌘O, Letzte Sessions,
-  Export als PDF ⌘E, Markdown ⇧⌘E, Word und EPUB.
-- Texterkennung läuft nach jeder Aufnahme im Hintergrund (Vision, Deutsch und
-  Englisch). Das PDF bekommt eine unsichtbare Textebene, Vorschau findet den Text
-  genau dort, wo er im Bild steht. Die erste Aufnahme liefert einen Titelvorschlag.
-- Sessions liegen unter `~/Documents/Buchscans/<Datum Uhrzeit>/`, änderbar in den
-  Einstellungen. Jede Aufnahme ist sofort als HEIC auf der Platte; `session.json`
-  hält Reihenfolge und Einstellungen. Gelöschte Seiten wandern in `Papierkorb/`.
+- `BookScannerKit`: capture, session store, OCR, page geometry (rotation, splitting),
+  document structuring, exporters, importer. No UI, fully testable.
+- `DeskViewBookScanner`: the SwiftUI app.
+- `scripts/`: Pandoc fetcher, icon renderer, OCR statistics helper.
 
-## Lizenz
+## License
 
-[EUPL-1.2](LICENSE) (European Union Public Licence). Amtliche Fassungen in allen
-EU-Sprachen, darunter die deutsche, unter
+[EUPL-1.2](LICENSE) (European Union Public Licence). Official versions in all EU
+languages, including German, at
 <https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12>.
 
-Das App-Bundle enthält [Pandoc](https://github.com/jgm/pandoc) als eigenständiges
-Hilfsprogramm unter `Contents/Helpers/pandoc`. Pandoc ist © John MacFarlane und steht
-unter der GPL-2.0-or-later; die App ruft es als getrennten Prozess auf und ist kein
-abgeleitetes Werk. Lizenztext und Copyright liegen im Bundle unter
-`Contents/Resources/Lizenzen/`, der Quellcode der gebündelten Version unter
-`build/vendor/pandoc-<Version>-src.tar.gz` (bei einem Release mit anbieten).
+The app bundle ships [Pandoc](https://github.com/jgm/pandoc) as a separate helper
+executable under `Contents/Helpers/pandoc`. Pandoc is © John MacFarlane and licensed
+GPL-2.0-or-later; the app runs it as a separate process and is not a derivative work.
+Its license text and copyright notice are in the bundle under
+`Contents/Resources/Lizenzen/`, and the source tarball of the bundled version is kept in
+`build/vendor/pandoc-<version>-src.tar.gz` (offer it alongside any release).
