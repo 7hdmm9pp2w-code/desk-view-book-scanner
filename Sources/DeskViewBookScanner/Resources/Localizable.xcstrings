@@ -272,6 +272,16 @@
         }
       }
     },
+    "Auto-Auslöser an": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto capture on"
+          }
+        }
+      }
+    },
     "Automatisch am Falz": {
       "localizations": {
         "en": {
@@ -628,6 +638,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Camera"
+          }
+        }
+      }
+    },
+    "Kamera freigeben…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow Camera…"
           }
         }
       }

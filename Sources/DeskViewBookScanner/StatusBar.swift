@@ -53,32 +53,30 @@ struct StatusBar: View {
             HStack(spacing: 10) {
                 cameraPicker
                 if !model.cameraAuthorized {
-                    Label(L("Kamerazugriff nicht freigegeben"), systemImage: "xmark.octagon.fill")
-                        .foregroundStyle(.red)
+                    Button {
+                        model.requestCameraAccess()
+                    } label: {
+                        Label(L("Kamera freigeben…"), systemImage: "xmark.octagon.fill")
+                    }
+                    .foregroundStyle(.red)
+                    .help(L("Kamerazugriff nicht freigegeben"))
+                } else if model.cameraRunning, model.autoTrigger, model.motionState != .idle {
+                    Label(L("Seiten glatt halten, Hände raus"), systemImage: "hand.raised")
+                        .foregroundStyle(.orange)
                         .lineLimit(1)
-                        .fixedSize()
-                    Button(L("Freigabe erteilen…")) { model.requestCameraAccess() }
-                        .fixedSize()
-                } else if let device = model.selectedCamera, model.cameraRunning {
-                    Text(verbatim: "\(device.maxWidth) × \(device.maxHeight) px")
+                } else if model.cameraRunning, model.autoTrigger {
+                    Label(L("Auto-Auslöser an"), systemImage: "bolt.fill")
                         .foregroundStyle(.secondary)
-                        .monospacedDigit()
+                        .lineLimit(1)
                 } else if model.cameraDevices.isEmpty {
                     Text(L("Keine Kamera gefunden")).foregroundStyle(.secondary)
                 }
-                Toggle(L("Auto-Auslöser"), isOn: Binding(get: { model.autoTrigger }, set: { model.setAutoTrigger($0) }))
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
-                    .disabled(!model.cameraRunning)
-                    .help(L("Löst nach dem Umblättern aus, sobald das Bild 1,5 Sekunden ruhig liegt und sich von der letzten Seite unterscheidet."))
-                if model.autoTrigger, model.motionState != .idle {
-                    Label(L("Seiten glatt halten, Hände raus"), systemImage: "hand.raised")
-                        .foregroundStyle(.orange)
-                }
             }
+            .lineLimit(1)
         }
     }
 
+    /// Kameramenü: Geräte mit Auflösung, darunter der Auto-Auslöser.
     private var cameraPicker: some View {
         Menu {
             ForEach(model.cameraDevices) { device in
@@ -92,19 +90,20 @@ struct StatusBar: View {
                     }
                 }
             }
-            Divider()
             Button(L("Kameras neu suchen")) { model.refreshCameraDevices() }
+            Divider()
+            Toggle(L("Auto-Auslöser"), isOn: Binding(get: { model.autoTrigger }, set: { model.setAutoTrigger($0) }))
+                .disabled(!model.cameraRunning)
         } label: {
             Label(model.selectedCamera.map(shortTitle) ?? L("Kamera wählen"), systemImage: "camera")
                 .lineLimit(1)
         }
-        .frame(maxWidth: 300)
-        .fixedSize(horizontal: false, vertical: true)
+        .menuStyle(.button)
+        .fixedSize()
     }
 
     private func deviceTitle(_ device: CameraDeviceInfo) -> String {
-        let size = String(format: "%.1f MP", device.megapixels)
-        return "\(device.name) (\(size))"
+        "\(device.name) · \(device.maxWidth) × \(device.maxHeight)"
     }
 
     /// Kurzname für die Leiste: „Desk View (MacBook Pro)" statt des Systemnamens.
