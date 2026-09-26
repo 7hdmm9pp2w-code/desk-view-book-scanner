@@ -55,7 +55,10 @@ struct StatusBar: View {
                 if !model.cameraAuthorized {
                     Label(L("Kamerazugriff nicht freigegeben"), systemImage: "xmark.octagon.fill")
                         .foregroundStyle(.red)
+                        .lineLimit(1)
+                        .fixedSize()
                     Button(L("Freigabe erteilen…")) { model.requestCameraAccess() }
+                        .fixedSize()
                 } else if let device = model.selectedCamera, model.cameraRunning {
                     Text(verbatim: "\(device.maxWidth) × \(device.maxHeight) px")
                         .foregroundStyle(.secondary)
@@ -92,14 +95,29 @@ struct StatusBar: View {
             Divider()
             Button(L("Kameras neu suchen")) { model.refreshCameraDevices() }
         } label: {
-            Label(model.selectedCamera.map(deviceTitle) ?? L("Kamera wählen"), systemImage: "camera")
+            Label(model.selectedCamera.map(shortTitle) ?? L("Kamera wählen"), systemImage: "camera")
+                .lineLimit(1)
         }
-        .fixedSize()
+        .frame(maxWidth: 300)
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private func deviceTitle(_ device: CameraDeviceInfo) -> String {
         let size = String(format: "%.1f MP", device.megapixels)
         return "\(device.name) (\(size))"
+    }
+
+    /// Kurzname für die Leiste: „Desk View (MacBook Pro)" statt des Systemnamens.
+    private func shortTitle(_ device: CameraDeviceInfo) -> String {
+        var name = device.name
+        for prefix in ["Schreibtischansicht-Kamera von ", "Desk View Camera of ", "Kamera von ", "Camera of "] {
+            if name.hasPrefix(prefix) {
+                let rest = name.dropFirst(prefix.count).trimmingCharacters(in: CharacterSet(charactersIn: "„“\" "))
+                name = device.kind == .deskView ? "Desk View (\(rest))" : rest
+                break
+            }
+        }
+        return "\(name) · \(String(format: "%.1f MP", device.megapixels))"
     }
 
     @ViewBuilder

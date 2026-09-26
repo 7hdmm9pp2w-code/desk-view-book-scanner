@@ -45,6 +45,9 @@ extension AppModel {
 
     /// Startet die gewählte Kamera; ohne Freigabe oder Gerät bleibt sie still.
     func startCamera() async {
+        if CameraSource.isUndetermined {
+            _ = await CameraSource.requestAccess()
+        }
         guard cameraAuthorized else { cameraRunning = false; return }
         if cameraDevices.isEmpty { refreshCameraDevices() }
         guard let id = selectedCameraID else { cameraRunning = false; return }

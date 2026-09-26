@@ -70,6 +70,12 @@ public final class CameraSource: NSObject, @unchecked Sendable {
         AVCaptureDevice.authorizationStatus(for: .video) == .authorized
     }
 
+    /// Noch nie gefragt: dann zeigt macOS den Dialog und führt die App erst danach in
+    /// den Einstellungen unter „Kamera".
+    public static var isUndetermined: Bool {
+        AVCaptureDevice.authorizationStatus(for: .video) == .notDetermined
+    }
+
     public static func requestAccess() async -> Bool {
         await AVCaptureDevice.requestAccess(for: .video)
     }
