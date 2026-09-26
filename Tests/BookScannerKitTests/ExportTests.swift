@@ -247,6 +247,8 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
         #expect(alone.first == .heading(level: 2, text: "DER POLITISCHE ZAUBER"))
         let junk = DocumentStructurer().structure(page: pageText([line("BOROPE /", top: 0.95, width: 0.15)] + bodyLines("Schrott")))
         #expect(junk.first == .paragraph(text: "BOROPE /"))
+        let digits = DocumentStructurer().structure(page: pageText([line("AE000 1 2H0N0 S0NY RE", top: 0.95, width: 0.3)] + bodyLines("Ziffern")))
+        #expect(digits.first == .paragraph(text: "AE000 1 2H0N0 S0NY RE"))
     }
 
     @Test func pageNumbersFootnotesAndCrossPageParagraphs() {
@@ -320,6 +322,25 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
         let next = pageText([line("lebt es sie nicht mehr. Von nun an ist es umgekehrt.", top: 0.9, width: 0.8)] + bodyLines("Acht", count: 10, top: 0.87))
         let doc = DocumentStructurer().structure(pages: [(7, page), (8, next)])
         #expect(doc.blocks.contains { if case .paragraph(let t) = $0 { return t.contains("auch über-lebt es sie") || t.contains("auch überlebt es sie") } else { return false } })
+    }
+
+    @Test func footnoteContinuationLinesAndPages() {
+        let page = pageText(bodyLines("Sechzehn", count: 12, top: 0.9) + [
+            line("* in: John Nance, \"The Gentle Tasadays\", London", top: 0.50, width: 0.62),
+            line("1975 (A.d. R.)", top: 0.47, width: 0.18),
+        ])
+        let blocks = DocumentStructurer().structure(page: page)
+        #expect(blocks.last == .footnote(text: "* in: John Nance, \"The Gentle Tasadays\", London 1975 (A.d. R.)"))
+        #expect(blocks.filter { if case .footnote = $0 { return true } else { return false } }.count == 1)
+
+        // Fußnote (1) endet offen und geht auf der nächsten Seite klein weiter.
+        let pageA = pageText(bodyLines("Zweiundachtzig", count: 12, top: 0.9) + [
+            line("(1) Die Dinge liegen natürlich anders, denn das Proletariat hat sich von", top: 0.50, width: 0.8),
+        ])
+        let pageB = pageText([line("nun an den Kommunisten die Ausübung der Politik verboten.", top: 0.9, width: 0.7)] + bodyLines("Dreiundachtzig", count: 10, top: 0.75))
+        let doc = DocumentStructurer().structure(pages: [(82, pageA), (83, pageB)])
+        #expect(doc.blocks.contains(.footnote(text: "(1) Die Dinge liegen natürlich anders, denn das Proletariat hat sich von nun an den Kommunisten die Ausübung der Politik verboten.")))
+        #expect(!doc.blocks.contains { if case .paragraph(let t) = $0 { return t.hasPrefix("nun an") } else { return false } })
     }
 
     @Test func duplicateScansAreSkippedAndContinuationCrossesEmptyPages() {

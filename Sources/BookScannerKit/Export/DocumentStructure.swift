@@ -123,6 +123,15 @@ public struct DocumentStructurer: Sendable {
                 blocks[lastIndex] = .paragraph(text: Self.join([previous, first], wordChecker: wordChecker))
                 pageBlocks.remove(at: firstIndex)
                 blocks.append(marker)
+            } else if firstIndex < pageBlocks.endIndex,
+                      case .paragraph(let first) = pageBlocks[firstIndex],
+                      let lastIndex = Self.lastFootnoteIndex(in: blocks),
+                      case .footnote(let previous) = blocks[lastIndex],
+                      Self.continues(previous, with: first) {
+                // Fußnote läuft auf der nächsten Seite weiter.
+                blocks[lastIndex] = .footnote(text: Self.join([previous, first], wordChecker: wordChecker))
+                pageBlocks.remove(at: firstIndex)
+                blocks.append(marker)
             } else {
                 blocks.append(marker)
             }
@@ -151,6 +160,19 @@ public struct DocumentStructurer: Sendable {
     static func jaccard(_ a: Set<String>, _ b: Set<String>) -> Double {
         let union = a.union(b).count
         return union == 0 ? 0 : Double(a.intersection(b).count) / Double(union)
+    }
+
+    /// Letzte Fußnote am Ende der bisherigen Blöcke (Notizen und Marker dazwischen erlaubt).
+    static func lastFootnoteIndex(in blocks: [DocumentBlock]) -> Int? {
+        var index = blocks.count - 1
+        while index >= 0 {
+            switch blocks[index] {
+            case .note, .pageBreak: index -= 1
+            case .footnote: return index
+            default: return nil
+            }
+        }
+        return nil
     }
 
     /// Letzter Absatz, hinter dem nur noch Fußnoten, Notizen oder Marker leerer Seiten stehen.
@@ -342,9 +364,9 @@ public struct DocumentStructurer: Sendable {
                         paragraphGapRatio: paragraphGapRatio, indentRatio: indentRatio, shortLineRatio: shortLineRatio
                     )
                 case (.footnote, .footnote):
-                    // Neue Fußnote beginnt mit Marker (*, Ziffer, Klammer) oder nach Lücke.
-                    let marker = line.text.first.map { $0 == "*" || $0.isNumber || $0 == "(" } ?? false
-                    startsNew = marker || previous.box.midY - line.box.midY > pitch * paragraphGapRatio
+                    // Neue Fußnote beginnt mit einer Marke oder nach Lücke; eine Jahreszahl
+                    // am Zeilenanfang („1975 (A.d. R.)") ist Fortsetzung.
+                    startsNew = Self.startsWithFootnoteMarker(line.text) || previous.box.midY - line.box.midY > pitch * paragraphGapRatio
                 case (.listItem, .listItem):
                     // Jede Zeile ein Eintrag, außer sie setzt die vorige fort.
                     let continuation = (previous.text.last.map { $0 == "-" || $0 == "," } ?? false)
@@ -428,6 +450,8 @@ public struct DocumentStructurer: Sendable {
         guard letters.count >= 4 else { return false }
         let nonLetters = text.filter { !$0.isLetter && !$0.isWhitespace }.count
         guard Double(nonLetters) <= Double(text.count) * 0.4 else { return false }
+        // Versalien mit vielen Ziffern („AE000 1 2H0N0 S0NY RE") sind Kolumnenschrott.
+        guard text.filter(\.isNumber).count <= 2 else { return false }
         let upper = letters.filter(\.isUppercase).count
         return Double(upper) >= Double(letters.count) * 0.8
     }
