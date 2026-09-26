@@ -1,7 +1,10 @@
 import Foundation
 import CoreGraphics
 import CoreImage
+import OSLog
 @preconcurrency import AVFoundation
+
+private let triggerLog = Logger(subsystem: "org.crushkilldestroy.DeskViewBookScanner", category: "Auslöser")
 
 /// Eine Kamera, wie sie AVFoundation sieht: Desk View (Mac oder iPhone), das iPhone
 /// als Continuity-Kamera, externe Kameras wie eine 4K-Webcam, die eingebaute Kamera.
@@ -54,9 +57,11 @@ public final class CameraSource: NSObject, @unchecked Sendable {
     private var judging = false
     /// Zählt Bewegungen; eine Prüfung, während der sich wieder etwas bewegt hat, verfällt.
     private var motionEpisode = 0
+    /// Genaue Erkennung, aber ohne Sprachkorrektur: Die schnelle liest die kleine Schrift
+    /// eines ganzen Kamerabilds nicht (0 Wörter auf voll bedruckten Seiten), die genaue
+    /// braucht dafür rund 100 ms.
     private let quickRecognizer: TextRecognizer = {
         var recognizer = TextRecognizer()
-        recognizer.accurate = false
         recognizer.usesLanguageCorrection = false
         return recognizer
     }()
@@ -188,6 +193,17 @@ public final class CameraSource: NSObject, @unchecked Sendable {
             autoTriggerEnabled = enabled
             trigger.reset()
         }
+        if enabled { warmUpRecognizer() }
+    }
+
+    /// Die genaue Erkennung lädt beim ersten Mal ihr Modell, das dauert bis zu einer halben
+    /// Minute. Vorab an einem leeren Bild, damit die erste umgeblätterte Seite nicht wartet.
+    private func warmUpRecognizer() {
+        guard let context = CGContext(data: nil, width: 64, height: 64, bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue),
+              let blank = context.makeImage() else { return }
+        let recognizer = quickRecognizer
+        Task.detached(priority: .utility) { _ = try? await recognizer.recognize(blank) }
     }
 
     /// Vergisst die erfassten Seiten, etwa bei einer neuen Session.
@@ -219,7 +235,9 @@ public final class CameraSource: NSObject, @unchecked Sendable {
             let snapshot = await snapshot(of: image, frame: frame)
             queue.async { [self] in
                 judging = false
-                guard autoTriggerEnabled, episode == motionEpisode, judge.isNewPage(snapshot) else { return }
+                let isNew = judge.isNewPage(snapshot)
+                triggerLog.notice("Seite ruhig: \(snapshot.words.count) Wörter, neu \(isNew), überholt \(episode != self.motionEpisode)")
+                guard autoTriggerEnabled, episode == motionEpisode, isNew else { return }
                 judge.remember(snapshot)
                 onAutoTrigger?()
             }
@@ -245,18 +263,44 @@ public final class CameraSource: NSObject, @unchecked Sendable {
         CVPixelBufferLockBaseAddress(buffer, .readOnly)
         defer { CVPixelBufferUnlockBaseAddress(buffer, .readOnly) }
         guard let base = CVPixelBufferGetBaseAddress(buffer) else { return [] }
-        let width = CVPixelBufferGetWidth(buffer), height = CVPixelBufferGetHeight(buffer)
-        let stride = CVPixelBufferGetBytesPerRow(buffer)
+        return grayThumbnail(
+            bgra: base,
+            width: CVPixelBufferGetWidth(buffer),
+            height: CVPixelBufferGetHeight(buffer),
+            bytesPerRow: CVPixelBufferGetBytesPerRow(buffer),
+            targetWidth: targetWidth
+        )
+    }
+
+    /// Verkleinertes Graubild aus BGRA-Pixeln, jeder Bildpunkt der Mittelwert seines Blocks.
+    ///
+    /// Nur jedes n-te Pixel zu nehmen reicht nicht: Auf einer Textseite springt so ein
+    /// Pixel beim kleinsten Zittern zwischen Schrift und Papier, dazu kommt das Rauschen
+    /// des Sensors. Der Auslöser sähe eine ruhig liegende Textseite dann als bewegt.
+    static func grayThumbnail(bgra base: UnsafeRawPointer, width: Int, height: Int, bytesPerRow stride: Int, targetWidth: Int) -> [UInt8] {
         let step = max(1, width / targetWidth)
         let outW = width / step, outH = height / step
         var result = [UInt8](repeating: 0, count: outW * outH)
         let pixels = base.assumingMemoryBound(to: UInt8.self)
+        var blue = [Int](repeating: 0, count: outW), green = blue, red = blue
+        let area = step * step
         for y in 0..<outH {
-            let row = pixels + y * step * stride
+            for i in 0..<outW { blue[i] = 0; green[i] = 0; red[i] = 0 }
+            for dy in 0..<step {
+                let row = pixels + (y * step + dy) * stride
+                for x in 0..<outW {
+                    var p = row + x * step * 4
+                    var b = 0, g = 0, r = 0
+                    for _ in 0..<step {
+                        b += Int(p[0]); g += Int(p[1]); r += Int(p[2])
+                        p += 4
+                    }
+                    blue[x] += b; green[x] += g; red[x] += r
+                }
+            }
             for x in 0..<outW {
-                let p = row + x * step * 4
                 // BGRA: Luma aus B, G, R
-                let luma = (Int(p[0]) * 29 + Int(p[1]) * 150 + Int(p[2]) * 77) >> 8
+                let luma = (blue[x] * 29 + green[x] * 150 + red[x] * 77) / (area << 8)
                 result[y * outW + x] = UInt8(min(255, luma))
             }
         }
@@ -285,6 +329,7 @@ extension CameraSource: AVCaptureVideoDataOutputSampleBufferDelegate {
         let time = CMTimeGetSeconds(CMSampleBufferGetPresentationTimeStamp(sampleBuffer))
         let stateBefore = trigger.state
         let settled = trigger.feed(gray, width: grayWidth, at: time)
+        triggerLog.debug("Bewegung \(self.trigger.lastLevel, format: .fixed(precision: 2)), Zustand \(String(describing: self.trigger.state), privacy: .public)")
         if trigger.state != stateBefore {
             if trigger.state == .moving { motionEpisode += 1 }
             onMotionState?(trigger.state)

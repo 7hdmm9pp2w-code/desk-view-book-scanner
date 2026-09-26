@@ -3,6 +3,8 @@
 Digitize books on the Mac: scan page by page, let the text be recognized, and take
 the result along as a searchable PDF, Markdown, Word or EPUB.
 
+![Auto capture with Desk View: turn the page, the app takes it by itself](doc/media/demo.gif)
+
 Deutsche Fassung: [README.de.md](README.de.md).
 
 ## What the app does
