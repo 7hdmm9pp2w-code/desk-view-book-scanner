@@ -92,6 +92,16 @@
         }
       }
     },
+    "%lld Zeichen, davon %@ sicher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld characters, %@ confident"
+          }
+        }
+      }
+    },
     "%lld Zeilen": {
       "localizations": {
         "de": {
@@ -282,6 +292,16 @@
         }
       }
     },
+    "Besser erkannt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Better recognized"
+          }
+        }
+      }
+    },
     "Bild archiviert": {
       "localizations": {
         "en": {
@@ -292,12 +312,12 @@
         }
       }
     },
-    "Bild aus der gewählten Kamera erfassen (%@, auch aus anderen Apps)": {
+    "Bild aus der gewählten Kamera erfassen (Leertaste; %@ auch aus anderen Apps)": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Capture a frame from the chosen camera (%@, also from other apps)"
+            "value": "Capture a frame from the chosen camera (Space; %@ also from other apps)"
           }
         }
       }
@@ -318,6 +338,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose images or PDF scans; pages are appended in this order."
+          }
+        }
+      }
+    },
+    "Bisher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before"
+          }
+        }
+      }
+    },
+    "Bisherigen behalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep Previous"
           }
         }
       }
@@ -368,6 +408,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The iPhone's document scanner delivers the pages, triggered from the Mac. Switch the source above for files or Desk View."
+          }
+        }
+      }
+    },
+    "Der andere Scan wandert in den Papierkorb der Session.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The other scan goes to the session’s trash."
           }
         }
       }
@@ -498,16 +548,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recognized Text"
-          }
-        }
-      }
-    },
-    "Ersetzt die ausgewählte Seite durch das nächste Ergebnis der gewählten Quelle (⇧⌘R)": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Replaces the selected page with the next result from the chosen source (⇧⌘R)"
           }
         }
       }
@@ -822,12 +862,32 @@
         }
       }
     },
+    "Nachscannen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rescan"
+          }
+        }
+      }
+    },
     "Nein": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "No"
+          }
+        }
+      }
+    },
+    "Neu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New"
           }
         }
       }
@@ -858,6 +918,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "New session with ⌘N, or scan pages."
+          }
+        }
+      }
+    },
+    "Neuen behalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep New"
           }
         }
       }
@@ -1008,6 +1078,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "pp. %1$lld–%2$lld"
+          }
+        }
+      }
+    },
+    "Scannt die Seite mit der gewählten Quelle neu; danach entscheidest du, welche Fassung bleibt (⇧⌘R)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rescans the page with the chosen source; then you decide which version stays (⇧⌘R)"
+          }
+        }
+      }
+    },
+    "Scannt die ausgewählte Seite mit der gewählten Quelle neu; danach entscheidest du, welche Fassung bleibt (⇧⌘R)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rescans the selected page with the chosen source; then you decide which version stays (⇧⌘R)"
           }
         }
       }
@@ -1332,6 +1422,16 @@
         }
       }
     },
+    "Welcher Scan bleibt?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which scan stays?"
+          }
+        }
+      }
+    },
     "Wird erfasst…": {
       "localizations": {
         "en": {
@@ -1402,12 +1502,12 @@
         }
       }
     },
-    "Öffnet den Dokumentenscanner auf dem iPhone; die Seiten landen in dieser Session (⇧⌘S).": {
+    "Öffnet den Dokumentenscanner auf dem iPhone; die Seiten landen in dieser Session (Leertaste oder ⇧⌘S).": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Opens the document scanner on the iPhone; pages go into this session (⇧⌘S)."
+            "value": "Opens the document scanner on the iPhone; pages go into this session (Space or ⇧⌘S)."
           }
         }
       }

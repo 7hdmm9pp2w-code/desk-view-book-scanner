@@ -81,6 +81,7 @@ struct PageGrid: View {
         .focusEffectDisabled()
         .onAppear { isFocused = true }
         .onDeleteCommand { model.trashSelectedPage() }
+        .onKeyPress(.space) { model.captureWithSpace() ? .handled : .ignored }
         .background(Color(nsColor: .controlBackgroundColor))
     }
 }
@@ -91,6 +92,7 @@ struct PageCell: View {
     let number: Int
     let isSelected: Bool
     @State private var thumbnail: CGImage?
+    @State private var hovering = false
 
     var body: some View {
         VStack(spacing: 6) {
@@ -112,6 +114,9 @@ struct PageCell: View {
                 RoundedRectangle(cornerRadius: 6)
                     .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 3)
             )
+            .overlay { rescanButton }
+            .onHover { hovering = $0 }
+            .animation(.easeOut(duration: 0.15), value: hovering)
             HStack(spacing: 4) {
                 if let issue = model.sequenceIssues[page.id] {
                     Image(systemName: "exclamationmark.triangle.fill")
@@ -135,6 +140,26 @@ struct PageCell: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .task(id: page.id) {
             thumbnail = await model.image(for: page, maxPixelSize: AppModel.cellThumbnailSize)
+        }
+    }
+
+    /// Beim Überfahren: Knopf zum Nachscannen mitten auf dem Vorschaubild.
+    @ViewBuilder
+    private var rescanButton: some View {
+        if hovering, thumbnail != nil, model.rescanAvailable {
+            Button {
+                model.rescan(pageID: page.id)
+            } label: {
+                Label(L("Nachscannen"), systemImage: "arrow.triangle.2.circlepath.camera")
+                    .font(.system(size: 12, weight: .medium))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.regularMaterial, in: Capsule())
+                    .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .help(L("Scannt die Seite mit der gewählten Quelle neu; danach entscheidest du, welche Fassung bleibt (⇧⌘R)"))
+            .transition(.opacity)
         }
     }
 }

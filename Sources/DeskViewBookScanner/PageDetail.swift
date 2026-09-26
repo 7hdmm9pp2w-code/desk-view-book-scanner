@@ -25,7 +25,9 @@ struct PageDetail: View {
 
     @ViewBuilder
     private var pageContent: some View {
-        if let page {
+        if let page, let comparison = model.rescanComparison, comparison.contains(page.id) {
+            RescanComparisonView(comparison: comparison)
+        } else if let page {
             VStack(alignment: .leading, spacing: 10) {
                 ZStack {
                     Color(nsColor: .windowBackgroundColor)
