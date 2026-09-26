@@ -80,6 +80,12 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
         #expect(abs(hitBounds.midY - expectedMidY) < pageBounds.height * 0.03)
         #expect(hitBounds.minX > pageBounds.width * 0.05 && hitBounds.maxX < pageBounds.width * 0.95)
 
+        // Zeilen bleiben bei der Textextraktion getrennt: kein „HandprobeZweite".
+        let extracted = document.page(at: 0)?.string ?? ""
+        #expect(extracted.contains("Handprobe"))
+        #expect(!extracted.contains("HandprobeZweite"))
+        #expect(document.findString("Zweite Zeile", withOptions: []).count == 1)
+
         // JPEG eingebettet, nicht verlustfrei aufgebläht.
         let bytes = try Data(contentsOf: pdfURL)
         #expect(bytes.range(of: Data("DCTDecode".utf8)) != nil)

@@ -74,7 +74,9 @@ public struct PDFExporter: Sendable {
             guard unitWidth > 0 else { continue }
             let fontSize = box.width / unitWidth
             let font = CTFontCreateWithName(fontName as CFString, fontSize, nil)
-            let attributed = NSAttributedString(string: line.text, attributes: [kCTFontAttributeName as NSAttributedString.Key: font])
+            // Leerzeichen am Zeilenende, sonst klebt die Textextraktion das letzte Wort
+            // dieser Zeile an das erste der nächsten („Möglichkeitmehr").
+            let attributed = NSAttributedString(string: line.text + " ", attributes: [kCTFontAttributeName as NSAttributedString.Key: font])
             let ctLine = CTLineCreateWithAttributedString(attributed)
             context.textPosition = CGPoint(x: box.minX, y: box.minY + CTFontGetDescent(font))
             CTLineDraw(ctLine, context)
