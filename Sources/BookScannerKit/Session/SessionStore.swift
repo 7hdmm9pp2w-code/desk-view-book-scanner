@@ -154,6 +154,15 @@ public actor SessionStore {
     /// Drehen). Die alte Seite wandert in den Papierkorb.
     @discardableResult
     public func replacePage(_ id: UUID, with images: [CGImage], capturedAt: Date = .now) throws -> [PageRecord] {
+        let records = try insertPages(images, after: id, capturedAt: capturedAt)
+        try trash(pageIDs: [id])
+        return records
+    }
+
+    /// Fügt Bilder direkt hinter einer Seite ein, die alte bleibt stehen (Nachscannen:
+    /// erst vergleichen, dann eine von beiden in den Papierkorb).
+    @discardableResult
+    public func insertPages(_ images: [CGImage], after id: UUID, capturedAt: Date = .now) throws -> [PageRecord] {
         guard let index = document.pageOrder.firstIndex(of: id), !images.isEmpty else {
             throw SessionError.unknownPage(id)
         }
@@ -168,8 +177,8 @@ public actor SessionStore {
             document.pages.append(record)
             records.append(record)
         }
-        document.pageOrder.replaceSubrange(index...index, with: records.map(\.id))
-        try trash(pageIDs: [id])
+        document.pageOrder.insert(contentsOf: records.map(\.id), at: index + 1)
+        try save()
         return records
     }
 

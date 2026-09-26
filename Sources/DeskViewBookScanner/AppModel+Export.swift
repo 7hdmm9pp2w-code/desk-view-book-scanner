@@ -99,12 +99,9 @@ extension AppModel {
                     }
                 }
                 if let target, !replacements.isEmpty {
-                    // Nachscannen: alle neuen Seiten rücken an die Stelle der alten.
-                    let records = try await store.replacePage(target, with: replacements)
-                    forgetPage(target)
-                    pages = await store.orderedPages
+                    // Nachscannen: neue Seiten neben die alte, zum Vergleichen.
+                    let records = try await stageRescan(of: target, with: replacements, in: store)
                     selectedPageID = records.first?.id
-                    for record in records { recognizeText(for: record) }
                 }
                 exportStatus = nil
                 lastError = nil

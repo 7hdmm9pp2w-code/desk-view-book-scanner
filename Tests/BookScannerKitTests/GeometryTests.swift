@@ -89,6 +89,19 @@ func makeDoublePage(width: Int = 1600, height: Int = 1000, gutter: Double? = 0.5
         #expect(FileManager.default.fileExists(atPath: await store.trashDirectory.appending(path: b.fileName).path))
     }
 
+    @Test func insertPagesKeepsOriginalInPlace() async throws {
+        let root = try makeTempRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = try SessionStore.create(in: root)
+        let a = try await store.addPage(makeTestImage(width: 10, height: 10))
+        let b = try await store.addPage(makeTestImage(width: 10, height: 10))
+
+        let rescans = try await store.insertPages([makeTestImage(width: 10, height: 10)], after: a.id)
+
+        #expect(await store.orderedPages.map(\.id) == [a.id, rescans[0].id, b.id])
+        #expect(await store.document.trashed.isEmpty)
+    }
+
     @Test func textAcrossTheCutPreventsSplitting() {
         let image = makeDoublePage(gutter: 0.52)
         let splitter = PageSplitter()

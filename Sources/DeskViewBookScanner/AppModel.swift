@@ -39,7 +39,12 @@ final class AppModel {
     var session: SessionStore?
     var sessionDirectory: URL?
     var sessionTitle: String = ""
-    var pages: [PageRecord] = [] { didSet { refreshPageSequence() } }
+    var pages: [PageRecord] = [] {
+        didSet {
+            refreshPageSequence()
+            dropStaleRescanComparison()
+        }
+    }
     var isCapturing = false
     var hotKeyRegistered = false
     var texts: [UUID: PageText] = [:] { didSet { refreshPageSequence() } }
@@ -57,6 +62,8 @@ final class AppModel {
     var captureSource: CaptureSource = .iPhone
     /// Seite, die der nächste Scan, Import oder die nächste Aufnahme ersetzt statt anzuhängen.
     var rescanTargetID: UUID?
+    /// Alte und neue Fassung einer nachgescannten Seite, bis entschieden ist, welche bleibt.
+    var rescanComparison: RescanComparison?
     var titleSuggestionDismissed = false
     var summaries: [SessionSummary] = []
     var sessionArchived = false
@@ -238,10 +245,7 @@ final class AppModel {
                 let prepared = await processor.prepare(image, settings: settings)
                 var lastPage: PageRecord?
                 if let target = takeRescanTarget() {
-                    let records = try await store.replacePage(target, with: prepared)
-                    forgetPage(target)
-                    for record in records { recognizeText(for: record) }
-                    lastPage = records.first
+                    lastPage = try await stageRescan(of: target, with: prepared, in: store).first
                 } else {
                     for image in prepared {
                         let page = try await store.addPage(image)
@@ -278,7 +282,8 @@ final class AppModel {
         trash(pageIDs: [id])
     }
 
-    func trash(pageIDs: [UUID]) {
+    /// `select` wählt danach eine bestimmte Seite, sonst die Nachbarin der ersten gelöschten.
+    func trash(pageIDs: [UUID], select: UUID? = nil) {
         guard let session, !pageIDs.isEmpty else { return }
         let index = pages.firstIndex { $0.id == pageIDs[0] } ?? 0
         Task {
@@ -291,7 +296,9 @@ final class AppModel {
                     imageCache.removeAll { $0.hasPrefix(id.uuidString) }
                     texts[id] = nil
                 }
-                if pages.isEmpty {
+                if let select, pages.contains(where: { $0.id == select }) {
+                    selectedPageID = select
+                } else if pages.isEmpty {
                     selectedPageID = nil
                 } else {
                     selectedPageID = pages[min(index, pages.count - 1)].id
@@ -319,9 +326,15 @@ final class AppModel {
 // MARK: - Nachscannen
 
 extension AppModel {
-    /// Ersetzt die ausgewählte Seite durch das nächste Ergebnis der gewählten Quelle:
-    /// iPhone-Scan, Dateiimport oder Desk-View-Aufnahme. Kommen mehrere Seiten,
-    /// rücken sie alle an die Stelle der alten.
+    struct RescanComparison: Equatable {
+        let oldID: UUID
+        let newIDs: [UUID]
+        func contains(_ id: UUID) -> Bool { id == oldID || newIDs.contains(id) }
+    }
+
+    /// Holt für die ausgewählte Seite das nächste Ergebnis der gewählten Quelle:
+    /// iPhone-Scan, Dateiimport oder Kamera-Aufnahme. Die neuen Seiten kommen direkt
+    /// hinter die alte; welche Fassung bleibt, entscheidet `resolveRescan`.
     func rescanSelectedPage() {
         guard let page = selectedPage, canRescan else { return }
         rescanTargetID = page.id
@@ -336,6 +349,7 @@ extension AppModel {
 
     var canRescan: Bool {
         selectedPageID != nil && exportStatus == nil && !sessionArchived && !iPhoneWaiting
+            && rescanComparison == nil
     }
 
     func takeRescanTarget() -> UUID? {
@@ -343,10 +357,32 @@ extension AppModel {
         return rescanTargetID
     }
 
-    /// Cache und Text einer ersetzten Seite vergessen; sie liegt jetzt im Papierkorb.
-    func forgetPage(_ id: UUID) {
-        imageCache.removeAll { $0.hasPrefix(id.uuidString) }
-        texts[id] = nil
-        trashedCount += 1
+    /// Legt die neuen Seiten neben die alte und merkt sich den Vergleich.
+    func stageRescan(of target: UUID, with images: [CGImage], in store: SessionStore) async throws -> [PageRecord] {
+        let records = try await store.insertPages(images, after: target)
+        rescanComparison = RescanComparison(oldID: target, newIDs: records.map(\.id))
+        pages = await store.orderedPages
+        for record in records { recognizeText(for: record) }
+        return records
+    }
+
+    /// Die verworfene Fassung wandert in den Papierkorb der Session.
+    func resolveRescan(keepNew: Bool) {
+        guard let comparison = rescanComparison else { return }
+        rescanComparison = nil
+        if keepNew {
+            trash(pageIDs: [comparison.oldID], select: comparison.newIDs.first)
+        } else {
+            trash(pageIDs: comparison.newIDs, select: comparison.oldID)
+        }
+    }
+
+    /// Hat jemand eine der Seiten anders gelöscht oder die Session gewechselt, gibt es nichts mehr zu vergleichen.
+    func dropStaleRescanComparison() {
+        guard let comparison = rescanComparison else { return }
+        let ids = Set(pages.map(\.id))
+        if !ids.contains(comparison.oldID) || !comparison.newIDs.allSatisfy(ids.contains) {
+            rescanComparison = nil
+        }
     }
 }

@@ -73,7 +73,10 @@ Zone an der Tastaturkante am schärfsten. Darum:
 - **Für ganze Bücher** eine 4K-Kamera senkrecht über dem Buch oder der iPhone-Scan.
   Der Auto-Auslöser erfasst nach jedem Umblättern, sobald das Bild anderthalb
   Sekunden ruhig liegt und sich von der letzten Seite unterscheidet.
-- Eine unscharfe Seite muss nicht neu einsortiert werden: auswählen, ⇧⌘R, neu erfassen.
+- Eine unscharfe Seite muss nicht neu einsortiert werden: auswählen, ⇧⌘R (oder der Knopf,
+  der beim Überfahren des Bildes erscheint), neu erfassen. Alte und neue Fassung stehen
+  dann nebeneinander, mit Hinweis, welche besser erkannt wurde; die verworfene wandert in
+  den Papierkorb der Session.
 
 `scripts/ocr_stats.py` zeigt je Aufnahme die Zeilenhöhen und Konfidenzen einer Session.
 

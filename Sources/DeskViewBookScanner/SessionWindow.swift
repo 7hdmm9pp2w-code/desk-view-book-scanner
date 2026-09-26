@@ -45,7 +45,7 @@ struct SessionWindow: View {
                 } label: {
                     Label(L("Seite nachscannen"), systemImage: "arrow.triangle.2.circlepath.camera")
                 }
-                .help(L("Ersetzt die ausgewählte Seite durch das nächste Ergebnis der gewählten Quelle (⇧⌘R)"))
+                .help(L("Scannt die ausgewählte Seite mit der gewählten Quelle neu; danach entscheidest du, welche Fassung bleibt (⇧⌘R)"))
                 .disabled(!model.canRescan)
                 Button {
                     model.splitSelectedPage()

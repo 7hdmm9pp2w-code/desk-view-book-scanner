@@ -57,8 +57,10 @@ Design notes and the implementation log are in German: [doc/KONZEPT.md](doc/KONZ
   and images, for example scans from Notes or vFlat, rendered at their embedded
   resolution. *Camera* (⌥⌘S) grabs a frame from any camera AVFoundation sees, in its
   largest format, with a live preview and an auto-capture mode.
-- **Rescan** a page in place (⇧⌘R): the next result from the chosen source replaces
-  the selected page; the old one goes to the session's trash.
+- **Rescan** a page in place (⇧⌘R, or the button that appears when hovering over the
+  page image): the next result from the chosen source lands next to the selected page,
+  both are shown side by side with a hint which one was read better, and the version
+  you discard goes to the session's trash.
 - **Before saving**, every page is rotated upright (Vision reads the text direction) and
   double pages are split at the gutter, using the text-free gap between the two text
   blocks. Existing pages can be split (⌘T), rotated (⌘L/⌘R) or rescanned in place (⇧⌘R).

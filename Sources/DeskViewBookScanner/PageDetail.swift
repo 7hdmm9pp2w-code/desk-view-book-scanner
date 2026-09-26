@@ -5,6 +5,7 @@ struct PageDetail: View {
     @Environment(AppModel.self) private var model
     @State private var image: CGImage?
     @State private var text: PageText?
+    @State private var hoveringImage = false
 
     private var page: PageRecord? {
         model.pages.first { $0.id == model.selectedPageID }
@@ -25,7 +26,9 @@ struct PageDetail: View {
 
     @ViewBuilder
     private var pageContent: some View {
-        if let page {
+        if let page, let comparison = model.rescanComparison, comparison.contains(page.id) {
+            RescanComparisonView(comparison: comparison)
+        } else if let page {
             VStack(alignment: .leading, spacing: 10) {
                 ZStack {
                     Color(nsColor: .windowBackgroundColor)
@@ -41,6 +44,9 @@ struct PageDetail: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipShape(RoundedRectangle(cornerRadius: 6))
+                .overlay { rescanOverlay }
+                .onHover { hoveringImage = $0 }
+                .animation(.easeOut(duration: 0.15), value: hoveringImage)
 
                 Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 4) {
                     GridRow {
@@ -88,6 +94,26 @@ struct PageDetail: View {
             }
         } else {
             ContentUnavailableView(L("Keine Seite ausgewählt"), systemImage: "doc.text.magnifyingglass")
+        }
+    }
+
+    /// Beim Überfahren des Bildes: Knopf zum Nachscannen mitten auf der Seite.
+    @ViewBuilder
+    private var rescanOverlay: some View {
+        if hoveringImage, image != nil, model.canRescan {
+            Button {
+                model.rescanSelectedPage()
+            } label: {
+                Label(L("Seite nachscannen"), systemImage: "arrow.triangle.2.circlepath.camera")
+                    .font(.system(size: 14, weight: .medium))
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(.regularMaterial, in: Capsule())
+                    .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .help(L("Scannt die ausgewählte Seite mit der gewählten Quelle neu; danach entscheidest du, welche Fassung bleibt (⇧⌘R)"))
+            .transition(.opacity)
         }
     }
 

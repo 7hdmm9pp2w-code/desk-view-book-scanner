@@ -62,4 +62,14 @@ public struct PageText: Codable, Sendable, Equatable {
     public var plainText: String {
         lines.map(\.text).joined(separator: "\n")
     }
+
+    public var characterCount: Int {
+        lines.reduce(0) { $0 + $1.text.count }
+    }
+
+    /// Zeichen, gewichtet mit der Sicherheit ihrer Zeile: mehr und sicherer gelesener
+    /// Text ergibt mehr. Taugt zum Vergleich zweier Scans derselben Seite.
+    public var confidentCharacters: Double {
+        lines.reduce(0) { $0 + Double($1.text.count) * Double($1.confidence) }
+    }
 }

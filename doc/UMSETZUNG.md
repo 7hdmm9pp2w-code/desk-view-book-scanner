@@ -175,6 +175,14 @@ vom Konzept abwich und den Grund. Neueste Einträge unten.
     bestätigt. Fehlend ist nur, was nirgends in der Session vorkommt; nachgescannte Seiten
     schließen die Lücke. Anzeige am Vorschaubild (Dreieck, gedruckte Zahl) und in der
     Quellenleiste; bei der Kamera ein Ton, wenn die eben erfasste Seite auffällt.
+- **Nachscannen mit Vergleich (27.09.2026):** Beim Überfahren des Seitenbilds erscheint
+  mittig „Seite nachscannen“. Das Ergebnis ersetzt die Seite nicht mehr sofort:
+  `SessionStore.insertPages(_:after:)` legt es hinter die alte, `rescanComparison` merkt
+  sich beide, das Detail zeigt sie nebeneinander. Vorgeschlagen (⏎) ist die Fassung mit
+  mehr sicher erkannten Zeichen (`PageText.confidentCharacters`, Zeichen × Zeilensicherheit,
+  ab 3 % Abstand), sonst die neue. Die verworfene wandert in den Papierkorb. Solange der
+  Vergleich offen ist, ist Nachscannen gesperrt; verschwindet eine der Seiten anders, fällt
+  er weg.
 - **Hände im Bild (27.09.2026):** Viele Bücher müssen aufgehalten werden. `MotionTrigger`
   misst Bewegung deshalb in 16 Kacheln je Zeile und nimmt die Kacheldifferenz, die nur
   das bewegteste Viertel übersteigt: Umblättern bewegt mehr als ein Viertel der Kacheln,
