@@ -398,7 +398,7 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
             line("Jean Baudrillard", top: 0.75, height: 0.05, width: 0.5),
             line("Agonie des Realen", top: 0.69, height: 0.05, width: 0.5),
             line("Merve Verlag Berlin", top: 0.25, height: 0.09, width: 0.6),
-            line("klein", top: 0.1, height: 0.02, width: 0.1),
+            line("Klein gesetzt", top: 0.1, height: 0.02, width: 0.2),
         ])
         let doc = DocumentStructurer().structure(pages: [(1, cover)], title: "Jean Baudrillard – Agonie des Realen")
         #expect(!doc.blocks.contains { if case .heading = $0 { return true } else { return false } })
