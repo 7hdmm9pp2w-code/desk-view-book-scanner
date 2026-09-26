@@ -175,3 +175,11 @@ vom Konzept abwich und den Grund. Neueste Einträge unten.
     bestätigt. Fehlend ist nur, was nirgends in der Session vorkommt; nachgescannte Seiten
     schließen die Lücke. Anzeige am Vorschaubild (Dreieck, gedruckte Zahl) und in der
     Quellenleiste; bei der Kamera ein Ton, wenn die eben erfasste Seite auffällt.
+- **Hände im Bild (27.09.2026):** Viele Bücher müssen aufgehalten werden. `MotionTrigger`
+  misst Bewegung deshalb in 16 Kacheln je Zeile und nimmt die Kacheldifferenz, die nur
+  das bewegteste Viertel übersteigt: Umblättern bewegt mehr als ein Viertel der Kacheln,
+  zitternde oder umgreifende Hände weniger. Handprobe mit Desk View: Umgreifen löst nicht
+  aus (31 % und 36 % geänderte Kacheln, Grenze 40 %); Umblättern mit 0–15 % gemeinsamen
+  Wörtern klar erkannt. Die schnelle OCR findet bei 1920 × 1440 oft unter 12 Wörter, dann
+  entscheidet der Kachelvergleich. Schalter „Beim Umblättern auslösen" jetzt direkt in der
+  Quellenleiste statt im Kameramenü; der Hinweis „Hände raus" ist entfallen.

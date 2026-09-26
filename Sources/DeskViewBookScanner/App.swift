@@ -56,7 +56,7 @@ struct DeskViewBookScannerApp: App {
                     Button(L("Seite erfassen")) { model.capturePage() }
                         .keyboardShortcut("s", modifiers: [.command, .option])
                         .disabled(!model.canCapture)
-                    Toggle(L("Auto-Auslöser"), isOn: Binding(get: { model.autoTrigger }, set: { model.setAutoTrigger($0) }))
+                    Toggle(L("Beim Umblättern auslösen"), isOn: Binding(get: { model.autoTrigger }, set: { model.setAutoTrigger($0) }))
                         .disabled(!model.cameraRunning)
                 }
             }

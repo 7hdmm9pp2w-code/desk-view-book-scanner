@@ -53,6 +53,13 @@ struct StatusBar: View {
         case .camera:
             HStack(spacing: 10) {
                 cameraPicker
+                Toggle(isOn: Binding(get: { model.autoTrigger }, set: { model.setAutoTrigger($0) })) {
+                    Text(L("Beim Umblättern auslösen"))
+                }
+                .toggleStyle(.switch)
+                .controlSize(.small)
+                .disabled(!model.cameraRunning)
+                .help(L("Erfasst jede neue Seite von selbst, sobald nach dem Umblättern Ruhe ist. Dieselbe Seite, eine Hand im Bild oder Zurückblättern lösen nicht aus."))
                 if !model.cameraAuthorized {
                     Button {
                         model.requestCameraAccess()
@@ -62,12 +69,8 @@ struct StatusBar: View {
                     .foregroundStyle(.red)
                     .help(L("Kamerazugriff nicht freigegeben"))
                 } else if model.cameraRunning, model.autoTrigger, model.motionState != .idle {
-                    Label(L("Seiten glatt halten, Hände raus"), systemImage: "hand.raised")
+                    Label(L("Umblättern erkannt, Buch kurz ruhig halten"), systemImage: "book.pages")
                         .foregroundStyle(.orange)
-                        .lineLimit(1)
-                } else if model.cameraRunning, model.autoTrigger {
-                    Label(L("Auto-Auslöser an"), systemImage: "bolt.fill")
-                        .foregroundStyle(.secondary)
                         .lineLimit(1)
                 } else if model.cameraDevices.isEmpty {
                     Text(L("Keine Kamera gefunden")).foregroundStyle(.secondary)
@@ -77,7 +80,7 @@ struct StatusBar: View {
         }
     }
 
-    /// Kameramenü: Geräte mit Auflösung, darunter der Auto-Auslöser.
+    /// Kameramenü: Geräte mit Auflösung.
     private var cameraPicker: some View {
         Menu {
             ForEach(model.cameraDevices) { device in
@@ -92,9 +95,6 @@ struct StatusBar: View {
                 }
             }
             Button(L("Kameras neu suchen")) { model.refreshCameraDevices() }
-            Divider()
-            Toggle(L("Auto-Auslöser"), isOn: Binding(get: { model.autoTrigger }, set: { model.setAutoTrigger($0) }))
-                .disabled(!model.cameraRunning)
         } label: {
             Label(model.selectedCamera.map(shortTitle) ?? L("Kamera wählen"), systemImage: "camera")
                 .lineLimit(1)

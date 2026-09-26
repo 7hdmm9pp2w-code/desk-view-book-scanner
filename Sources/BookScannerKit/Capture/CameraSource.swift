@@ -62,7 +62,7 @@ public final class CameraSource: NSObject, @unchecked Sendable {
     }()
     /// Wird auf der Kamera-Queue gerufen, wenn der Auto-Auslöser feuert.
     public var onAutoTrigger: (@Sendable () -> Void)?
-    /// Bewegung im Bild, für den Hinweis „Seiten glatt halten".
+    /// Bewegung im Bild, für den Hinweis in der Quellenleiste.
     public var onMotionState: (@Sendable (MotionTrigger.State) -> Void)?
 
     public private(set) var activeDevice: CameraDeviceInfo?
@@ -281,9 +281,10 @@ extension CameraSource: AVCaptureVideoDataOutputSampleBufferDelegate {
         // Auslöser mit rund 4 Bildern pro Sekunde, das reicht für Umblättern und Ruhe.
         guard autoTriggerEnabled, frameCounter % 8 == 0 else { return }
         let gray = Self.downsampledGray(buffer)
+        let grayWidth = CVPixelBufferGetWidth(buffer) / max(1, CVPixelBufferGetWidth(buffer) / 160)
         let time = CMTimeGetSeconds(CMSampleBufferGetPresentationTimeStamp(sampleBuffer))
         let stateBefore = trigger.state
-        let settled = trigger.feed(gray, at: time)
+        let settled = trigger.feed(gray, width: grayWidth, at: time)
         if trigger.state != stateBefore {
             if trigger.state == .moving { motionEpisode += 1 }
             onMotionState?(trigger.state)
