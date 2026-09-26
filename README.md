@@ -1,137 +1,148 @@
 # Desk View Book Scanner
 
-Bücher am Mac digitalisieren: Seite für Seite scannen, den Text erkennen lassen und
-das Ergebnis als durchsuchbares PDF, Markdown, Word oder EPUB mitnehmen.
+Digitize books on the Mac: scan page by page, let the text be recognized, and take
+the result along as a searchable PDF, Markdown, Word or EPUB.
 
-## Was die App macht
+Deutsche Fassung: [README.de.md](README.de.md).
 
-Du blätterst ein Buch durch und nimmst jede Seite auf, am besten mit dem iPhone über
-Apples Dokumentenscanner. Die App sammelt die Seiten in einer **Session**, einem
-Ordner pro Buch oder Kapitel, und erledigt den Rest selbst:
+## What the app does
 
-1. **Seiten holen.** Drei Wege, alle landen in derselben Session:
-   - **iPhone-Scan** über Continuity Camera: Scan auf dem iPhone auslösen, die Seite
-     erscheint sofort am Mac. Der empfohlene Weg für Fließtext.
-   - **Import** vorhandener PDFs und Bilder, etwa aus Notizen, vFlat oder Fotos.
-   - **Desk View** (Schreibtischansicht): ein Tastendruck fotografiert das
-     Desk-View-Fenster. Reicht für Umschläge, Überschriften und Großdruck, für
-     kleinen Buchtext ist die Auflösung zu gering.
-2. **Seiten aufbereiten.** Jede Seite wird aufrecht gedreht, eine Doppelseite am Falz
-   in zwei Seiten geteilt.
-3. **Text erkennen.** Nach jeder Aufnahme läuft im Hintergrund die Texterkennung von
-   macOS (Vision, Deutsch und Englisch), vollständig lokal, ohne Cloud. Absätze und
-   Überschriften bleiben erhalten, Silbentrennungen am Zeilenende werden aufgelöst.
-   Aus dem Umschlag schlägt die App einen Titel vor.
-4. **Exportieren.**
-   - **PDF** mit den Seitenbildern und einer unsichtbaren Textebene: in Vorschau
-     durchsuchbar, markierbar und kopierbar, genau an der Stelle im Bild.
-   - **Markdown**, **Word** (.docx) und **EPUB** mit durchgehendem Text über
-     Seitengrenzen hinweg, bequem zum Weiterverarbeiten, Zitieren oder Lesen auf dem
-     E-Reader. Im Markdown markiert ein Kommentar, wo jede Buchseite beginnt.
+You leaf through a book and capture every page, ideally with the iPhone through
+Apple's document scanner. The app collects the pages in a **session**, one folder per
+book or chapter, and does the rest itself:
 
-Alles liegt als normale Dateien auf der Platte: Seitenbilder als HEIC, erkannter Text
-als JSON daneben, die Reihenfolge in `session.json`. Nichts verlässt den Mac.
+1. **Get pages.** Three ways, all ending up in the same session:
+   - **iPhone scan** via Continuity Camera: trigger the scan on the iPhone, the page
+     appears on the Mac right away. The recommended way for body text.
+   - **Import** of existing PDFs and images, for example from Notes, vFlat or Photos.
+   - **Camera**: any camera AVFoundation sees, in its largest format. A 4K camera
+     above the book gives readable body text; Desk View is limited to 1920 × 1440 and
+     is enough for covers, headings and large print. Auto capture takes a page after
+     each turn.
+2. **Prepare pages.** Every page is rotated upright, a double page is split at the
+   gutter into two pages.
+3. **Recognize text.** After every capture, macOS text recognition (Vision, German and
+   English) runs in the background, entirely on device, no cloud. Paragraphs and
+   headings are preserved, hyphenation at line ends is resolved. The app suggests a
+   title from the cover.
+4. **Export.**
+   - **PDF** with the page images and an invisible text layer: searchable, selectable
+     and copyable in Preview, exactly where the words are in the image.
+   - **Markdown**, **Word** (.docx) and **EPUB** with continuous text across page
+     boundaries, handy for further processing, quoting or reading on an e-reader. In
+     Markdown a comment marks where each book page begins.
 
-**Warum nicht einfach Notizen oder Prizmo?** Die scannen gut, liefern aber kein
-Buch mit Absatzstruktur als Markdown, Word oder EPUB und keinen Session-Ordner, in
-dem man später weitermachen kann. Das ist der Kern hier.
+Everything lives as ordinary files on disk: page images as HEIC, recognized text as
+JSON next to them, the order in `session.json`. Nothing leaves the Mac.
 
-Das Konzept steht in [doc/KONZEPT.md](doc/KONZEPT.md), die Befunde aus der Umsetzung
-in [doc/UMSETZUNG.md](doc/UMSETZUNG.md).
+**Why not just Notes or Prizmo?** They scan well, but they do not give you a book with
+paragraph structure as Markdown, Word or EPUB, nor a session folder to come back to
+later. That is the core here.
 
-## Voraussetzungen
+Design notes and the implementation log are in German: [doc/KONZEPT.md](doc/KONZEPT.md),
+[doc/UMSETZUNG.md](doc/UMSETZUNG.md).
 
-- Aktuelles macOS (27) auf Apple Silicon
-- Für den iPhone-Scan: ein iPhone mit derselben Apple-ID, Bluetooth und WLAN an
-  (Continuity Camera)
-- Zum Bauen: Swift-Toolchain (Xcode oder Command Line Tools). Es gibt kein
-  Xcode-Projekt, nur ein Swift Package.
+## Requirements
 
-## Kamera und Auflösung
+- Current macOS (27) on Apple silicon
+- For the iPhone scan: an iPhone signed in to the same Apple ID, Bluetooth and Wi-Fi
+  on (Continuity Camera)
+- To build: a Swift toolchain (Xcode or Command Line Tools). There is no Xcode
+  project, just a Swift package.
 
-Was die Texterkennung braucht, ist Pixel pro Buchstabe. Ein Taschenbuchtext ist ab
-etwa 20 Pixel Zeilenhöhe zuverlässig lesbar, unter 12 wird es Raten. Gemessen über
-AVFoundation, nicht geschätzt:
+## Details
 
-| Quelle | Echte Auflösung | Reicht für |
+- **Sources.** *iPhone* (⇧⌘S) opens Apple's document scanner on your iPhone via
+  Continuity Camera; the scan lands in the session as pages. *Files* (⇧⌘I) imports PDFs
+  and images, for example scans from Notes or vFlat, rendered at their embedded
+  resolution. *Camera* (⌥⌘S) grabs a frame from any camera AVFoundation sees, in its
+  largest format, with a live preview and an auto-capture mode.
+- **Rescan** a page in place (⇧⌘R): the next result from the chosen source replaces
+  the selected page; the old one goes to the session's trash.
+- **Before saving**, every page is rotated upright (Vision reads the text direction) and
+  double pages are split at the gutter, using the text-free gap between the two text
+  blocks. Existing pages can be split (⌘T), rotated (⌘L/⌘R) or rescanned in place (⇧⌘R).
+- **OCR** runs in the background after every page (Vision, German and English), keeping
+  bounding boxes. The **PDF** gets an invisible text layer placed exactly where the words
+  are in the image, so Preview finds and highlights them in place.
+- **Markdown, Word, EPUB** are built from a block model: paragraphs from line spacing and
+  indents, headings from the table of contents, uppercase lines and size, footnotes,
+  page markers (`<!-- Seite 12, Scan 10 -->`), de-hyphenation, duplicate-scan detection,
+  and notes for low-confidence lines. Pandoc is bundled for Word and EPUB and for better
+  Markdown; without it the app writes Markdown itself.
+- **Sessions** are folders on disk: every page is saved immediately as HEIC, `session.json`
+  holds the order and settings, OCR results sit next to the images, deleted pages go to
+  the session's own `Papierkorb` folder. The sidebar lists all sessions with size and
+  exports; the context menu empties trashes, archives (removes images, keeps text) or
+  deletes sessions, always into the macOS Trash.
+
+## Camera and resolution
+
+What text recognition needs is pixels per letter. Paperback body text is reliable
+from about 20 pixels of line height; below 12 it becomes guesswork. Measured via
+AVFoundation, not estimated:
+
+| Source | Real resolution | Enough for |
 |---|---|---|
-| iPhone-Dokumentenscanner | ca. 1700 × 2700 pro Seite | Fließtext, der empfohlene Weg |
-| 4K-Kamera über dem Buch (z. B. Insta360 Link) | 3840 × 2160 | Fließtext, freihändig mit Auto-Auslöser |
-| Desk View (Mac oder iPhone) | 1920 × 1440, mehr gibt es nicht | Umschläge, Überschriften, Großdruck |
-| iPhone als Webcam | 1920 × 1440 | wie Desk View |
+| iPhone document scanner | about 1700 × 2700 per page | body text, the recommended way |
+| 4K camera above the book (e.g. Insta360 Link) | 3840 × 2160 | body text, hands-free with auto capture |
+| Desk View (Mac or iPhone) | 1920 × 1440, and no more | covers, headings, large print |
+| iPhone as a webcam | 1920 × 1440 | same as Desk View |
 
-Das Desk-View-Fenster zeigt mehr Pixel, als der Feed hat; das ist Hochskalierung.
-Und der Feed ist nicht überall gleich scharf: Desk View schneidet den unteren Teil
-des Ultraweitwinkel-Bildes aus und entzerrt ihn zu einer Draufsicht. Der ferne Rand
-des Schreibtischs wird dabei am stärksten gestreckt und ist am unschärfsten, die
-Zone an der Tastaturkante am schärfsten. Darum:
+The Desk View window shows more pixels than the feed has; that is upscaling. And the
+feed is not equally sharp everywhere: Desk View crops the lower part of the
+ultra-wide image and dewarps it into a top-down view. The far edge of the desk is
+stretched the most and is the least sharp; the zone next to the keyboard is the
+sharpest. Hence:
 
-- **Buch nah ans Gerät**, an die Tastaturkante, nicht in die Tischmitte.
-- **Trapez in der Desk-View-Einrichtung eng ums Buch ziehen**, damit die 1920 Pixel
-  nicht den halben Tisch abdecken.
-- **Für ganze Bücher** eine 4K-Kamera senkrecht über dem Buch oder der iPhone-Scan.
-  Der Auto-Auslöser erfasst nach jedem Umblättern, sobald das Bild anderthalb
-  Sekunden ruhig liegt und sich von der letzten Seite unterscheidet.
-- Eine unscharfe Seite muss nicht neu einsortiert werden: auswählen, ⇧⌘R, neu erfassen.
+- **Put the book close to the Mac**, at the keyboard edge, not in the middle of the desk.
+- **Pull the trapezoid tight around the book** in Desk View's setup so the 1920 pixels
+  do not cover half the desk.
+- **For whole books** use a 4K camera straight above the book, or the iPhone scan.
+  Auto capture takes a page after each turn once the image has been still for one and
+  a half seconds and differs from the last page.
+- A blurry page does not need re-sorting: select it, ⇧⌘R, capture again.
 
-`scripts/ocr_stats.py` zeigt je Aufnahme die Zeilenhöhen und Konfidenzen einer Session.
+`scripts/ocr_stats.py` prints line heights and confidences per page of a session.
 
-## Bauen und starten
+## Build and run
 
 ```bash
 ./build_app.sh --run
 ```
 
-Das Skript baut `build/DeskViewBookScanner.app`, signiert es mit der
-Apple-Development-Identität aus dem Schlüsselbund (sonst ad hoc) und startet es.
-Die Kamera-Quelle fragt beim ersten Start nach der Kamera-Freigabe.
+The script builds `build/DeskViewBookScanner.app`, signs it with the Apple Development
+identity in your keychain (ad hoc otherwise) and launches it. The camera source asks for camera
+access on first use; the build script signs with the camera entitlement the hardened
+runtime requires for that.
 
-Beim ersten Build lädt `scripts/fetch_pandoc.sh` Pandoc 3.11 für Apple Silicon
-(40 MB Archiv, 181 MB ausgepackt) samt Quell-Tarball nach `build/vendor/` und prüft die
-SHA-256. `./build_app.sh --without-pandoc` baut ohne, dann nutzt die App ein
-installiertes Pandoc oder schreibt Markdown selbst.
+The first build downloads Pandoc 3.11 for Apple silicon (40 MB archive, 181 MB unpacked)
+plus its source tarball into `build/vendor/` and verifies the SHA-256. Use
+`./build_app.sh --without-pandoc` for a smaller bundle; the app then uses an installed
+Pandoc or falls back to its own Markdown writer.
 
-Tests laufen gegen den Kit ohne UI:
+Tests run against the kit, without UI:
 
 ```bash
 swift test
 ```
 
-## Bedienung
+## Layout
 
-- Seiten kommen aus drei Quellen: **„Mit iPhone scannen"** ⇧⌘S öffnet Apples
-  Dokumentenscanner auf dem iPhone (Continuity Camera), der Scan landet direkt in der
-  Session; **Import** ⇧⌘I von PDFs und Bildern (Scans aus Notizen, vFlat, Fotos);
-  **Kamera** ⌥⌘S holt ein Bild aus jeder Kamera, die AVFoundation sieht, im größten
-  Format: eine 4K-Kamera über dem Buch liefert 3840 × 2160 und lesbaren Fließtext, Desk
-  View bleibt bei 1920 × 1440. Der Auto-Auslöser erfasst nach jedem Umblättern.
-- Vor dem Speichern wird jede Seite aufrecht gedreht und eine Doppelseite am Falz
-  geteilt (Menü „Aufnahme": automatisch, Mitte oder gar nicht). Vorhandene Seiten:
-  „Seite teilen" ⌘T, drehen ⌘L / ⌘R.
-- Seitenleiste links mit allen Sessions, Größe und Exporten; Rechtsklick für
-  Papierkorb leeren, Archivieren (Bilder weg, Text bleibt) und Löschen, alles in den
-  macOS-Papierkorb.
-- Hauptfenster: Quellenleiste mit dem Hauptknopf der gewählten Quelle, darunter
-  die Seiten der Session; rechts die Detailansicht.
-- ⌥⌘S erfasst das Desk-View-Fenster als Seite, auch wenn Desk View vorn liegt.
-- Menü „Ablage": Neue Session ⌘N, Session-Ordner öffnen ⌘O, Letzte Sessions,
-  Export als PDF ⌘E, Markdown ⇧⌘E, Word und EPUB.
-- Texterkennung läuft nach jeder Aufnahme im Hintergrund (Vision, Deutsch und
-  Englisch). Das PDF bekommt eine unsichtbare Textebene, Vorschau findet den Text
-  genau dort, wo er im Bild steht. Die erste Aufnahme liefert einen Titelvorschlag.
-- Sessions liegen unter `~/Documents/Buchscans/<Datum Uhrzeit>/`, änderbar in den
-  Einstellungen. Jede Aufnahme ist sofort als HEIC auf der Platte; `session.json`
-  hält Reihenfolge und Einstellungen. Gelöschte Seiten wandern in `Papierkorb/`.
+- `BookScannerKit`: capture, session store, OCR, page geometry (rotation, splitting),
+  document structuring, exporters, importer. No UI, fully testable.
+- `DeskViewBookScanner`: the SwiftUI app.
+- `scripts/`: Pandoc fetcher, icon renderer, OCR statistics helper.
 
-## Lizenz
+## License
 
-[EUPL-1.2](LICENSE) (European Union Public Licence). Amtliche Fassungen in allen
-EU-Sprachen, darunter die deutsche, unter
+[EUPL-1.2](LICENSE) (European Union Public Licence). Official versions in all EU
+languages, including German, at
 <https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12>.
 
-Das App-Bundle enthält [Pandoc](https://github.com/jgm/pandoc) als eigenständiges
-Hilfsprogramm unter `Contents/Helpers/pandoc`. Pandoc ist © John MacFarlane und steht
-unter der GPL-2.0-or-later; die App ruft es als getrennten Prozess auf und ist kein
-abgeleitetes Werk. Lizenztext und Copyright liegen im Bundle unter
-`Contents/Resources/Lizenzen/`, der Quellcode der gebündelten Version unter
-`build/vendor/pandoc-<Version>-src.tar.gz` (bei einem Release mit anbieten).
+The app bundle ships [Pandoc](https://github.com/jgm/pandoc) as a separate helper
+executable under `Contents/Helpers/pandoc`. Pandoc is © John MacFarlane and licensed
+GPL-2.0-or-later; the app runs it as a separate process and is not a derivative work.
+Its license text and copyright notice are in the bundle under
+`Contents/Resources/Lizenzen/`, and the source tarball of the bundled version is kept in
+`build/vendor/pandoc-<version>-src.tar.gz` (offer it alongside any release).
