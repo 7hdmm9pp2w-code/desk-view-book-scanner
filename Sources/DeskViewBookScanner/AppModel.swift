@@ -40,6 +40,7 @@ final class AppModel {
     private(set) var pandocPath: String
     private(set) var iPhoneWaiting = false
     private(set) var sessionSettings = SessionSettings()
+    private(set) var trashedCount = 0
     var lastError: String?
     var selectedPageID: UUID?
 
@@ -173,6 +174,7 @@ final class AppModel {
         sessionTitle = await store.document.title ?? ""
         pages = await store.orderedPages
         sessionSettings = await store.document.settings
+        trashedCount = await store.document.trashed.count
         imageCache = [:]
         texts = [:]
         suggestedTitle = nil
@@ -260,6 +262,7 @@ final class AppModel {
             do {
                 try await session.trash(pageIDs: pageIDs)
                 pages = await session.orderedPages
+                trashedCount = await session.document.trashed.count
                 for id in pageIDs {
                     imageCache = imageCache.filter { !$0.key.hasPrefix(id.uuidString) }
                     texts[id] = nil
@@ -415,6 +418,25 @@ extension AppModel {
         pages.first { $0.id == selectedPageID }
     }
 
+    var canRestoreTrashed: Bool { trashedCount > 0 }
+
+    /// Holt die zuletzt gelöschte Seite vor die ausgewählte Seite zurück (oder ans Ende).
+    func restoreLastTrashedPage() {
+        guard let session, exportStatus == nil else { return }
+        Task {
+            do {
+                guard let page = try await session.restoreLastTrashed(before: selectedPageID) else { return }
+                pages = await session.orderedPages
+                trashedCount = await session.document.trashed.count
+                selectedPageID = page.id
+                if page.ocrStatus != .done { recognizeText(for: page) }
+                lastError = nil
+            } catch {
+                lastError = error.localizedDescription
+            }
+        }
+    }
+
     private func replaceSelectedPage(_ transform: @escaping @Sendable (CGImage) -> [CGImage]?) {
         guard let session, let page = selectedPage, exportStatus == nil else { return }
         Task {
@@ -425,6 +447,7 @@ extension AppModel {
                 }.value
                 guard let images else { return }
                 let records = try await session.replacePage(page.id, with: images)
+                trashedCount = await session.document.trashed.count
                 imageCache = imageCache.filter { !$0.key.hasPrefix(page.id.uuidString) }
                 texts[page.id] = nil
                 pages = await session.orderedPages

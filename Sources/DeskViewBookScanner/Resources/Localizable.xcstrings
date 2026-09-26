@@ -882,6 +882,16 @@
         }
       }
     },
+    "Zuletzt gelöschte Seite zurückholen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore Last Deleted Page"
+          }
+        }
+      }
+    },
     "Öffnen": {
       "localizations": {
         "en": {

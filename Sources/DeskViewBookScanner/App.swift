@@ -90,6 +90,9 @@ struct DeskViewBookScannerApp: App {
                 Button(L("Seite löschen")) { model.trashSelectedPage() }
                     .keyboardShortcut(.delete, modifiers: [.command])
                     .disabled(model.selectedPageID == nil)
+                Button(L("Zuletzt gelöschte Seite zurückholen")) { model.restoreLastTrashedPage() }
+                    .keyboardShortcut("z", modifiers: [.command, .shift])
+                    .disabled(!model.canRestoreTrashed)
             }
         }
 
