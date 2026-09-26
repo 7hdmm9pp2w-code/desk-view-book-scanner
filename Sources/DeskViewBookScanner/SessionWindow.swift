@@ -258,7 +258,7 @@ struct PageGrid: View {
         switch model.captureSource {
         case .iPhone: return L("Der Dokumentenscanner des iPhones liefert die Seiten, ausgelöst vom Mac. Quelle oben wechseln für Dateien oder Desk View.")
         case .files: return L("PDFs und Bilder aus Notizen, vFlat oder Fotos werden Seiten dieser Session.")
-        case .deskView: return L("Desk View fotografiert das Buch von oben. Reicht für Umschläge und Großdruck, nicht für Fließtext.")
+        case .deskView: return L("Desk View fotografiert das Buch von oben. Die Kameraauflösung reicht heute für Umschläge und Großdruck, nicht für Fließtext.")
         }
     }
 

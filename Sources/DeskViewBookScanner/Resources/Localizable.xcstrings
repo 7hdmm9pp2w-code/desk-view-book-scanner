@@ -272,12 +272,12 @@
         }
       }
     },
-    "Desk View fotografiert das Buch von oben. Reicht für Umschläge und Großdruck, nicht für Fließtext.": {
+    "Desk View fotografiert das Buch von oben. Die Kameraauflösung reicht heute für Umschläge und Großdruck, nicht für Fließtext.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Desk View photographs the book from above. Fine for covers and large print, not for body text."
+            "value": "Desk View photographs the book from above. Today's camera resolution is enough for covers and large print, not for body text."
           }
         }
       }
