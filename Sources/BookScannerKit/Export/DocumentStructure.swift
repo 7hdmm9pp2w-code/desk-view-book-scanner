@@ -177,11 +177,11 @@ public struct DocumentStructurer: Sendable {
         var lines = page.lines.filter { !$0.text.isEmpty }
         guard !lines.isEmpty else { return PageAnalysis(blocks: [], printedNumber: nil) }
 
-        // Gedruckte Seitenzahl: reine Ziffernzeile ganz oben oder ganz unten.
+        // Gedruckte Seitenzahl wie bei der Prüfung der Seitenfolge; reine Zahlenzeilen fallen weg.
         var printed: String?
-        if let index = Self.pageNumberIndex(in: lines) {
-            printed = lines[index].text.trimmingCharacters(in: CharacterSet(charactersIn: "-–— "))
-            lines.remove(at: index)
+        if let found = PageSequence.printedNumbers(in: lines) {
+            printed = found.numbers.count == 1 ? "\(found.numbers.lowerBound)" : "\(found.numbers.lowerBound)–\(found.numbers.upperBound)"
+            for index in found.numberLines.reversed() { lines.remove(at: index) }
         }
         guard !lines.isEmpty else { return PageAnalysis(blocks: [], printedNumber: printed) }
 
@@ -375,20 +375,6 @@ public struct DocumentStructurer: Sendable {
     }
 
     // MARK: Hilfen
-
-    static func pageNumberIndex(in lines: [RecognizedLine]) -> Int? {
-        func isNumber(_ text: String) -> Bool {
-            let trimmed = text.trimmingCharacters(in: CharacterSet(charactersIn: "-–— "))
-            return !trimmed.isEmpty && trimmed.count <= 4 && trimmed.allSatisfy(\.isNumber)
-        }
-        let tops = lines.map(\.box.midY)
-        guard let top = tops.max(), let bottom = tops.min() else { return nil }
-        for (index, line) in lines.enumerated() where isNumber(line.text) {
-            let atEdge = line.box.midY >= top - 0.001 || line.box.midY <= bottom + 0.001
-            if atEdge { return index }
-        }
-        return nil
-    }
 
     static func isListPage(_ lines: [RecognizedLine]) -> Bool {
         guard lines.count >= 4 else { return false }

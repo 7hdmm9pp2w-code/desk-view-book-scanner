@@ -274,6 +274,31 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
         #expect(!doc.blocks.contains(.paragraph(text: "7")) && !doc.blocks.contains(.paragraph(text: "8")))
     }
 
+    @Test func printedNumbersMatchThePageSequenceCheck() {
+        let body = bodyLines("Text", count: 10, top: 0.85)
+        // Doppelseite: zwei Zahlen, beide Zeilen fallen weg.
+        let spread = DocumentStructurer().structure(pages: [(1, pageText(body + [
+            line("24", x: 0.2, top: 0.05, width: 0.02), line("25", x: 0.8, top: 0.05, width: 0.02),
+        ]))])
+        #expect(spread.blocks.first == .pageBreak(number: 1, printed: "24–25"))
+        #expect(!spread.blocks.contains { if case .paragraph(let t) = $0 { return t == "24" || t == "25" } else { return false } })
+
+        // Kolumnentitel liefert die Zahl, bleibt aber im Text.
+        let header = DocumentStructurer().structure(pages: [(1, pageText([line("24 Einleitung", top: 0.95, width: 0.3)] + body))])
+        #expect(header.blocks.first == .pageBreak(number: 1, printed: "24"))
+        #expect(header.blocks.contains { block in
+            switch block {
+            case .paragraph(let t), .heading(_, let t): return t.contains("Einleitung")
+            default: return false
+            }
+        })
+
+        // Dieselbe Zahl oben und unten: eine Seitenzahl, beide Zeilen weg.
+        let twice = DocumentStructurer().structure(pages: [(1, pageText([line("9", top: 0.95, width: 0.02)] + body + [line("– 9 –", top: 0.05, width: 0.04)]))])
+        #expect(twice.blocks.first == .pageBreak(number: 1, printed: "9"))
+        #expect(!twice.blocks.contains { if case .paragraph(let t) = $0 { return t == "9" || t.contains("– 9 –") } else { return false } })
+    }
+
     @Test func falseHeadingsAndFootnotesFromTheBook() {
         let body = bodyLines("Buch", count: 10, top: 0.9)
         // Zeile nach Bindestrich, Versalien, kurz: trotzdem Fließtext („UN-" / „TERWELT.").
