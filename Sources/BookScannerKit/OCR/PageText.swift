@@ -18,6 +18,12 @@ public struct RecognizedLine: Codable, Sendable, Equatable {
         self.angle = angle
     }
 
+    /// Mittlere Zeichenbreite, normiert: das verlässlichste Maß für die Schriftgröße.
+    /// Die Boxhöhe schwankt je nach Ober- und Unterlängen um bis zu 40 %.
+    public var charWidth: CGFloat {
+        box.width / CGFloat(max(text.count, 1))
+    }
+
     enum CodingKeys: String, CodingKey { case text, confidence, box, angle }
 
     public init(from decoder: Decoder) throws {

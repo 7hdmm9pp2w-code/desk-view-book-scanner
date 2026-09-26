@@ -109,24 +109,25 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
     let checker = SetWordChecker(["Wörter", "Wörtern", "Handprobe"])
 
     @Test func headingsParagraphsAndHyphenation() {
+        // Breiten wie im Buch: Fließtext rund 0,012 je Zeichen, Titelzeilen fünfmal so viel.
         let page = pageText([
             line("GOTT UND", top: 0.95, height: 0.06, width: 0.5),
             line("DER STAAT", top: 0.88, height: 0.06, width: 0.5),
-            line("Erster Absatz mit Wör-", top: 0.75, width: 0.8),
-            line("tern und einem Desk-", top: 0.72, width: 0.8),
-            line("View im Text.", top: 0.69, width: 0.4),
-            line("Zweiter Absatz nach kurzer Zeile.", top: 0.66, width: 0.8),
-            line("Er geht weiter.", top: 0.63, width: 0.8),
-            line("Dritter Absatz nach großem Abstand.", top: 0.50, width: 0.8),
-            line("Eingerückt beginnt der vierte.", x: 0.14, top: 0.47, width: 0.76),
+            line("Erster Absatz mit Wörtern über die ganze Breite der Seite, Wör-", top: 0.75, width: 0.8),
+            line("tern und einem Bindestrich am Zeilenende wie bei Desk-", top: 0.72, width: 0.7),
+            line("View im Text.", top: 0.69, width: 0.16),
+            line("Zweiter Absatz nach kurzer Zeile, der über die ganze Breite geht.", top: 0.66, width: 0.8),
+            line("Er geht weiter und weiter bis zum Ende der Zeile, ja bis dahin.", top: 0.63, width: 0.8),
+            line("Dritter Absatz nach großem Abstand, ebenfalls über die ganze Breite.", top: 0.50, width: 0.8),
+            line("Eingerückt beginnt der vierte Absatz und läuft bis zum Rand.", x: 0.14, top: 0.47, width: 0.76),
         ])
         let blocks = DocumentStructurer(wordChecker: checker).structure(page: page)
         #expect(blocks == [
             .heading(level: 1, text: "GOTT UND DER STAAT"),
-            .paragraph(text: "Erster Absatz mit Wörtern und einem Desk-View im Text."),
-            .paragraph(text: "Zweiter Absatz nach kurzer Zeile. Er geht weiter."),
-            .paragraph(text: "Dritter Absatz nach großem Abstand."),
-            .paragraph(text: "Eingerückt beginnt der vierte."),
+            .paragraph(text: "Erster Absatz mit Wörtern über die ganze Breite der Seite, Wörtern und einem Bindestrich am Zeilenende wie bei Desk-View im Text."),
+            .paragraph(text: "Zweiter Absatz nach kurzer Zeile, der über die ganze Breite geht. Er geht weiter und weiter bis zum Ende der Zeile, ja bis dahin."),
+            .paragraph(text: "Dritter Absatz nach großem Abstand, ebenfalls über die ganze Breite."),
+            .paragraph(text: "Eingerückt beginnt der vierte Absatz und läuft bis zum Rand."),
         ])
     }
 
@@ -141,14 +142,15 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
 
     @Test func hyphenRules() {
         let words = SetWordChecker(["Wörter", "Reiches", "Territoriums", "Ein", "und", "Desk", "Vor", "Vorspiegelung"])
-        // Bekanntes Ganzes: Strich fällt.
+        // Silbentrennung: der Strich fällt, ohne Wörterbuch zu fragen.
         #expect(DocumentStructurer.join(["Wör-", "ter"], wordChecker: words) == "Wörter")
-        // Versalien werden über die Grundform erkannt.
-        #expect(DocumentStructurer.join(["des REI-", "CHES jedoch"], wordChecker: words) == "des REICHES jedoch")
+        #expect(DocumentStructurer.join(["Unbe-", "kannt"], wordChecker: words) == "Unbekannt")
+        // Versalien: „REI-" + „CHES" ebenso.
+        #expect(DocumentStructurer.join(["des REI-", "CHES jedoch"], wordChecker: words) == "des REI-CHES jedoch")
         // Großer zweiter Teil: echter Kompositum-Strich bleibt.
         #expect(DocumentStructurer.join(["Desk-", "View"], wordChecker: words) == "Desk-View")
-        // Beide Teile eigene Wörter: Strich bleibt (Ergänzungsstrich).
-        #expect(DocumentStructurer.join(["Ein-", "und"], wordChecker: words) == "Ein-und")
+        // Ergänzungsstrich vor „und": Strich bleibt, Leerzeichen dazu.
+        #expect(DocumentStructurer.join(["Ein-", "und Zusammenbruch"], wordChecker: words) == "Ein- und Zusammenbruch")
         // Unbekannte Bruchstücke: zusammenziehen.
         #expect(DocumentStructurer.join(["re-", "ferentielles"], wordChecker: words) == "referentielles")
         // Fehlender Strich im Scan: beide unbekannt, Ganzes bekannt.
@@ -242,9 +244,9 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
 
     @Test func pageNumbersFootnotesAndCrossPageParagraphs() {
         let pageA = pageText(bodyLines("Seite sieben", count: 10, top: 0.85) + [
-            line("auch über-", top: 0.55, width: 0.3),
-            line("*vgl. J.L. Borges, Von der Strenge der Wissenschaft", top: 0.30, height: 0.014, width: 0.7),
-            line("Ffm-Berlin-Wien 1972, S. 71 (A.d. Ü.)", top: 0.28, height: 0.014, width: 0.5),
+            line("auch über-", top: 0.55, width: 0.12),
+            line("*vgl. J.L. Borges, Von der Strenge der Wissenschaft", top: 0.30, height: 0.014, width: 0.4),
+            line("Ffm-Berlin-Wien 1972, S. 71 (A.d. Ü.)", top: 0.28, height: 0.014, width: 0.28),
             line("7", top: 0.05, width: 0.02),
         ])
         let pageB = pageText([line("8", top: 0.98, width: 0.02)] + [
@@ -282,8 +284,8 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
         // Fußnote mit Marke ist kleiner und steht unten; ein kleines Absatzende bleibt Absatz.
         let page3 = pageText(body + [
             line("auch über-", top: 0.6, width: 0.3),
-            line("*vgl. J.L. Borges, Von der Strenge der Wissenschaft, in:", top: 0.3, height: 0.017, width: 0.7),
-            line("Universalgeschichte der Niedertracht, Ffm 1972, S. 71", top: 0.28, height: 0.017, width: 0.6),
+            line("*vgl. J.L. Borges, Von der Strenge der Wissenschaft, in:", top: 0.3, height: 0.017, width: 0.5),
+            line("Universalgeschichte der Niedertracht, Ffm 1972, S. 71", top: 0.28, height: 0.017, width: 0.45),
         ])
         let blocks3 = DocumentStructurer().structure(page: page3)
         #expect(blocks3.last == .footnote(text: "*vgl. J.L. Borges, Von der Strenge der Wissenschaft, in: Universalgeschichte der Niedertracht, Ffm 1972, S. 71"))
@@ -303,9 +305,10 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
     }
 
     @Test func inlineHyphensAreRepaired() {
-        let words = SetWordChecker(["einer", "Theorie", "Theo", "Immo", "ral", "nichtig", "kitschigen", "Stammes", "und"])
+        let words = SetWordChecker(["einer", "Theorie", "Theo", "Immo", "ral", "nichtig", "kitschigen", "Stammes", "und", "el", "ner"])
+        // Kurze Teile zählen nicht als Wörter, auch wenn das Wörterbuch sie „kennt".
         #expect(DocumentStructurer.repairInlineHyphens(in: "Effekts, el-ner Energie und der Theo-rie", wordChecker: words) == "Effekts, elner Energie und der Theorie")
-        #expect(DocumentStructurer.repairInlineHyphens(in: "der Immo-ral, der nichtig-kitschigen Stammes-und", wordChecker: words) == "der Immo-ral, der nichtig-kitschigen Stammes-und")
+        #expect(DocumentStructurer.repairInlineHyphens(in: "der Immo-ral, der nichtig-kitschigen Stammes-und", wordChecker: words) == "der Immoral, der nichtig-kitschigen Stammes-und")
         #expect(DocumentStructurer.repairInlineHyphens(in: "Desk-View bleibt", wordChecker: words) == "Desk-View bleibt")
         #expect(DocumentStructurer.repairInlineHyphens(in: "el-ner", wordChecker: NoWordChecker()) == "el-ner")
     }
@@ -323,11 +326,11 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
 
     @Test func titleFromTallestLines() {
         let page = pageText([
-            line("Michail Bakunin", top: 0.9, height: 0.03),
-            line("GOTT", top: 0.8, height: 0.08),
-            line("UND DER", top: 0.7, height: 0.08),
-            line("STAAT", top: 0.6, height: 0.08),
-            line("Verlag", top: 0.2, height: 0.02),
+            line("Michail Bakunin", top: 0.9, height: 0.03, width: 0.45),
+            line("GOTT", top: 0.8, height: 0.08, width: 0.32),
+            line("UND DER", top: 0.7, height: 0.08, width: 0.56),
+            line("STAAT", top: 0.6, height: 0.08, width: 0.4),
+            line("Verlag", top: 0.2, height: 0.02, width: 0.12),
         ])
         #expect(TitleSuggester.suggest(from: page) == "GOTT UND DER STAAT")
         #expect(TitleSuggester.suggest(from: pageText([])) == nil)
@@ -398,7 +401,10 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
             line("Jean Baudrillard", top: 0.75, height: 0.05, width: 0.5),
             line("Agonie des Realen", top: 0.69, height: 0.05, width: 0.5),
             line("Merve Verlag Berlin", top: 0.25, height: 0.09, width: 0.6),
-            line("Klein gesetzt", top: 0.1, height: 0.02, width: 0.2),
+            line("Klein gesetzte Zeile eins mit vielen Zeichen darin, ja.", top: 0.15, height: 0.02, width: 0.6),
+            line("Klein gesetzte Zeile zwei mit vielen Zeichen darin, ja.", top: 0.12, height: 0.02, width: 0.6),
+            line("Klein gesetzte Zeile drei mit vielen Zeichen darin, ja.", top: 0.09, height: 0.02, width: 0.6),
+            line("Klein gesetzte Zeile vier mit vielen Zeichen darin, ja.", top: 0.06, height: 0.02, width: 0.6),
         ])
         let doc = DocumentStructurer().structure(pages: [(1, cover)], title: "Jean Baudrillard – Agonie des Realen")
         #expect(!doc.blocks.contains { if case .heading = $0 { return true } else { return false } })

@@ -66,17 +66,17 @@ extension WordChecker {
 public struct DocumentStructurer: Sendable {
     public var wordChecker: any WordChecker
     /// Zeilen mit Boxhöhe über diesem Vielfachen der mittleren Höhe sind Überschriften.
-    public var headingRatio = 1.45
+    public var headingRatio = 1.4
     /// Darüber Überschrift 1. Ebene statt 2.
-    public var majorHeadingRatio = 2.2
+    public var majorHeadingRatio = 1.9
     /// Abstand zwischen Zeilen über diesem Vielfachen des üblichen Zeilenabstands trennt Absätze.
     public var paragraphGapRatio = 1.6
     /// Einzug der ersten Zeile über diesem Vielfachen der Zeilenhöhe beginnt einen Absatz.
     public var indentRatio = 1.0
     /// Endet eine Zeile deutlich vor dem rechten Rand (Anteil der Textbreite), endet der Absatz.
     public var shortLineRatio = 0.15
-    /// Zeilen am Seitenende, deren Höhe unter diesem Anteil der mittleren Höhe liegt, sind Fußnoten.
-    public var footnoteRatio = 0.82
+    /// Zeilen am Seitenende mit Zeichenbreite unter diesem Anteil des Medians sind Fußnoten.
+    public var footnoteRatio = 0.85
     /// Zeilen unter dieser Konfidenz werden als unsicher gemeldet.
     public var uncertainConfidence: Float = 0.5
     /// Ab so vielen Zeilen taugt die Dokumentstatistik; sonst pro Seite.
@@ -203,6 +203,9 @@ public struct DocumentStructurer: Sendable {
         let pageStats = Typography(pages: [page], minimumLines: 1)
         let medianHeight = stats.medianHeight ?? pageStats.medianHeight ?? 0.02
         let pitch = stats.pitch ?? pageStats.pitch ?? medianHeight * 1.3
+        // Schriftgröße über die Zeichenbreite; Höhe nur, wenn es keine langen Zeilen gibt.
+        let medianSize = stats.medianCharWidth ?? pageStats.medianCharWidth ?? medianHeight * 0.55
+        func size(_ line: RecognizedLine) -> CGFloat { line.charWidth }
         let lefts = lines.map(\.box.minX).sorted()
         let rights = lines.map(\.box.maxX).sorted()
         let leftEdge = lefts[lefts.count / 10]
@@ -216,15 +219,15 @@ public struct DocumentStructurer: Sendable {
         var footnoteStart = lines.count
         if !isListPage {
             var i = lines.count - 1
-            while i > 0, lines[i].box.height < medianHeight * 0.9 { i -= 1 }
+            while i > 0, size(lines[i]) < medianSize * 0.92 { i -= 1 }
             let start = i + 1
-            if start < lines.count, lines[..<start].contains(where: { $0.box.height >= medianHeight * 0.9 }) {
+            if start < lines.count, lines[..<start].contains(where: { size($0) >= medianSize * 0.92 }) {
                 let block = lines[start...]
-                let heights = block.map(\.box.height).sorted()
-                let blockMedian = heights[heights.count / 2]
+                let sizes = block.map { size($0) }.sorted()
+                let blockMedian = sizes[sizes.count / 2]
                 let first = block.first!
                 let startsLower = first.text.first.map { $0.isLetter && $0.isLowercase } ?? false
-                if !startsLower, Self.startsWithFootnoteMarker(first.text) || (block.count >= 2 && blockMedian < medianHeight * footnoteRatio) {
+                if !startsLower, Self.startsWithFootnoteMarker(first.text) || (block.count >= 2 && blockMedian < medianSize * footnoteRatio) {
                     footnoteStart = start
                 }
             }
@@ -235,7 +238,7 @@ public struct DocumentStructurer: Sendable {
         for (index, line) in lines.enumerated() {
             if index >= footnoteStart { kinds.append(.footnote); continue }
             if isListPage { kinds.append(.listItem); continue }
-            let ratio = line.box.height / medianHeight
+            let ratio = size(line) / medianSize
             let startsLower = line.text.first.map { $0.isLetter && $0.isLowercase } ?? false
             let endsHyphen = line.text.last == "-" || line.text.last == "\u{2010}"
             let short = line.box.width < textWidth * 0.7
@@ -259,20 +262,21 @@ public struct DocumentStructurer: Sendable {
             let eligible = !startsLower && !endsHyphen && !endsOpen && !afterHyphen && !afterOpenLine && !beforeLowercase
                 && !Self.startsWithNumber(line.text) && !Self.endsWithNumber(line.text) && !Self.startsWithFootnoteMarker(line.text)
 
-            if eligible {
+            // Mindestens zwei Wörter oder acht Buchstaben, sonst ist es eher
+            // Kolumnentitel-Schrott („BOROPE /") als Überschrift.
+            let words = line.text.split(whereSeparator: { $0.isWhitespace }).filter { $0.contains { $0.isLetter } }.count
+            let substantial = words >= 2 || line.text.filter(\.isLetter).count >= 8
+            if eligible, substantial {
+                if matchesToc {
+                    kinds.append(.heading(allCaps ? 1 : 2)); continue
+                }
                 if ratio > majorHeadingRatio, short || spaced {
                     kinds.append(.heading(1)); continue
                 }
                 if ratio > headingRatio, short || spaced {
                     kinds.append(.heading(2)); continue
                 }
-                if matchesToc {
-                    kinds.append(.heading(allCaps ? 1 : 2)); continue
-                }
-                // Versalien: mindestens zwei Wörter oder acht Buchstaben, sonst ist es
-                // eher Kolumnentitel-Schrott („BOROPE /").
-                let words = line.text.split(whereSeparator: { $0.isWhitespace }).filter { $0.contains { $0.isLetter } }.count
-                if allCaps, short, words >= 2 || line.text.filter(\.isLetter).count >= 8 {
+                if allCaps, short {
                     kinds.append(.heading(2)); continue
                 }
             }
@@ -486,18 +490,16 @@ public struct DocumentStructurer: Sendable {
                 result += " " + line
             } else if let last = result.last, last == "-" || last == "\u{2010}" {
                 let head = String(result.dropLast())
-                let stem = head.split(whereSeparator: { $0.isWhitespace }).last.map(String.init) ?? head
-                let stemLetters = String(stem.reversed().prefix { $0.isLetter }.reversed())
                 let startsUpper = line.first.map { $0.isUppercase } ?? false
                 if !wordChecker.hasDictionary {
                     result += line                      // Strich bleibt, nichts dazwischen
-                } else if wordChecker.knows(stemLetters + tail) {
-                    result = head + line                // „Wör-" + „ter", „REI-" + „CHES"
-                } else if startsUpper || (wordChecker.knows(stemLetters) && wordChecker.knows(tail)) {
-                    result += line                      // „Desk-View", Ergänzungsstrich
+                } else if startsUpper {
+                    result += line                      // „Desk-" + „View": Kompositum
+                } else if Self.conjunctions.contains(tail.lowercased()) {
+                    result += " " + line                // „Ein-" + „und": Ergänzungsstrich
                 } else {
-                    result = head + line                // unbekannte Bruchstücke
-                }
+                    result = head + line                // Silbentrennung; das Wörterbuch ist
+                }                                       // für Bruchstücke nicht zu gebrauchen
             } else {
                 let headWord = String(result.reversed().prefix { $0.isLetter }.reversed())
                 if wordChecker.hasDictionary, headWord.count >= 2, tail.count >= 2, line.first?.isLowercase == true,
@@ -511,9 +513,14 @@ public struct DocumentStructurer: Sendable {
         return repairInlineHyphens(in: result, wordChecker: wordChecker)
     }
 
+    /// Wörter, die nach einem Ergänzungsstrich folgen: „Ein- und Zusammenbruch".
+    static let conjunctions: Set<String> = ["und", "oder", "bzw", "sowie", "beziehungsweise", "and", "or"]
+
     /// Bindestriche mitten in einer Zeile, die aus zusammengelegten Zeilen stammen:
-    /// „el-ner", „Theo-rie". Dieselbe Regel wie am Zeilenende, nur bei kleinem zweiten
-    /// Teil; echte Komposita aus zwei bekannten Wörtern bleiben.
+    /// „el-ner", „Theo-rie". Vorsichtiger als am Zeilenende, weil hier echte Komposita
+    /// stehen können („nichtig-kitschigen"): Der Strich fällt, wenn das Ganze bekannt ist
+    /// oder ein Teil zu kurz für ein eigenes Wort ist (unter vier Buchstaben) oder das
+    /// Wörterbuch einen Teil nicht kennt.
     static func repairInlineHyphens(in text: String, wordChecker: any WordChecker) -> String {
         guard wordChecker.hasDictionary, text.contains("-") else { return text }
         guard let regex = try? NSRegularExpression(pattern: "(\\p{L}{2,})-(\\p{Ll}\\p{L}{1,})") else { return text }
@@ -524,9 +531,10 @@ public struct DocumentStructurer: Sendable {
                   let stemRange = Range(match.range(at: 1), in: result),
                   let tailRange = Range(match.range(at: 2), in: result) else { continue }
             let stem = String(result[stemRange]), tail = String(result[tailRange])
+            if conjunctions.contains(tail.lowercased()) { continue }
             if wordChecker.knows(stem + tail) {
                 result.replaceSubrange(whole, with: stem + tail)
-            } else if !(wordChecker.knows(stem) && wordChecker.knows(tail)) {
+            } else if stem.count < 4 || tail.count < 4 || !(wordChecker.knows(stem) && wordChecker.knows(tail)) {
                 result.replaceSubrange(whole, with: stem + tail)
             }
         }
@@ -537,14 +545,17 @@ public struct DocumentStructurer: Sendable {
 /// Zeilenhöhe und Zeilenabstand als Median über alle Seiten.
 struct Typography {
     var medianHeight: CGFloat?
+    var medianCharWidth: CGFloat?
     var pitch: CGFloat?
 
     init(pages: [PageText], minimumLines: Int) {
         var heights: [CGFloat] = []
+        var charWidths: [CGFloat] = []
         var gaps: [CGFloat] = []
         for page in pages {
             let lines = page.lines.filter { !$0.text.isEmpty && $0.confidence >= 0.3 }
             heights.append(contentsOf: lines.map(\.box.height))
+            charWidths.append(contentsOf: lines.filter { $0.text.count >= 8 }.map(\.charWidth))
             for (a, b) in zip(lines, lines.dropFirst()) {
                 let gap = a.box.midY - b.box.midY
                 if gap > 0 { gaps.append(gap) }
@@ -552,6 +563,7 @@ struct Typography {
         }
         guard heights.count >= minimumLines else { return }
         medianHeight = heights.sorted()[heights.count / 2]
+        if !charWidths.isEmpty { medianCharWidth = charWidths.sorted()[charWidths.count / 2] }
         if !gaps.isEmpty { pitch = gaps.sorted()[gaps.count / 2] }
     }
 }
@@ -586,10 +598,10 @@ public enum TitleSuggester {
 
     public static func suggest(cover: PageText, followingPages: [PageText]) -> String? {
         let lines = cover.lines.filter { $0.confidence >= minimumConfidence && !$0.text.isEmpty && !isExcluded($0.text) }
-        guard let tallest = lines.map(\.box.height).max(), tallest > 0 else { return nil }
-        let allHeights = cover.lines.filter { !$0.text.isEmpty }.map(\.box.height).sorted()
-        if allHeights.count >= 4 {
-            guard tallest >= allHeights[allHeights.count / 4] * minimumProminence else { return nil }
+        guard let tallest = lines.map(\.charWidth).max(), tallest > 0 else { return nil }
+        let allSizes = cover.lines.filter { !$0.text.isEmpty }.map(\.charWidth).sorted()
+        if allSizes.count >= 4 {
+            guard tallest >= allSizes[allSizes.count / 4] * minimumProminence else { return nil }
         }
 
         // Normalisierte Zeilen der folgenden Seiten, für die Wiederholungssuche.
@@ -605,7 +617,7 @@ public enum TitleSuggester {
         }
 
         let ordered = lines.sorted { $0.box.midY > $1.box.midY }
-        let big = ordered.filter { $0.box.height >= tallest * heightShare }.prefix(maxLines)
+        let big = ordered.filter { $0.charWidth >= tallest * heightShare }.prefix(maxLines)
         guard !big.isEmpty else { return nil }
 
         // Teile bilden: wiederkehrende Zeilen einzeln, alle anderen zusammen.

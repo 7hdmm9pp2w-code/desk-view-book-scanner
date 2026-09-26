@@ -315,6 +315,20 @@ PDF-Export wieder durchsuchbar sein. Screenshot und Desk View bleiben Handprobe.
     drei Seiten) werden übersprungen und gemeldet. Listenseiten: jede Zeile ein Eintrag,
     außer nach Komma oder Bindestrich. Bindestriche mitten in der Zeile (aus von Vision
     zusammengelegten Zeilen, „el-ner") laufen durch dieselbe Silbenregel.
+  - Dritte Runde, zwei Grundsatzkorrekturen: **Schriftgröße über die Zeichenbreite**
+    (Boxbreite geteilt durch Zeichenzahl) statt über die Boxhöhe. Gemessen am
+    Bakunin-Scan schwankt die Höhe von Fließtextzeilen derselben Schrift zwischen 0,62
+    und 1,22 des Medians (Ober- und Unterlängen), die Zeichenbreite nur um ±5 %;
+    Überschriften liegen bei 2,5- bis 3-facher Zeichenbreite. Gilt für Überschriften,
+    Fußnoten und Titelvorschlag. Und **Silbentrennung ohne Wörterbuch**: Das
+    Systemwörterbuch hält „el", „ner", „ie", „positivs" für Wörter, damit taugt es
+    nicht für Bruchstücke. Am Zeilenende fällt der Strich immer, außer der zweite Teil
+    beginnt groß („Desk-View") oder ist „und/oder" (Ergänzungsstrich, „Ein- und").
+    Mitten in der Zeile fällt er, wenn das Ganze bekannt ist, ein Teil unter vier
+    Buchstaben hat oder ein Teil unbekannt ist; „nichtig-kitschigen" bleibt.
+    DOCX und EPUB bekommen Seitenmarker und Notizen als HTML-Kommentare, die Pandoc
+    verschluckt; vorher standen die Platzhalter wörtlich im Buch. Umschlagzeilen, die
+    im Dokumenttitel stecken oder Verlagszeilen sind, werden keine Überschriften.
 
 ## Bekannte Risiken
 
