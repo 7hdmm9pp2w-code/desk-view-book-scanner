@@ -10,6 +10,9 @@ struct SessionWindow: View {
     var body: some View {
         VStack(spacing: 0) {
             StatusBar()
+                .background(alignment: .bottomLeading) {
+                    ContinuityCameraReceiver().frame(width: 2, height: 2)
+                }
             Divider()
             HSplitView {
                 PageGrid()
@@ -30,6 +33,20 @@ struct SessionWindow: View {
                     .disabled(model.sessionDirectory == nil)
             }
             ToolbarItemGroup(placement: .primaryAction) {
+                Button {
+                    model.scanWithiPhone(.scanDocuments)
+                } label: {
+                    Label(L("Mit iPhone scannen"), systemImage: "iphone.and.arrow.forward")
+                }
+                .help(L("Öffnet den Dokumentenscanner auf dem iPhone; die Seiten landen in dieser Session (⇧⌘S)."))
+                .disabled(model.iPhoneWaiting)
+                Button {
+                    model.importFiles()
+                } label: {
+                    Label(L("Bilder oder PDF importieren…"), systemImage: "square.and.arrow.down")
+                }
+                .help(L("Scans aus Notizen, vFlat oder Fotos als Seiten anhängen"))
+                .disabled(model.exportStatus != nil)
                 Menu {
                     Button(L("Als PDF exportieren…")) { model.exportPDF() }
                     Button(L("Als Markdown exportieren…")) { model.exportText(format: .markdown) }
@@ -41,6 +58,20 @@ struct SessionWindow: View {
                     Label(L("Exportieren"), systemImage: "square.and.arrow.up")
                 }
                 .disabled(!model.canExport)
+                Button {
+                    model.splitSelectedPage()
+                } label: {
+                    Label(L("Seite teilen"), systemImage: "rectangle.split.2x1")
+                }
+                .help(L("Doppelseite am Falz in zwei Seiten teilen (⌘T)"))
+                .disabled(model.selectedPageID == nil)
+                Button {
+                    model.rotateSelectedPage(quarterTurns: 1)
+                } label: {
+                    Label(L("Nach links drehen"), systemImage: "rotate.left")
+                }
+                .help(L("Seite um 90° drehen (⌘L / ⌘R)"))
+                .disabled(model.selectedPageID == nil)
                 Button {
                     model.trashSelectedPage()
                 } label: {
@@ -78,10 +109,18 @@ struct StatusBar: View {
         HStack(alignment: .center, spacing: 16) {
             statusView
             Spacer(minLength: 12)
+            if model.iPhoneWaiting {
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small)
+                    Text(L("Warte auf das iPhone…")).foregroundStyle(.secondary)
+                }
+            }
             if let status = model.exportStatus {
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.small)
                     switch status {
+                    case .importing(let done, let total):
+                        Text(L("Import \(done) von \(total)")).monospacedDigit()
                     case .recognizing(let done, let total):
                         Text(L("Texterkennung \(done) von \(total)")).monospacedDigit()
                     case .writing(let done, let total):
@@ -175,16 +214,21 @@ struct StatusBar: View {
 
 struct PageGrid: View {
     @Environment(AppModel.self) private var model
+    @FocusState private var isFocused: Bool
     private let columns = [GridItem(.adaptive(minimum: 150, maximum: 230), spacing: 12)]
 
     var body: some View {
         Group {
             if model.pages.isEmpty {
-                ContentUnavailableView(
-                    L("Noch keine Seiten"),
-                    systemImage: "book.closed",
-                    description: Text(L("⌥⌘S erfasst das Desk-View-Fenster als Seite."))
-                )
+                ContentUnavailableView {
+                    Label(L("Noch keine Seiten"), systemImage: "book.closed")
+                } description: {
+                    Text(L("⇧⌘S scannt mit dem iPhone. ⇧⌘I importiert Scans aus Notizen, vFlat oder Fotos. ⌥⌘S erfasst das Desk-View-Fenster."))
+                } actions: {
+                    Button(L("Mit iPhone scannen")) { model.scanWithiPhone(.scanDocuments) }
+                        .disabled(model.iPhoneWaiting)
+                    Button(L("Bilder oder PDF importieren…")) { model.importFiles() }
+                }
             } else {
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 12) {
@@ -211,7 +255,9 @@ struct PageGrid: View {
             }
         }
         .focusable()
+        .focused($isFocused)
         .focusEffectDisabled()
+        .onAppear { isFocused = true }
         .onDeleteCommand { model.trashSelectedPage() }
         .background(Color(nsColor: .controlBackgroundColor))
     }

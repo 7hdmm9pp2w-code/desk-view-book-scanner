@@ -13,6 +13,41 @@ durchsuchbares PDF.
 Zielplattform ist das **aktuelle macOS** (derzeit 27) auf Apple Silicon. Keine
 Rückwärtskompatibilität; `platforms: [.macOS(.v26)]` oder höher, sobald das SDK es hergibt.
 
+## Quellen (ergänzt 26.09.2026, nach der Handprobe)
+
+Desk View reicht für Umschläge, Überschriften und Großdruck, nicht für Fließtext: Der
+Feed ist Video, grob 1080p aus dem Rand eines Ultraweitwinkels, das Fenster zeigt ihn
+nur hochskaliert. Taschenbuchtext kam mit rund 8 px Zeilenhöhe an; Vision braucht etwa 20.
+Ein iPhone-Scan aus Notizen desselben Buches (1713 × 2710 px, Zeilen rund 60 px) ging
+fehlerfrei durch dieselbe Erkennung. Daraus folgt: Die Seite kommt aus dem iPhone, das
+Tool macht Session, OCR, PDF und Markdown. Drei Quellen, alle liefern nur ein `CGImage`:
+
+1. **Import** (gebaut): PDFs und Bilder aus Notizen, vFlat oder der Fotos-App. PDF-Seiten
+   werden in der Auflösung ihres eingebetteten Bildes gerendert (aus dem größten
+   Bild-XObject der Seite), EXIF-Ausrichtung wird angewandt. Menü Ablage ⇧⌘I, auch für
+   den leeren Zustand des Fensters.
+   - **Direkt vom iPhone** (gebaut): Apples Dokumentenscanner über Continuity Camera,
+     auf dem SwiftUI-Weg: `ImportFromDevicesCommands()` in `.commands` bringt „Vom
+     iPhone oder iPad importieren" ins Menü Ablage, `importsItemProviders` an der
+     Fensteransicht nimmt PDF (Dokumentenscan) oder Foto entgegen; die Provider werden
+     als Temp-Dateien geschrieben und laufen durch denselben Import. Der AppKit-Weg
+     (`NSMenuItem.importFromDeviceIdentifier` mit `validRequestor` im Delegate oder
+     einem First-Responder-Knopf) wurde versucht und verworfen: AppKit fragte in der
+     SwiftUI-App nie nach einem Empfänger, das Item blieb versteckt.
+   - **Später, Hotkey für den Scan:** Das Projekt continuity-capture zeigt, dass sich
+     das System-Item ohne sichtbares Menü füllen (`submenu.update()`) und auslösen lässt.
+     Damit könnte ⇧⌘S den Scan starten, ohne ins Menü zu gehen.
+2. **Desk View** (gebaut): bleibt für Großdruck und als Schnellweg.
+3. **Kamera über AVFoundation** (offen): das iPhone als Continuity-Kamera, Foto in voller
+   Auflösung per `AVCapturePhotoOutput` mit `maxPhotoDimensions`, vom Mac ausgelöst, mit
+   Vorschau im Fenster. Lohnt erst, wenn Import und Bedienung am Buch sitzen; dieselbe
+   Quelle trüge später eine 4K-Kamera am Arm.
+
+Fertige Apps, die den iPhone-Teil abdecken: Apples „Dokumente scannen" (Notizen,
+Vorschau, Finder), Prizmo 5 für Mac (Continuity Camera, OCR, Glättung), vFlat auf dem
+iPhone (Auto-Auslöser, Wölbungskorrektur). Keine davon macht Session-Ordner mit
+OCR-JSON und Markdown, DOCX, EPUB mit Absatzstruktur; das bleibt der Kern hier.
+
 ## Die eine Einschränkung, die alles prägt
 
 Wir bekommen nie mehr Pixel als das Desk-View-Fenster auf dem Bildschirm hat. Auf einem
@@ -199,6 +234,34 @@ PDF-Export wieder durchsuchbar sein. Screenshot und Desk View bleiben Handprobe.
   - Struktur (Absätze, Überschriften) kommt aus einem gemeinsamen Blockmodell, aus dem
     HTML und Markdown gerendert werden; das ist derselbe Weg wie im Konzept, nur ohne
     den Umweg HTML→Markdown im Kit.
+
+- **Schritt 3 teilweise (26.09.2026):** Drehen und Teilen sind gebaut, der Zuschnitt
+  über `VNDetectDocumentSegmentationRequest` steht noch aus (iPhone-Scans kommen schon
+  beschnitten). Befunde:
+  - Visions genaue Erkennung liest gedrehten Text von sich aus und liefert das Viereck
+    jeder Zeile. Die Richtung der Oberkante (`topLeft → topRight`) verrät die Lage;
+    gewichtete Abstimmung über alle Zeilen ergibt die nötige Vierteldrehung. Der
+    Umweg über vier Erkennungsläufe war unnötig, und die schnelle Erkennung
+    unterscheidet 0° und 180° ohnehin nicht.
+  - Falz: Helligkeitsprofil der Spalten über das mittlere Drittel der Höhe, geglättet,
+    dunkelstes Tal zwischen 35 % und 65 % der Breite, mindestens 20 Stufen unter dem
+    Median; sonst Mitte. Ein Bild gilt ab Seitenverhältnis 1,15 als Doppelseite.
+  - Beides läuft in `PageProcessor.prepare` vor dem Speichern, für Import, iPhone-Scan
+    und Desk View gleichermaßen. Für vorhandene Seiten gibt es „Seite teilen" ⌘T und
+    „Drehen" ⌘L/⌘R; `replacePage` setzt die neuen Seiten an dieselbe Stelle und legt
+    die alte in den Papierkorb.
+  - Lesereihenfolge der OCR: Zeilen bilden nur dann eine Reihe, wenn sie sich vertikal
+    überlappen und horizontal nicht. Der frühere Vergleich über die Boxhöhe verschmolz
+    bei schiefen Seiten Nachbarzeilen zu einer Reihe. Alte OCR-Dateien (Version 1)
+    werden beim Laden neu sortiert.
+- **iPhone-Scan per Hotkey (26.09.2026):** ⇧⌘S löst „Dokumente scannen" auf dem
+  iPhone vom Mac aus. Mechanismus wie in continuity-capture: verstecktes `NSTextView`
+  mit `importsGraphics` wird First Responder, `registerServicesMenuSendTypes` meldet
+  die Typen, das System-Untermenü am Item von `ImportFromDevicesCommands` wird mit
+  `update()` ohne Anzeige gefüllt und der Eintrag mit `performActionForItem` ausgelöst;
+  der Scan kommt als `NSTextAttachment` und geht als Datei durch den Import. Der
+  Menüeintrag selbst bleibt in der SwiftUI-App ausgegraut, weil SwiftUIs
+  Hosting-View die Anfrage nach einem Empfänger nicht weiterreicht; das ist egal.
 
 ## Bekannte Risiken
 

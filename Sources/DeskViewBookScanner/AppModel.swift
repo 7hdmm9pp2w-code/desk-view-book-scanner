@@ -38,10 +38,13 @@ final class AppModel {
     private(set) var suggestedTitle: String?
     private(set) var exportStatus: ExportStatus?
     private(set) var pandocPath: String
+    private(set) var iPhoneWaiting = false
+    private(set) var sessionSettings = SessionSettings()
     var lastError: String?
     var selectedPageID: UUID?
 
     enum ExportStatus: Equatable {
+        case importing(done: Int, total: Int)
         case recognizing(done: Int, total: Int)
         case writing(done: Int, total: Int)
     }
@@ -169,6 +172,7 @@ final class AppModel {
         sessionDirectory = await store.directory
         sessionTitle = await store.document.title ?? ""
         pages = await store.orderedPages
+        sessionSettings = await store.document.settings
         imageCache = [:]
         texts = [:]
         suggestedTitle = nil
@@ -214,12 +218,17 @@ final class AppModel {
             do {
                 let store = try await ensureSession()
                 let result = try await source.captureImage()
-                let page = try await store.addPage(result.image)
+                let settings = await store.document.settings
+                var lastPage: PageRecord?
+                for image in await processor.prepare(result.image, settings: settings) {
+                    let page = try await store.addPage(image)
+                    recognizeText(for: page)
+                    lastPage = page
+                }
                 pages = await store.orderedPages
-                selectedPageID = page.id
+                selectedPageID = lastPage?.id
                 lastError = nil
                 NSSound(named: "Tink")?.play()
-                recognizeText(for: page)
             } catch {
                 lastError = error.localizedDescription
                 NSSound.beep()
@@ -313,6 +322,140 @@ extension AppModel {
 
     func dismissSuggestedTitle() {
         suggestedTitle = nil
+    }
+
+    // MARK: Import
+
+    /// Bilder und PDFs (Notizen, vFlat, Fotos) als Seiten anhängen.
+    func importFiles() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = PageImporter.supportedTypes
+        panel.allowsMultipleSelection = true
+        panel.canChooseDirectories = false
+        panel.message = L("Bilder oder PDF-Scans wählen; die Seiten werden in dieser Reihenfolge angehängt.")
+        guard panel.runModal() == .OK, !panel.urls.isEmpty else { return }
+        importFiles(panel.urls)
+    }
+
+    func importFiles(_ urls: [URL]) {
+        guard exportStatus == nil else { return }
+        let files = urls.filter { PageImporter.isSupported($0) }
+        guard !files.isEmpty else { return }
+        Task {
+            do {
+                let store = try await ensureSession()
+                var total = 0
+                for url in files { total += try PageImporter.pageCount(of: url) }
+                var done = 0
+                exportStatus = .importing(done: 0, total: total)
+                for url in files {
+                    let count = try PageImporter.pageCount(of: url)
+                    for index in 0..<count {
+                        let image = try await Task.detached(priority: .userInitiated) {
+                            try PageImporter.image(at: index, from: url)
+                        }.value
+                        let settings = await store.document.settings
+                        for prepared in await processor.prepare(image, settings: settings) {
+                            let page = try await store.addPage(prepared)
+                            selectedPageID = page.id
+                            recognizeText(for: page)
+                        }
+                        pages = await store.orderedPages
+                        done += 1
+                        exportStatus = .importing(done: done, total: total)
+                    }
+                }
+                exportStatus = nil
+                lastError = nil
+            } catch {
+                exportStatus = nil
+                lastError = error.localizedDescription
+            }
+        }
+    }
+
+    // MARK: Seiten bearbeiten
+
+    func setSplitMode(_ mode: SplitMode) {
+        sessionSettings.splitMode = mode
+        persistSettings()
+    }
+
+    func setAutoRotate(_ on: Bool) {
+        sessionSettings.autoRotate = on
+        persistSettings()
+    }
+
+    private func persistSettings() {
+        guard let session else { return }
+        let settings = sessionSettings
+        Task {
+            do { try await session.updateSettings(settings) } catch { lastError = error.localizedDescription }
+        }
+    }
+
+    /// Ausgewählte Doppelseite am Falz teilen (oder in der Mitte, je nach Einstellung).
+    func splitSelectedPage() {
+        guard let page = selectedPage else { return }
+        let mode: SplitMode = sessionSettings.splitMode == .none ? .automatic : sessionSettings.splitMode
+        replaceSelectedPage { image in
+            let splitter = PageSplitter()
+            let halves = splitter.split(image, mode: mode)
+            return halves.count == 2 ? halves : nil
+        }
+        _ = page
+    }
+
+    /// Ausgewählte Seite um 90° drehen; positive Werte gegen den Uhrzeigersinn.
+    func rotateSelectedPage(quarterTurns: Int) {
+        replaceSelectedPage { image in [ImageOps.rotated(image, quarterTurns: quarterTurns)] }
+    }
+
+    private var selectedPage: PageRecord? {
+        pages.first { $0.id == selectedPageID }
+    }
+
+    private func replaceSelectedPage(_ transform: @escaping @Sendable (CGImage) -> [CGImage]?) {
+        guard let session, let page = selectedPage, exportStatus == nil else { return }
+        Task {
+            do {
+                let url = await session.fileURL(for: page)
+                let images = try await Task.detached(priority: .userInitiated) { () -> [CGImage]? in
+                    transform(try ImageFile.read(url))
+                }.value
+                guard let images else { return }
+                let records = try await session.replacePage(page.id, with: images)
+                imageCache = imageCache.filter { !$0.key.hasPrefix(page.id.uuidString) }
+                texts[page.id] = nil
+                pages = await session.orderedPages
+                selectedPageID = records.first?.id
+                for record in records { recognizeText(for: record) }
+                lastError = nil
+            } catch {
+                lastError = error.localizedDescription
+            }
+        }
+    }
+
+    // MARK: iPhone
+
+    var isWaitingForiPhone: Bool { ContinuityCamera.shared.isWaiting }
+
+    /// Löst „Dokumente scannen" oder „Foto aufnehmen" auf dem iPhone aus.
+    func scanWithiPhone(_ kind: ContinuityCamera.Kind = .scanDocuments) {
+        guard exportStatus == nil else { return }
+        iPhoneWaiting = true
+        ContinuityCamera.shared.start(kind) { [weak self] urls in
+            guard let self else { return }
+            self.iPhoneWaiting = false
+            self.lastError = nil
+            self.importFiles(urls)
+        } failure: { [weak self] error in
+            guard let self else { return }
+            self.iPhoneWaiting = false
+            self.lastError = error.localizedDescription
+            NSSound.beep()
+        }
     }
 
     // MARK: Pandoc

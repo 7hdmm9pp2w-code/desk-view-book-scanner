@@ -142,6 +142,46 @@
         }
       }
     },
+    "Aufrecht drehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rotate Upright"
+          }
+        }
+      }
+    },
+    "Automatisch am Falz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically at the Gutter"
+          }
+        }
+      }
+    },
+    "Bilder oder PDF importieren…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import Images or PDF…"
+          }
+        }
+      }
+    },
+    "Bilder oder PDF-Scans wählen; die Seiten werden in dieser Reihenfolge angehängt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose images or PDF scans; pages are appended in this order."
+          }
+        }
+      }
+    },
     "Bildschirmaufnahme": {
       "localizations": {
         "en": {
@@ -158,6 +198,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Screen recording not allowed"
+          }
+        }
+      }
+    },
+    "Das Fenster ist nicht bereit für den iPhone-Scan.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The window is not ready for the iPhone scan."
           }
         }
       }
@@ -232,6 +282,36 @@
         }
       }
     },
+    "Dokumente mit dem iPhone scannen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan Documents with iPhone"
+          }
+        }
+      }
+    },
+    "Doppelseite am Falz in zwei Seiten teilen (⌘T)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split a double page at the gutter (⌘T)"
+          }
+        }
+      }
+    },
+    "Doppelseiten teilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split Double Pages"
+          }
+        }
+      }
+    },
     "Eigener Pfad zu pandoc": {
       "localizations": {
         "en": {
@@ -302,6 +382,16 @@
         }
       }
     },
+    "Foto mit dem iPhone aufnehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take Photo with iPhone"
+          }
+        }
+      }
+    },
     "Freigabe": {
       "localizations": {
         "en": {
@@ -362,6 +452,36 @@
         }
       }
     },
+    "Import %lld von %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importing %lld of %lld"
+          }
+        }
+      }
+    },
+    "In der Mitte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the Middle"
+          }
+        }
+      }
+    },
+    "Kein iPhone gefunden. Gleiche Apple-ID, Bluetooth und WLAN an, iPhone entsperrt und in der Nähe?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No iPhone found. Same Apple ID, Bluetooth and Wi-Fi on, iPhone unlocked and nearby?"
+          }
+        }
+      }
+    },
     "Keine Seite ausgewählt": {
       "localizations": {
         "en": {
@@ -392,6 +512,16 @@
         }
       }
     },
+    "Mit iPhone scannen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan with iPhone"
+          }
+        }
+      }
+    },
     "Mitgeliefert im App-Bundle": {
       "localizations": {
         "en": {
@@ -408,6 +538,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "After granting access, quit and reopen the app once."
+          }
+        }
+      }
+    },
+    "Nach links drehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rotate Left"
+          }
+        }
+      }
+    },
+    "Nach rechts drehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rotate Right"
           }
         }
       }
@@ -438,6 +588,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not granted"
+          }
+        }
+      }
+    },
+    "Nicht teilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't Split"
           }
         }
       }
@@ -492,6 +652,16 @@
         }
       }
     },
+    "Scans aus Notizen, vFlat oder Fotos als Seiten anhängen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Append scans from Notes, vFlat or Photos as pages"
+          }
+        }
+      }
+    },
     "Seite %lld": {
       "localizations": {
         "en": {
@@ -518,6 +688,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Delete Page"
+          }
+        }
+      }
+    },
+    "Seite teilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split Page"
+          }
+        }
+      }
+    },
+    "Seite um 90° drehen (⌘L / ⌘R)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rotate the page by 90° (⌘L / ⌘R)"
           }
         }
       }
@@ -652,6 +842,26 @@
         }
       }
     },
+    "Vom iPhone kam nichts an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing arrived from the iPhone."
+          }
+        }
+      }
+    },
+    "Warte auf das iPhone…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for the iPhone…"
+          }
+        }
+      }
+    },
     "Wird erfasst…": {
       "localizations": {
         "en": {
@@ -682,6 +892,16 @@
         }
       }
     },
+    "Öffnet den Dokumentenscanner auf dem iPhone; die Seiten landen in dieser Session (⇧⌘S).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the document scanner on the iPhone; pages go into this session (⇧⌘S)."
+          }
+        }
+      }
+    },
     "Übernehmen": {
       "localizations": {
         "en": {
@@ -692,12 +912,12 @@
         }
       }
     },
-    "⌥⌘S erfasst das Desk-View-Fenster als Seite.": {
+    "⇧⌘S scannt mit dem iPhone. ⇧⌘I importiert Scans aus Notizen, vFlat oder Fotos. ⌥⌘S erfasst das Desk-View-Fenster.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "⌥⌘S captures the Desk View window as a page."
+            "value": "⇧⌘S scans with the iPhone. ⇧⌘I imports scans from Notes, vFlat or Photos. ⌥⌘S captures the Desk View window."
           }
         }
       }

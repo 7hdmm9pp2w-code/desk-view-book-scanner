@@ -41,6 +41,24 @@ public enum ImageFile {
         return image
     }
 
+    /// Volle Größe, aber mit angewandter EXIF-Ausrichtung, damit ein hochkant
+    /// fotografiertes Bild auch hochkant im Speicher liegt.
+    public static func readOriented(_ url: URL) throws -> CGImage {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else {
+            throw ImageFileError.cannotRead(url)
+        }
+        let size = pixelSize(of: url).map { max($0.width, $0.height) } ?? 20_000
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: size,
+        ]
+        guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            throw ImageFileError.cannotRead(url)
+        }
+        return image
+    }
+
     /// Verkleinerte Fassung, längste Kante höchstens `maxPixelSize`. ImageIO dekodiert
     /// dafür nicht das ganze Bild.
     public static func thumbnail(_ url: URL, maxPixelSize: Int) throws -> CGImage {

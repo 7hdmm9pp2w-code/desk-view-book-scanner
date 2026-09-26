@@ -87,10 +87,21 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
     }
 
     @Test func readingOrderSortsRowsThenColumns() {
-        let a = line("rechts oben", x: 0.6, top: 0.9)
-        let b = line("links oben", x: 0.1, top: 0.905)
+        let a = line("rechts oben", x: 0.6, top: 0.9, width: 0.3)
+        let b = line("links oben", x: 0.1, top: 0.905, width: 0.3)
         let c = line("unten", x: 0.1, top: 0.5)
         #expect(TextRecognizer.readingOrder([c, a, b]).map(\.text) == ["links oben", "rechts oben", "unten"])
+    }
+
+    @Test func readingOrderSurvivesSkewedPage() {
+        // Schiefe Seite: breite Zeilen mit Boxen, die dreimal so hoch sind wie der Zeilenabstand.
+        var lines: [RecognizedLine] = []
+        for i in 0..<12 {
+            let top = 0.9 - CGFloat(i) * 0.03
+            lines.append(line("Zeile \(i)", x: 0.1, top: top, height: 0.09, width: 0.8))
+        }
+        let shuffled = [lines[5], lines[0], lines[11], lines[3], lines[1], lines[2], lines[4], lines[7], lines[6], lines[9], lines[8], lines[10]]
+        #expect(TextRecognizer.readingOrder(shuffled).map(\.text) == (0..<12).map { "Zeile \($0)" })
     }
 }
 
@@ -221,6 +232,23 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
 
         try await store.trash(pageIDs: [page.id])
         #expect(FileManager.default.fileExists(atPath: await store.trashDirectory.appending(path: "Aufnahme-0001.json").path))
+    }
+
+    @Test func oldTextFilesGetReorderedOnLoad() async throws {
+        let root = try makeTempRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = try SessionStore.create(in: root)
+        let page = try await store.addPage(makeTestImage(width: 10, height: 10))
+        var old = pageText([line("unten", top: 0.3, height: 0.09), line("oben", top: 0.9, height: 0.09)])
+        old.version = 1
+        try await store.saveText(old, for: page)
+
+        let loaded = try #require(try await store.loadText(for: page))
+        #expect(loaded.version == PageText.currentVersion)
+        #expect(loaded.lines.map(\.text) == ["oben", "unten"])
+        // Auf der Platte liegt jetzt die neue Fassung.
+        let again = try #require(try await store.loadText(for: page))
+        #expect(again == loaded)
     }
 
     @Test func processorRecognizesOnceAndCaches() async throws {

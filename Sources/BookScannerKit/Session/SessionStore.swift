@@ -125,7 +125,13 @@ public actor SessionStore {
         let url = textFileURL(for: page)
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
         let data = try Data(contentsOf: url)
-        return try Self.decoder.decode(PageText.self, from: data)
+        var text = try Self.decoder.decode(PageText.self, from: data)
+        if text.version < PageText.currentVersion {
+            text.lines = TextRecognizer.readingOrder(text.lines)
+            text.version = PageText.currentVersion
+            try Self.encoder.encode(text).write(to: url, options: .atomic)
+        }
+        return text
     }
 
     /// Schreibt das Bild als HEIC in den Session-Ordner und hängt die Seite ans Ende.
@@ -141,6 +147,27 @@ public actor SessionStore {
         document.pageOrder.append(page.id)
         try save()
         return page
+    }
+
+    /// Ersetzt eine Seite an Ort und Stelle durch ein oder mehrere Bilder (Teilen,
+    /// Drehen). Die alte Seite wandert in den Papierkorb.
+    @discardableResult
+    public func replacePage(_ id: UUID, with images: [CGImage], capturedAt: Date = .now) throws -> [PageRecord] {
+        guard let index = document.pageOrder.firstIndex(of: id), !images.isEmpty else {
+            throw SessionError.unknownPage(id)
+        }
+        var records: [PageRecord] = []
+        for image in images {
+            document.captureCounter += 1
+            let fileName = String(format: "Aufnahme-%04d.%@", document.captureCounter, Self.imageFileExtension)
+            try ImageFile.writeHEIC(image, to: directory.appending(path: fileName))
+            let record = PageRecord(fileName: fileName, capturedAt: capturedAt, pixelWidth: image.width, pixelHeight: image.height)
+            document.pages.append(record)
+            records.append(record)
+        }
+        document.pageOrder.replaceSubrange(index...index, with: records.map(\.id))
+        try trash(pageIDs: [id])
+        return records
     }
 
     /// Verschiebt eine Seite vor `targetID`; `nil` heißt ans Ende.
@@ -195,6 +222,30 @@ public actor SessionStore {
             document.trashed.append(page)
         }
         try save()
+    }
+
+    /// Holt die zuletzt gelöschte Seite zurück, vor `targetID` oder ans Ende.
+    @discardableResult
+    public func restoreLastTrashed(before targetID: UUID? = nil) throws -> PageRecord? {
+        guard let page = document.trashed.popLast() else { return nil }
+        let fm = FileManager.default
+        let source = trashDirectory.appending(path: page.fileName)
+        if fm.fileExists(atPath: source.path) {
+            try fm.moveItem(at: source, to: fileURL(for: page))
+        }
+        let textSource = trashDirectory.appending(path: textFileURL(for: page).lastPathComponent)
+        if fm.fileExists(atPath: textSource.path) {
+            try fm.createDirectory(at: textDirectory, withIntermediateDirectories: true)
+            try fm.moveItem(at: textSource, to: textFileURL(for: page))
+        }
+        document.pages.append(page)
+        if let targetID, let index = document.pageOrder.firstIndex(of: targetID) {
+            document.pageOrder.insert(page.id, at: index)
+        } else {
+            document.pageOrder.append(page.id)
+        }
+        try save()
+        return page
     }
 
     public func updateOCRStatus(_ status: OCRStatus, for pageID: UUID) throws {

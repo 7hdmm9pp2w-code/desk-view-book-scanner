@@ -23,24 +23,38 @@ public struct TextRecognizer: Sendable {
             let text = best.string.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !text.isEmpty else { return nil }
             let box = observation.boundingBox.toImageCoordinates(CGSize(width: 1, height: 1), origin: .lowerLeft)
-            return RecognizedLine(text: text, confidence: best.confidence, box: box)
+            let unit = CGSize(width: 1, height: 1)
+            let start = observation.topLeft.toImageCoordinates(unit, origin: .lowerLeft)
+            let end = observation.topRight.toImageCoordinates(unit, origin: .lowerLeft)
+            let angle = atan2(Double(end.y - start.y), Double(end.x - start.x))
+            return RecognizedLine(text: text, confidence: best.confidence, box: box, angle: angle)
         }
         return Self.readingOrder(lines)
     }
 
-    /// Lesereihenfolge: Zeilen, deren Mitten vertikal näher als eine halbe Zeilenhöhe
-    /// beieinander liegen, bilden eine Reihe und werden nach x sortiert.
+    /// Lesereihenfolge: oben nach unten, innerhalb einer Reihe links nach rechts.
+    /// Zwei Zeilen bilden nur dann eine Reihe, wenn sie sich vertikal deutlich überlappen
+    /// und horizontal nicht (Spalten). Der Vergleich über die Boxhöhe allein trügt: Bei
+    /// einer leicht schiefen Seite ist die Box einer breiten Zeile ein Vielfaches höher
+    /// als die Zeile selbst, und Nachbarzeilen würden zu einer Reihe verschmelzen.
     public static func readingOrder(_ lines: [RecognizedLine]) -> [RecognizedLine] {
         let byTop = lines.sorted { $0.box.midY > $1.box.midY }
         var rows: [[RecognizedLine]] = []
         for line in byTop {
-            if let reference = rows.last?.first,
-               abs(reference.box.midY - line.box.midY) < min(reference.box.height, line.box.height) * 0.5 {
+            if let row = rows.last, row.allSatisfy({ sameRow($0, line) }) {
                 rows[rows.count - 1].append(line)
             } else {
                 rows.append([line])
             }
         }
         return rows.flatMap { $0.sorted { $0.box.minX < $1.box.minX } }
+    }
+
+    static func sameRow(_ a: RecognizedLine, _ b: RecognizedLine) -> Bool {
+        let verticalOverlap = min(a.box.maxY, b.box.maxY) - max(a.box.minY, b.box.minY)
+        let horizontalOverlap = min(a.box.maxX, b.box.maxX) - max(a.box.minX, b.box.minX)
+        let minHeight = min(a.box.height, b.box.height)
+        let minWidth = min(a.box.width, b.box.width)
+        return verticalOverlap > minHeight * 0.5 && horizontalOverlap < minWidth * 0.2
     }
 }

@@ -31,6 +31,13 @@ swift test
 
 ## Bedienung
 
+- Seiten kommen aus drei Quellen: **„Mit iPhone scannen"** ⇧⌘S öffnet Apples
+  Dokumentenscanner auf dem iPhone (Continuity Camera), der Scan landet direkt in der
+  Session; **Import** ⇧⌘I von PDFs und Bildern (Scans aus Notizen, vFlat, Fotos);
+  **Desk View** ⌥⌘S für Umschläge und Großdruck. Für Buchtext braucht es das iPhone.
+- Vor dem Speichern wird jede Seite aufrecht gedreht und eine Doppelseite am Falz
+  geteilt (Menü „Aufnahme": automatisch, Mitte oder gar nicht). Vorhandene Seiten:
+  „Seite teilen" ⌘T, drehen ⌘L / ⌘R.
 - Hauptfenster: Statusleiste mit „Desk View starten" und „Seite erfassen", darunter
   die Seiten der Session; rechts die Detailansicht.
 - ⌥⌘S erfasst das Desk-View-Fenster als Seite, auch wenn Desk View vorn liegt.

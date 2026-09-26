@@ -17,8 +17,19 @@ public enum OCRStatus: String, Codable, Sendable {
 public struct SessionSettings: Codable, Sendable, Equatable {
     public var splitMode: SplitMode = .automatic
     public var cropEnabled: Bool = true
+    /// Textlage erkennen und das Bild aufrecht drehen, bevor es gespeichert wird.
+    public var autoRotate: Bool = true
 
     public init() {}
+
+    enum CodingKeys: String, CodingKey { case splitMode, cropEnabled, autoRotate }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        splitMode = try container.decodeIfPresent(SplitMode.self, forKey: .splitMode) ?? .automatic
+        cropEnabled = try container.decodeIfPresent(Bool.self, forKey: .cropEnabled) ?? true
+        autoRotate = try container.decodeIfPresent(Bool.self, forKey: .autoRotate) ?? true
+    }
 }
 
 /// Eine erfasste Aufnahme. Die Bilddatei liegt neben `session.json` im Session-Ordner.
