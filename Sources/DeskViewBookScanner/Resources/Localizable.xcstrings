@@ -1,0 +1,1026 @@
+{
+  "sourceLanguage": "de",
+  "version": "1.0",
+  "strings": {
+    "%lld Seiten": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Seite"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Seiten"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld page"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld pages"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld Zeilen": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Zeile"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Zeilen"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld line"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld lines"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Als EPUB exportieren…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export as EPUB…"
+          }
+        }
+      }
+    },
+    "Als Markdown exportieren…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export as Markdown…"
+          }
+        }
+      }
+    },
+    "Als PDF exportieren…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export as PDF…"
+          }
+        }
+      }
+    },
+    "Als Word (DOCX) exportieren…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export as Word (DOCX)…"
+          }
+        }
+      }
+    },
+    "Aufgenommen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captured"
+          }
+        }
+      }
+    },
+    "Aufnahme": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture"
+          }
+        }
+      }
+    },
+    "Aufrecht drehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rotate Upright"
+          }
+        }
+      }
+    },
+    "Automatisch am Falz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatically at the Gutter"
+          }
+        }
+      }
+    },
+    "Bilder oder PDF importieren…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import Images or PDF…"
+          }
+        }
+      }
+    },
+    "Bilder oder PDF-Scans wählen; die Seiten werden in dieser Reihenfolge angehängt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose images or PDF scans; pages are appended in this order."
+          }
+        }
+      }
+    },
+    "Bildschirmaufnahme": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen Recording"
+          }
+        }
+      }
+    },
+    "Bildschirmaufnahme nicht freigegeben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen recording not allowed"
+          }
+        }
+      }
+    },
+    "Das Fenster ist nicht bereit für den iPhone-Scan.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The window is not ready for the iPhone scan."
+          }
+        }
+      }
+    },
+    "Das Tastenkürzel konnte nicht registriert werden, vermutlich belegt es eine andere App.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shortcut could not be registered; another app probably uses it."
+          }
+        }
+      }
+    },
+    "Datei": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File"
+          }
+        }
+      }
+    },
+    "Dateien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files"
+          }
+        }
+      }
+    },
+    "Der Dokumentenscanner des iPhones liefert die Seiten, ausgelöst vom Mac. Quelle oben wechseln für Dateien oder Desk View.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The iPhone's document scanner delivers the pages, triggered from the Mac. Switch the source above for files or Desk View."
+          }
+        }
+      }
+    },
+    "Desk View": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desk View"
+          }
+        }
+      }
+    },
+    "Desk View Book Scanner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desk View Book Scanner"
+          }
+        }
+      }
+    },
+    "Desk View fotografiert das Buch von oben. Die Kameraauflösung reicht heute für Umschläge und Großdruck, nicht für Fließtext.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desk View photographs the book from above. Today's camera resolution is enough for covers and large print, not for body text."
+          }
+        }
+      }
+    },
+    "Desk View gefunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desk View found"
+          }
+        }
+      }
+    },
+    "Desk View läuft nicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desk View is not running"
+          }
+        }
+      }
+    },
+    "Desk View starten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Launch Desk View"
+          }
+        }
+      }
+    },
+    "Dokumente mit dem iPhone scannen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan Documents with iPhone"
+          }
+        }
+      }
+    },
+    "Dokumentenscanner auf dem iPhone, vom Mac ausgelöst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Document scanner on the iPhone, triggered from the Mac."
+          }
+        }
+      }
+    },
+    "Doppelseite am Falz in zwei Seiten teilen (⌘T)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split a double page at the gutter (⌘T)"
+          }
+        }
+      }
+    },
+    "Doppelseiten teilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split Double Pages"
+          }
+        }
+      }
+    },
+    "Eigener Pfad zu pandoc": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom path to pandoc"
+          }
+        }
+      }
+    },
+    "Einen Session-Ordner wählen (enthält session.json).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a session folder (contains session.json)."
+          }
+        }
+      }
+    },
+    "Erkannter Text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recognized Text"
+          }
+        }
+      }
+    },
+    "Erteilt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Granted"
+          }
+        }
+      }
+    },
+    "Export %lld von %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exporting %lld of %lld"
+          }
+        }
+      }
+    },
+    "Exportieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export"
+          }
+        }
+      }
+    },
+    "Fenster größer ziehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlarge the window"
+          }
+        }
+      }
+    },
+    "Foto mit dem iPhone aufnehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take Photo with iPhone"
+          }
+        }
+      }
+    },
+    "Freigabe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access"
+          }
+        }
+      }
+    },
+    "Freigabe erteilen…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grant Access…"
+          }
+        }
+      }
+    },
+    "Gefunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found"
+          }
+        }
+      }
+    },
+    "Gelöschte Seiten wandern in den Ordner „Papierkorb“ der Session.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted pages move to the session's “Papierkorb” folder."
+          }
+        }
+      }
+    },
+    "Größe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Size"
+          }
+        }
+      }
+    },
+    "Im Finder zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in Finder"
+          }
+        }
+      }
+    },
+    "Import %lld von %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importing %lld of %lld"
+          }
+        }
+      }
+    },
+    "In der Mitte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the Middle"
+          }
+        }
+      }
+    },
+    "Kein Schnitt gefunden: keine Doppelseite oder Text über der Schnittlinie.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No cut found: not a double page, or text crosses the cut line."
+          }
+        }
+      }
+    },
+    "Kein iPhone gefunden. Gleiche Apple-ID, Bluetooth und WLAN an, iPhone entsperrt und in der Nähe?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No iPhone found. Same Apple ID, Bluetooth and Wi-Fi on, iPhone unlocked and nearby?"
+          }
+        }
+      }
+    },
+    "Keine Seite ausgewählt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No page selected"
+          }
+        }
+      }
+    },
+    "Keine Sessions vorhanden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No sessions yet"
+          }
+        }
+      }
+    },
+    "Letzte Sessions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent Sessions"
+          }
+        }
+      }
+    },
+    "Mit iPhone scannen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan with iPhone"
+          }
+        }
+      }
+    },
+    "Mitgeliefert im App-Bundle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bundled with the app"
+          }
+        }
+      }
+    },
+    "Nach links drehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rotate Left"
+          }
+        }
+      }
+    },
+    "Nach rechts drehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rotate Right"
+          }
+        }
+      }
+    },
+    "Nein": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No"
+          }
+        }
+      }
+    },
+    "Neue Session": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Session"
+          }
+        }
+      }
+    },
+    "Nicht erteilt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not granted"
+          }
+        }
+      }
+    },
+    "Nicht teilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't Split"
+          }
+        }
+      }
+    },
+    "Noch keine Seiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pages yet"
+          }
+        }
+      }
+    },
+    "Ohne Pandoc schreibt die App Markdown selbst, mit einfacherer Struktur. Pandoc liefert bessere Ergebnisse und zusätzlich Word und EPUB. Installation: brew install pandoc": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without Pandoc the app writes Markdown itself, with simpler structure. Pandoc gives better results plus Word and EPUB. Install with: brew install pandoc"
+          }
+        }
+      }
+    },
+    "Ordner wählen…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Folder…"
+          }
+        }
+      }
+    },
+    "PDFs und Bilder aus Notizen, vFlat oder Fotos werden Seiten dieser Session.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDFs and images from Notes, vFlat or Photos become pages of this session."
+          }
+        }
+      }
+    },
+    "Pandoc": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pandoc"
+          }
+        }
+      }
+    },
+    "Pfad": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Path"
+          }
+        }
+      }
+    },
+    "Quelle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source"
+          }
+        }
+      }
+    },
+    "Scans aus Notizen, vFlat oder Fotos als Seiten anhängen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Append scans from Notes, vFlat or Photos as pages"
+          }
+        }
+      }
+    },
+    "Scans aus Notizen, vFlat oder Fotos als Seiten anhängen (⇧⌘I)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Append scans from Notes, vFlat or Photos as pages (⇧⌘I)"
+          }
+        }
+      }
+    },
+    "Scans aus Notizen, vFlat oder Fotos, PDF oder Bilder.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scans from Notes, vFlat or Photos, PDF or images."
+          }
+        }
+      }
+    },
+    "Seite": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page"
+          }
+        }
+      }
+    },
+    "Seite %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page %lld"
+          }
+        }
+      }
+    },
+    "Seite erfassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture Page"
+          }
+        }
+      }
+    },
+    "Seite löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Page"
+          }
+        }
+      }
+    },
+    "Seite teilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split Page"
+          }
+        }
+      }
+    },
+    "Seite um 90° drehen (⌘L / ⌘R)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rotate the page by 90° (⌘L / ⌘R)"
+          }
+        }
+      }
+    },
+    "Session-Ordner öffnen…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Session Folder…"
+          }
+        }
+      }
+    },
+    "Sessions-Ordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessions Folder"
+          }
+        }
+      }
+    },
+    "Speicherort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Location"
+          }
+        }
+      }
+    },
+    "Standard": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default"
+          }
+        }
+      }
+    },
+    "Systemeinstellungen öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open System Settings"
+          }
+        }
+      }
+    },
+    "Tastenkürzel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keyboard Shortcut"
+          }
+        }
+      }
+    },
+    "Tastenkürzel %@, auch wenn Desk View vorn liegt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcut %@, also while Desk View is in front."
+          }
+        }
+      }
+    },
+    "Text wird erkannt…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recognizing text…"
+          }
+        }
+      }
+    },
+    "Text wird geladen…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading text…"
+          }
+        }
+      }
+    },
+    "Texterkennung %lld von %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recognizing text %lld of %lld"
+          }
+        }
+      }
+    },
+    "Texterkennung fehlgeschlagen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text recognition failed."
+          }
+        }
+      }
+    },
+    "Titel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title"
+          }
+        }
+      }
+    },
+    "Titelvorschlag: „%@“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested title: “%@”"
+          }
+        }
+      }
+    },
+    "Vom iPhone kam nichts an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing arrived from the iPhone."
+          }
+        }
+      }
+    },
+    "Warte auf das iPhone…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for the iPhone…"
+          }
+        }
+      }
+    },
+    "Wird erfasst…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capturing…"
+          }
+        }
+      }
+    },
+    "Wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose"
+          }
+        }
+      }
+    },
+    "Zuletzt gelöschte Seite zurückholen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore Last Deleted Page"
+          }
+        }
+      }
+    },
+    "iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone"
+          }
+        }
+      }
+    },
+    "Öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        }
+      }
+    },
+    "Öffnet den Dokumentenscanner auf dem iPhone; die Seiten landen in dieser Session (⇧⌘S).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the document scanner on the iPhone; pages go into this session (⇧⌘S)."
+          }
+        }
+      }
+    },
+    "Übernehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply"
+          }
+        }
+      }
+    }
+  }
+}
