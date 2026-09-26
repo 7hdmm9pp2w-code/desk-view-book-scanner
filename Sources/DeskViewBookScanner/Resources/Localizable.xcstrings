@@ -2,6 +2,16 @@
   "sourceLanguage": "de",
   "version": "1.0",
   "strings": {
+    "%@ an Bildern, Text und Exporten wandern in den Papierkorb von macOS und lassen sich dort zurückholen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ of images, text and exports move to the macOS Trash and can be restored from there."
+          }
+        }
+      }
+    },
     "%lld Seiten": {
       "localizations": {
         "de": {
@@ -38,6 +48,46 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld Sessions archivieren?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive %lld sessions?"
+          }
+        }
+      }
+    },
+    "%lld Sessions archivieren…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive %lld Sessions…"
+          }
+        }
+      }
+    },
+    "%lld Sessions in den Papierkorb legen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move %lld sessions to the Trash?"
+          }
+        }
+      }
+    },
+    "%lld Sessions in den Papierkorb legen…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move %lld Sessions to Trash…"
           }
         }
       }
@@ -248,16 +298,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose images or PDF scans; pages are appended in this order."
-          }
-        }
-      }
-    },
-    "Bilder, Text und Exporte wandern in den Papierkorb von macOS und lassen sich dort zurückholen.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Images, text and exports move to the macOS Trash and can be restored from there."
           }
         }
       }
@@ -868,6 +908,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Empty Trash (%lld pages, %@)"
+          }
+        }
+      }
+    },
+    "Papierkorb von %lld Sessions leeren?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empty the trash of %lld sessions?"
           }
         }
       }

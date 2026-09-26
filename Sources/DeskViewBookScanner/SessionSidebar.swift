@@ -5,31 +5,35 @@ import BookScannerKit
 /// Exporten. Auswahl wechselt die Session; Aufräumen über das Kontextmenü.
 struct SessionSidebar: View {
     @Environment(AppModel.self) private var model
-    @State private var pendingDelete: SessionSummary?
-    @State private var pendingArchive: SessionSummary?
-    @State private var pendingEmptyTrash: SessionSummary?
-
-    private var selection: Binding<URL?> {
-        Binding(
-            get: { model.sessionDirectory },
-            set: { url in if let url, url != model.sessionDirectory { model.openSession(at: url) } }
-        )
-    }
+    @State private var selection: Set<URL> = []
+    @State private var pendingDelete: [SessionSummary] = []
+    @State private var pendingArchive: [SessionSummary] = []
+    @State private var pendingEmptyTrash: [SessionSummary] = []
 
     private var deletePresented: Binding<Bool> {
-        Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } })
+        Binding(get: { !pendingDelete.isEmpty }, set: { if !$0 { pendingDelete = [] } })
     }
 
     private var archivePresented: Binding<Bool> {
-        Binding(get: { pendingArchive != nil }, set: { if !$0 { pendingArchive = nil } })
+        Binding(get: { !pendingArchive.isEmpty }, set: { if !$0 { pendingArchive = [] } })
     }
 
     private var emptyTrashPresented: Binding<Bool> {
-        Binding(get: { pendingEmptyTrash != nil }, set: { if !$0 { pendingEmptyTrash = nil } })
+        Binding(get: { !pendingEmptyTrash.isEmpty }, set: { if !$0 { pendingEmptyTrash = [] } })
     }
 
     private func bytes(_ value: Int64) -> String {
         value.formatted(.byteCount(style: .file))
+    }
+
+    private func summaries(for urls: Set<URL>) -> [SessionSummary] {
+        model.summaries.filter { urls.contains($0.directory) }
+    }
+
+    /// Eine einzelne Auswahl öffnet die Session; eine Mehrfachauswahl nur markiert.
+    private func selectionChanged(_ urls: Set<URL>) {
+        guard urls.count == 1, let url = urls.first, url != model.sessionDirectory else { return }
+        model.openSession(at: url)
     }
 
     var body: some View {
@@ -38,26 +42,34 @@ struct SessionSidebar: View {
             .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 360)
             .overlay { emptyOverlay }
             .task { model.refreshSummaries() }
+            .onChange(of: selection) { _, urls in selectionChanged(urls) }
+            .onChange(of: model.sessionDirectory) { _, directory in
+                if let directory, selection != [directory] { selection = [directory] }
+            }
+            .onDeleteCommand {
+                let chosen = summaries(for: selection)
+                if !chosen.isEmpty { pendingDelete = chosen }
+            }
             .confirmationDialog(deleteTitle, isPresented: deletePresented, titleVisibility: .visible) {
                 Button(L("In den Papierkorb legen"), role: .destructive) {
-                    if let summary = pendingDelete { model.deleteSession(summary) }
-                    pendingDelete = nil
+                    model.deleteSessions(pendingDelete)
+                    pendingDelete = []
                 }
             } message: {
-                Text(L("Bilder, Text und Exporte wandern in den Papierkorb von macOS und lassen sich dort zurückholen."))
+                Text(deleteMessage)
             }
             .confirmationDialog(archiveTitle, isPresented: archivePresented, titleVisibility: .visible) {
                 Button(L("Archivieren"), role: .destructive) {
-                    if let summary = pendingArchive { model.archiveSession(summary) }
-                    pendingArchive = nil
+                    model.archiveSessions(pendingArchive)
+                    pendingArchive = []
                 }
             } message: {
                 Text(archiveMessage)
             }
-            .confirmationDialog(L("Papierkorb der Session leeren?"), isPresented: emptyTrashPresented, titleVisibility: .visible) {
+            .confirmationDialog(emptyTrashTitle, isPresented: emptyTrashPresented, titleVisibility: .visible) {
                 Button(L("Leeren"), role: .destructive) {
-                    if let summary = pendingEmptyTrash { model.emptyTrash(of: summary) }
-                    pendingEmptyTrash = nil
+                    model.emptyTrash(of: pendingEmptyTrash)
+                    pendingEmptyTrash = []
                 }
             } message: {
                 Text(emptyTrashMessage)
@@ -65,16 +77,19 @@ struct SessionSidebar: View {
     }
 
     private var list: some View {
-        List(selection: selection) {
+        List(selection: $selection) {
             Section {
                 ForEach(model.summaries) { summary in
                     SessionRow(summary: summary)
                         .tag(summary.directory)
-                        .contextMenu { contextMenu(for: summary) }
                 }
             } header: {
                 header
             }
+        }
+        // Rechtsklick wirkt auf die ganze Markierung; auf einer unmarkierten Zeile nur auf diese.
+        .contextMenu(forSelectionType: URL.self) { urls in
+            contextMenu(for: summaries(for: urls))
         }
     }
 
@@ -95,39 +110,60 @@ struct SessionSidebar: View {
         }
     }
 
+    @ViewBuilder
+    private func contextMenu(for chosen: [SessionSummary]) -> some View {
+        let count = chosen.count
+        if count == 1, let only = chosen.first {
+            Button(L("Öffnen")) { model.openSession(at: only.directory) }
+            Button(L("Im Finder zeigen")) { model.revealSession(only) }
+            Divider()
+        }
+        let trashCount = chosen.reduce(0) { $0 + $1.trashedCount }
+        let trashSize = bytes(chosen.reduce(0) { $0 + $1.trashBytes })
+        Button(L("Papierkorb leeren (\(trashCount) Seiten, \(trashSize))")) { pendingEmptyTrash = chosen }
+            .disabled(trashCount == 0)
+        let archivable = chosen.filter { !$0.archived && $0.pageCount > 0 }
+        Button(count == 1 ? L("Archivieren: Bilder entfernen, Text behalten…") : L("\(archivable.count) Sessions archivieren…")) { pendingArchive = archivable }
+            .disabled(archivable.isEmpty)
+        Divider()
+        Button(count == 1 ? L("Session in den Papierkorb legen…") : L("\(count) Sessions in den Papierkorb legen…"), role: .destructive) { pendingDelete = chosen }
+            .disabled(chosen.isEmpty)
+    }
+
+    private func names(_ chosen: [SessionSummary]) -> String {
+        chosen.map { "„\($0.displayName)“" }.joined(separator: ", ")
+    }
+
     private var deleteTitle: String {
-        L("Session „\(pendingDelete?.displayName ?? "")“ in den Papierkorb legen?")
+        pendingDelete.count == 1
+            ? L("Session „\(pendingDelete.first?.displayName ?? "")“ in den Papierkorb legen?")
+            : L("\(pendingDelete.count) Sessions in den Papierkorb legen?")
+    }
+
+    private var deleteMessage: String {
+        let size = bytes(pendingDelete.reduce(0) { $0 + $1.totalBytes })
+        return L("\(size) an Bildern, Text und Exporten wandern in den Papierkorb von macOS und lassen sich dort zurückholen.")
     }
 
     private var archiveTitle: String {
-        L("Session „\(pendingArchive?.displayName ?? "")“ archivieren?")
+        pendingArchive.count == 1
+            ? L("Session „\(pendingArchive.first?.displayName ?? "")“ archivieren?")
+            : L("\(pendingArchive.count) Sessions archivieren?")
     }
 
     private var archiveMessage: String {
-        let size = bytes(pendingArchive?.imagesBytes ?? 0)
+        let size = bytes(pendingArchive.reduce(0) { $0 + $1.imagesBytes })
         return L("Die Seitenbilder (\(size)) wandern in den Papierkorb von macOS. Text und Exporte bleiben; Markdown, Word und EPUB gehen weiter, PDF nicht mehr.")
     }
 
-    private var emptyTrashMessage: String {
-        let count = pendingEmptyTrash?.trashedCount ?? 0
-        let size = bytes(pendingEmptyTrash?.trashBytes ?? 0)
-        return L("\(count) gelöschte Seiten, \(size), wandern in den Papierkorb von macOS.")
+    private var emptyTrashTitle: String {
+        pendingEmptyTrash.count == 1 ? L("Papierkorb der Session leeren?") : L("Papierkorb von \(pendingEmptyTrash.count) Sessions leeren?")
     }
 
-    @ViewBuilder
-    private func contextMenu(for summary: SessionSummary) -> some View {
-        Button(L("Öffnen")) { model.openSession(at: summary.directory) }
-        Button(L("Im Finder zeigen")) { model.revealSession(summary) }
-        Divider()
-        let trashSize = bytes(summary.trashBytes)
-        Button(L("Papierkorb leeren (\(summary.trashedCount) Seiten, \(trashSize))")) {
-            pendingEmptyTrash = summary
-        }
-        .disabled(summary.trashedCount == 0 && summary.trashBytes == 0)
-        Button(L("Archivieren: Bilder entfernen, Text behalten…")) { pendingArchive = summary }
-            .disabled(summary.archived || summary.pageCount == 0)
-        Divider()
-        Button(L("Session in den Papierkorb legen…"), role: .destructive) { pendingDelete = summary }
+    private var emptyTrashMessage: String {
+        let count = pendingEmptyTrash.reduce(0) { $0 + $1.trashedCount }
+        let size = bytes(pendingEmptyTrash.reduce(0) { $0 + $1.trashBytes })
+        return L("\(count) gelöschte Seiten, \(size), wandern in den Papierkorb von macOS.")
     }
 }
 

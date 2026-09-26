@@ -692,26 +692,32 @@ extension AppModel {
         NSWorkspace.shared.activateFileViewerSelecting([summary.directory])
     }
 
-    func deleteSession(_ summary: SessionSummary) {
-        do {
-            try SessionStore.moveToSystemTrash(summary.directory)
-            if summary.directory == sessionDirectory {
-                session = nil
-                sessionDirectory = nil
-                sessionTitle = ""
-                pages = []
-                texts = [:]
-                imageCache = [:]
-                selectedPageID = nil
-                suggestedTitle = nil
-                sessionArchived = false
-                trashedCount = 0
+    func deleteSessions(_ summaries: [SessionSummary]) {
+        for summary in summaries {
+            do {
+                try SessionStore.moveToSystemTrash(summary.directory)
+                if summary.directory == sessionDirectory { closeSession() }
+                lastError = nil
+            } catch {
+                lastError = error.localizedDescription
             }
-            lastError = nil
-        } catch {
-            lastError = error.localizedDescription
         }
         refreshSummaries()
+    }
+
+    func deleteSession(_ summary: SessionSummary) { deleteSessions([summary]) }
+
+    private func closeSession() {
+        session = nil
+        sessionDirectory = nil
+        sessionTitle = ""
+        pages = []
+        texts = [:]
+        imageCache = [:]
+        selectedPageID = nil
+        suggestedTitle = nil
+        sessionArchived = false
+        trashedCount = 0
     }
 
     private func store(for summary: SessionSummary) throws -> SessionStore {
@@ -719,36 +725,44 @@ extension AppModel {
         return try SessionStore.open(directory: summary.directory)
     }
 
-    func emptyTrash(of summary: SessionSummary) {
+    func emptyTrash(of summaries: [SessionSummary]) {
         Task {
-            do {
-                let store = try store(for: summary)
-                try await store.emptyTrash()
-                if summary.directory == sessionDirectory { trashedCount = 0 }
-                lastError = nil
-            } catch {
-                lastError = error.localizedDescription
+            for summary in summaries {
+                do {
+                    let store = try store(for: summary)
+                    try await store.emptyTrash()
+                    if summary.directory == sessionDirectory { trashedCount = 0 }
+                    lastError = nil
+                } catch {
+                    lastError = error.localizedDescription
+                }
             }
             refreshSummaries()
         }
     }
 
-    func archiveSession(_ summary: SessionSummary) {
+    func emptyTrash(of summary: SessionSummary) { emptyTrash(of: [summary]) }
+
+    func archiveSessions(_ summaries: [SessionSummary]) {
         Task {
-            do {
-                let store = try store(for: summary)
-                try await store.archive()
-                if summary.directory == sessionDirectory {
-                    sessionArchived = true
-                    trashedCount = 0
-                    imageCache = [:]
-                    pages = await store.orderedPages
+            for summary in summaries where !summary.archived {
+                do {
+                    let store = try store(for: summary)
+                    try await store.archive()
+                    if summary.directory == sessionDirectory {
+                        sessionArchived = true
+                        trashedCount = 0
+                        imageCache = [:]
+                        pages = await store.orderedPages
+                    }
+                    lastError = nil
+                } catch {
+                    lastError = error.localizedDescription
                 }
-                lastError = nil
-            } catch {
-                lastError = error.localizedDescription
             }
             refreshSummaries()
         }
     }
+
+    func archiveSession(_ summary: SessionSummary) { archiveSessions([summary]) }
 }
