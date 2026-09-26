@@ -61,6 +61,12 @@ fi
 cp LICENSE "$OUT/Contents/Resources/Lizenzen/DeskViewBookScanner-EUPL-1.2.txt" 2>/dev/null || {
   mkdir -p "$OUT/Contents/Resources/Lizenzen"; cp LICENSE "$OUT/Contents/Resources/Lizenzen/DeskViewBookScanner-EUPL-1.2.txt"; }
 
+# App-Icon aus dem Skript, einmal gerendert und dann wiederverwendet.
+if [[ ! -f build/AppIcon.icns || scripts/make_icon.swift -nt build/AppIcon.icns ]]; then
+  swift scripts/make_icon.swift build/AppIcon.icns
+fi
+cp build/AppIcon.icns "$OUT/Contents/Resources/AppIcon.icns"
+
 cat > "$OUT/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -70,6 +76,7 @@ cat > "$OUT/Contents/Info.plist" <<PLIST
   <key>CFBundleLocalizations</key><array><string>de</string><string>en</string></array>
   <key>CFBundleDisplayName</key><string>Desk View Book Scanner</string>
   <key>CFBundleExecutable</key><string>$APP_NAME</string>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundleIdentifier</key><string>$BUNDLE_ID</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>CFBundleName</key><string>$APP_NAME</string>
