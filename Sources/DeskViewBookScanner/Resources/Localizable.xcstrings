@@ -42,6 +42,86 @@
         }
       }
     },
+    "%lld Zeilen": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Zeile"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Zeilen"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld line"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld lines"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Als EPUB exportieren…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export as EPUB…"
+          }
+        }
+      }
+    },
+    "Als Markdown exportieren…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export as Markdown…"
+          }
+        }
+      }
+    },
+    "Als PDF exportieren…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export as PDF…"
+          }
+        }
+      }
+    },
+    "Als Word (DOCX) exportieren…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export as Word (DOCX)…"
+          }
+        }
+      }
+    },
     "Aufgenommen": {
       "localizations": {
         "en": {
@@ -152,6 +232,16 @@
         }
       }
     },
+    "Eigener Pfad zu pandoc": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom path to pandoc"
+          }
+        }
+      }
+    },
     "Einen Session-Ordner wählen (enthält session.json).": {
       "localizations": {
         "en": {
@@ -182,6 +272,26 @@
         }
       }
     },
+    "Export %lld von %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exporting %lld of %lld"
+          }
+        }
+      }
+    },
+    "Exportieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export"
+          }
+        }
+      }
+    },
     "Fenster größer ziehen: unter 1600 px Breite reicht die Auflösung nicht.": {
       "localizations": {
         "en": {
@@ -208,6 +318,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Grant Access…"
+          }
+        }
+      }
+    },
+    "Gefunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found"
           }
         }
       }
@@ -272,12 +392,32 @@
         }
       }
     },
+    "Mitgeliefert im App-Bundle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bundled with the app"
+          }
+        }
+      }
+    },
     "Nach der Freigabe die App einmal beenden und neu starten.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "After granting access, quit and reopen the app once."
+          }
+        }
+      }
+    },
+    "Nein": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No"
           }
         }
       }
@@ -302,16 +442,6 @@
         }
       }
     },
-    "Noch kein Text erkannt. Die Texterkennung kommt mit dem PDF-Export.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No text recognized yet. Text recognition arrives with the PDF export."
-          }
-        }
-      }
-    },
     "Noch keine Seiten": {
       "localizations": {
         "en": {
@@ -322,12 +452,42 @@
         }
       }
     },
+    "Ohne Pandoc schreibt die App Markdown selbst, mit einfacherer Struktur. Pandoc liefert bessere Ergebnisse und zusätzlich Word und EPUB. Installation: brew install pandoc": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without Pandoc the app writes Markdown itself, with simpler structure. Pandoc gives better results plus Word and EPUB. Install with: brew install pandoc"
+          }
+        }
+      }
+    },
     "Ordner wählen…": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Choose Folder…"
+          }
+        }
+      }
+    },
+    "Pandoc": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pandoc"
+          }
+        }
+      }
+    },
+    "Pfad": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Path"
           }
         }
       }
@@ -432,12 +592,32 @@
         }
       }
     },
-    "Text liegt vor, Anzeige folgt mit dem PDF-Export.": {
+    "Text wird erkannt…": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Text is available; display arrives with the PDF export."
+            "value": "Recognizing text…"
+          }
+        }
+      }
+    },
+    "Text wird geladen…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading text…"
+          }
+        }
+      }
+    },
+    "Texterkennung %lld von %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recognizing text %lld of %lld"
           }
         }
       }
@@ -458,6 +638,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Title"
+          }
+        }
+      }
+    },
+    "Titelvorschlag vom Umschlag: „%@“, ⏎ im Titelfeld übernimmt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title suggested from the cover: “%@”, press ⏎ in the title field to apply."
           }
         }
       }
@@ -488,6 +678,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open"
+          }
+        }
+      }
+    },
+    "Übernehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply"
           }
         }
       }

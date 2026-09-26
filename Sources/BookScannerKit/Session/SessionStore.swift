@@ -21,6 +21,7 @@ public enum SessionError: Error, LocalizedError, Equatable {
 public actor SessionStore {
     public static let documentFileName = "session.json"
     public static let trashDirectoryName = "Papierkorb"
+    public static let textDirectoryName = "OCR"
     public static let imageFileExtension = "heic"
 
     public private(set) var directory: URL
@@ -100,6 +101,33 @@ public actor SessionStore {
         directory.appending(path: Self.trashDirectoryName, directoryHint: .isDirectory)
     }
 
+    public var textDirectory: URL {
+        directory.appending(path: Self.textDirectoryName, directoryHint: .isDirectory)
+    }
+
+    /// `OCR/Aufnahme-0001.json` zu `Aufnahme-0001.heic`.
+    public func textFileURL(for page: PageRecord) -> URL {
+        let base = (page.fileName as NSString).deletingPathExtension
+        return textDirectory.appending(path: base + ".json")
+    }
+
+    // MARK: OCR-Text
+
+    public func saveText(_ text: PageText, for page: PageRecord) throws {
+        try FileManager.default.createDirectory(at: textDirectory, withIntermediateDirectories: true)
+        let data = try Self.encoder.encode(text)
+        try data.write(to: textFileURL(for: page), options: .atomic)
+        try updateOCRStatus(.done, for: page.id)
+    }
+
+    /// `nil`, wenn noch kein Text erkannt wurde.
+    public func loadText(for page: PageRecord) throws -> PageText? {
+        let url = textFileURL(for: page)
+        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        let data = try Data(contentsOf: url)
+        return try Self.decoder.decode(PageText.self, from: data)
+    }
+
     /// Schreibt das Bild als HEIC in den Session-Ordner und hängt die Seite ans Ende.
     @discardableResult
     public func addPage(_ image: CGImage, capturedAt: Date = .now) throws -> PageRecord {
@@ -155,6 +183,12 @@ public actor SessionStore {
             if fm.fileExists(atPath: source.path) {
                 if fm.fileExists(atPath: target.path) { try fm.removeItem(at: target) }
                 try fm.moveItem(at: source, to: target)
+            }
+            let textSource = textFileURL(for: page)
+            if fm.fileExists(atPath: textSource.path) {
+                let textTarget = trashDirectory.appending(path: textSource.lastPathComponent)
+                if fm.fileExists(atPath: textTarget.path) { try fm.removeItem(at: textTarget) }
+                try fm.moveItem(at: textSource, to: textTarget)
             }
             document.pages.remove(at: index)
             document.pageOrder.removeAll { $0 == id }

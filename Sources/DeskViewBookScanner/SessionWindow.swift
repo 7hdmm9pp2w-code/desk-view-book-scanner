@@ -30,6 +30,17 @@ struct SessionWindow: View {
                     .disabled(model.sessionDirectory == nil)
             }
             ToolbarItemGroup(placement: .primaryAction) {
+                Menu {
+                    Button(L("Als PDF exportieren…")) { model.exportPDF() }
+                    Button(L("Als Markdown exportieren…")) { model.exportText(format: .markdown) }
+                    Button(L("Als Word (DOCX) exportieren…")) { model.exportText(format: .docx) }
+                        .disabled(model.pandoc == nil)
+                    Button(L("Als EPUB exportieren…")) { model.exportText(format: .epub) }
+                        .disabled(model.pandoc == nil)
+                } label: {
+                    Label(L("Exportieren"), systemImage: "square.and.arrow.up")
+                }
+                .disabled(!model.canExport)
                 Button {
                     model.trashSelectedPage()
                 } label: {
@@ -47,6 +58,10 @@ struct SessionWindow: View {
         }
         .onAppear { titleDraft = model.sessionTitle }
         .onChange(of: model.sessionTitle) { _, title in titleDraft = title }
+        .onChange(of: model.suggestedTitle) { _, suggestion in
+            // Vorschlag vom Umschlag landet im Feld; erst ⏎ benennt den Ordner um.
+            if let suggestion, titleDraft.isEmpty { titleDraft = suggestion }
+        }
     }
 
     private var windowTitle: String {
@@ -63,6 +78,27 @@ struct StatusBar: View {
         HStack(alignment: .center, spacing: 16) {
             statusView
             Spacer(minLength: 12)
+            if let status = model.exportStatus {
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small)
+                    switch status {
+                    case .recognizing(let done, let total):
+                        Text(L("Texterkennung \(done) von \(total)")).monospacedDigit()
+                    case .writing(let done, let total):
+                        Text(L("Export \(done) von \(total)")).monospacedDigit()
+                    }
+                }
+                .foregroundStyle(.secondary)
+            } else if let suggestion = model.suggestedTitle, model.sessionTitle.isEmpty {
+                HStack(spacing: 6) {
+                    Text(L("Titelvorschlag vom Umschlag: „\(suggestion)“, ⏎ im Titelfeld übernimmt."))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Button(L("Übernehmen")) { model.setTitle(suggestion); model.dismissSuggestedTitle() }
+                        .controlSize(.small)
+                }
+            }
             if let error = model.lastError {
                 Label(error, systemImage: "exclamationmark.triangle.fill")
                     .foregroundStyle(.red)
@@ -223,6 +259,7 @@ struct PageCell: View {
 struct PageDetail: View {
     @Environment(AppModel.self) private var model
     @State private var image: CGImage?
+    @State private var text: PageText?
 
     private var page: PageRecord? {
         model.pages.first { $0.id == model.selectedPageID }
@@ -262,19 +299,31 @@ struct PageDetail: View {
                 .monospacedDigit()
 
                 Divider()
-                Text(L("Erkannter Text")).font(.headline)
+                HStack {
+                    Text(L("Erkannter Text")).font(.headline)
+                    Spacer()
+                    if let text {
+                        Text(L("\(text.lines.count) Zeilen")).foregroundStyle(.secondary).monospacedDigit()
+                    }
+                }
                 ScrollView {
-                    Text(ocrText(for: page))
-                        .foregroundStyle(page.ocrStatus == .done ? .primary : .secondary)
+                    Text(text?.plainText ?? ocrText(for: page))
+                        .foregroundStyle(text == nil ? .secondary : .primary)
+                        .font(.system(size: 13))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .textSelection(.enabled)
                 }
-                .frame(minHeight: 120, maxHeight: 220)
+                .frame(minHeight: 120, maxHeight: 280)
             }
             .padding(12)
             .task(id: page.id) {
                 image = nil
+                text = nil
                 image = await model.image(for: page, maxPixelSize: AppModel.detailImageSize)
+                text = await model.text(for: page)
+            }
+            .onChange(of: model.texts[page.id]) { _, updated in
+                if let updated { text = updated }
             }
         } else {
             ContentUnavailableView(L("Keine Seite ausgewählt"), systemImage: "doc.text.magnifyingglass")
@@ -283,9 +332,9 @@ struct PageDetail: View {
 
     private func ocrText(for page: PageRecord) -> String {
         switch page.ocrStatus {
-        case .pending: return L("Noch kein Text erkannt. Die Texterkennung kommt mit dem PDF-Export.")
+        case .pending: return L("Text wird erkannt…")
         case .failed: return L("Texterkennung fehlgeschlagen.")
-        case .done: return L("Text liegt vor, Anzeige folgt mit dem PDF-Export.")
+        case .done: return L("Text wird geladen…")
         }
     }
 }

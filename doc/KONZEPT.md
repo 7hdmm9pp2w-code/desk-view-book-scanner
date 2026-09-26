@@ -98,9 +98,17 @@ DeskViewQuelle ──► Erfassung ──► Verarbeitung ──► Session ─�
   - Pandoc vorhanden (`/opt/homebrew/bin/pandoc`, `/usr/local/bin/pandoc` oder Pfad in
     den Einstellungen): `pandoc -f html -t gfm --wrap=none`, und auf Wunsch gleich
     weiter nach `.docx` oder `.epub`, weil Pandoc das mitbringt.
-  - Kein Pandoc: eigener, einfacher HTML→Markdown-Schreiber im Kit, damit die Option
+  - Kein Pandoc: eigener, einfacher Markdown-Schreiber im Kit, damit die Option
     nie tot ist. Der Hinweis in der Oberfläche sagt dann, dass Pandoc bessere
     Ergebnisse liefert und wie man es installiert.
+  - **Pandoc mitgeliefert** (beschlossen 26.09.2026): Das Build-Skript lädt eine
+    festgenagelte Version mit geprüfter SHA-256 und legt sie als Hilfsprogramm unter
+    `Contents/Helpers/pandoc` ab, Suchreihenfolge: Bundle, Einstellungspfad, Homebrew.
+    Kein SwiftPM-Abhängigkeit, das kennt keine Laufzeit-Binaries. Lizenz: Pandoc ist
+    GPL-2.0-or-later; als getrennt aufgerufener Prozess ist es Beigabe, kein
+    abgeleitetes Werk, die App bleibt EUPL. Bedingungen: GPL-Text und Copyright im
+    Bundle, Quell-Tarball der gebündelten Version zum Release anbieten. Nicht für den
+    App Store geeignet, dessen Bedingungen vertragen sich nicht mit der GPL.
   Silbentrennung am Zeilenende (`Wör-` + `ter`) wird vor dem Export zusammengezogen,
   wenn das Ergebnis im Wörterbuch (`NSSpellChecker`) steht; sonst bleibt der Bindestrich.
 
@@ -176,6 +184,21 @@ PDF-Export wieder durchsuchbar sein. Screenshot und Desk View bleiben Handprobe.
     Oberfläche).
   - Zeitstempel in `session.json` sind ISO 8601 mit Millisekunden; Werte werden beim
     Anlegen durch dasselbe Format normalisiert, damit Speicher und Platte exakt gleich sind.
+
+- **Schritt 2 fertig (26.09.2026):** OCR nach jeder Aufnahme im Hintergrund
+  (`PageProcessor`), Text als `OCR/<Aufnahme>.json` neben dem Bild, PDF mit
+  unsichtbarer Textebene, Markdown über Pandoc oder eigenen Schreiber, Word und EPUB
+  über Pandoc, Titelvorschlag vom Umschlag ins Titelfeld. Befunde:
+  - Vision hat seit macOS 15 eine Swift-API (`RecognizeTextRequest`), die wir statt
+    `VNRecognizeTextRequest` nutzen. Der erste Lauf im Prozess dauert rund 25 s
+    (Modell laden), danach unter einer Sekunde pro Seite.
+  - Pandoc verschluckt HTML-Kommentare. Seitenwechsel gehen daher als Marker-Absatz
+    `@@SEITE 12@@` durch Pandoc und werden danach zu `<!-- Seite 12 -->`.
+  - Ein aus JPEG-Daten erzeugtes `CGImage` bettet CoreGraphics als DCTDecode ins PDF
+    ein; so bleibt das PDF klein. Test prüft das am Bytestrom.
+  - Struktur (Absätze, Überschriften) kommt aus einem gemeinsamen Blockmodell, aus dem
+    HTML und Markdown gerendert werden; das ist derselbe Weg wie im Konzept, nur ohne
+    den Umweg HTML→Markdown im Kit.
 
 ## Bekannte Risiken
 

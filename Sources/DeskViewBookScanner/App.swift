@@ -33,6 +33,17 @@ struct DeskViewBookScannerApp: App {
                     }
                 }
                 Divider()
+                Button(L("Als PDF exportieren…")) { model.exportPDF() }
+                    .keyboardShortcut("e")
+                    .disabled(!model.canExport)
+                Button(L("Als Markdown exportieren…")) { model.exportText(format: .markdown) }
+                    .keyboardShortcut("e", modifiers: [.command, .shift])
+                    .disabled(!model.canExport)
+                Button(L("Als Word (DOCX) exportieren…")) { model.exportText(format: .docx) }
+                    .disabled(!model.canExport || model.pandoc == nil)
+                Button(L("Als EPUB exportieren…")) { model.exportText(format: .epub) }
+                    .disabled(!model.canExport || model.pandoc == nil)
+                Divider()
                 Button(L("Im Finder zeigen")) { model.revealSessionInFinder() }
                     .disabled(model.sessionDirectory == nil)
             }

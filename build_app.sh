@@ -12,16 +12,19 @@
 #   ./build_app.sh            → build/DeskViewBookScanner.app (release)
 #   ./build_app.sh debug      → Debug-Konfiguration
 #   ./build_app.sh --run      → bauen und starten
+#   ./build_app.sh --without-pandoc → ohne mitgeliefertes Pandoc (kleineres Bundle)
 set -euo pipefail
 cd "$(dirname "$0")"
 
 CONFIG=release
 RUN=0
+WITH_PANDOC=1
 for arg in "$@"; do
   case "$arg" in
     debug) CONFIG=debug ;;
     release) CONFIG=release ;;
     --run) RUN=1 ;;
+    --without-pandoc) WITH_PANDOC=0 ;;
     *) echo "Unbekanntes Argument: $arg" >&2; exit 2 ;;
   esac
 done
@@ -45,6 +48,18 @@ RESOURCE_BUNDLE="$BIN_DIR/${APP_NAME}_${APP_NAME}.bundle"
 if [[ -d "$RESOURCE_BUNDLE" ]]; then
   cp -R "$RESOURCE_BUNDLE" "$OUT/Contents/Resources/"
 fi
+
+# Pandoc als Hilfsprogramm (GPL, separater Prozess) samt Lizenztexten.
+if [[ $WITH_PANDOC -eq 1 ]]; then
+  ./scripts/fetch_pandoc.sh
+  PANDOC_DIR="$(ls -d build/vendor/pandoc-*/ | head -1)"
+  mkdir -p "$OUT/Contents/Helpers" "$OUT/Contents/Resources/Lizenzen"
+  cp "$PANDOC_DIR/pandoc" "$OUT/Contents/Helpers/pandoc"
+  cp "$PANDOC_DIR/COPYING.md" "$OUT/Contents/Resources/Lizenzen/Pandoc-COPYING.md"
+  cp "$PANDOC_DIR/COPYRIGHT" "$OUT/Contents/Resources/Lizenzen/Pandoc-COPYRIGHT.txt"
+fi
+cp LICENSE "$OUT/Contents/Resources/Lizenzen/DeskViewBookScanner-EUPL-1.2.txt" 2>/dev/null || {
+  mkdir -p "$OUT/Contents/Resources/Lizenzen"; cp LICENSE "$OUT/Contents/Resources/Lizenzen/DeskViewBookScanner-EUPL-1.2.txt"; }
 
 cat > "$OUT/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -74,6 +89,9 @@ if [[ -z "${SIGN_IDENTITY:-}" ]]; then
   SIGN_IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null \
     | grep -o '"Apple Development: [^"]*"' | head -1 | tr -d '"')"
   SIGN_IDENTITY="${SIGN_IDENTITY:--}"
+fi
+if [[ -x "$OUT/Contents/Helpers/pandoc" ]]; then
+  codesign --force --sign "$SIGN_IDENTITY" --options runtime "$OUT/Contents/Helpers/pandoc"
 fi
 codesign --force --sign "$SIGN_IDENTITY" --identifier "$BUNDLE_ID" --options runtime "$OUT"
 echo "Gebaut: $OUT ($CONFIG, $VERSION, signiert mit: $SIGN_IDENTITY)"

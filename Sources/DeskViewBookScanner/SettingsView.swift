@@ -3,6 +3,7 @@ import BookScannerKit
 
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
+    @State private var pandocDraft = ""
 
     var body: some View {
         Form {
@@ -27,6 +28,18 @@ struct SettingsView: View {
                         .foregroundStyle(.orange)
                 }
             }
+            Section(L("Pandoc")) {
+                if let pandoc = model.pandoc {
+                    LabeledContent(L("Gefunden"), value: pandoc.version() ?? pandoc.executable.path)
+                    LabeledContent(L("Pfad"), value: pandoc.isBundled ? L("Mitgeliefert im App-Bundle") : pandoc.executable.path)
+                } else {
+                    LabeledContent(L("Gefunden"), value: L("Nein"))
+                    Text(L("Ohne Pandoc schreibt die App Markdown selbst, mit einfacherer Struktur. Pandoc liefert bessere Ergebnisse und zusätzlich Word und EPUB. Installation: brew install pandoc"))
+                        .foregroundStyle(.secondary)
+                }
+                TextField(L("Eigener Pfad zu pandoc"), text: $pandocDraft)
+                    .onSubmit { model.setPandocPath(pandocDraft) }
+            }
             Section(L("Bildschirmaufnahme")) {
                 LabeledContent(L("Freigabe"), value: model.permissionGranted ? L("Erteilt") : L("Nicht erteilt"))
                 Button(L("Systemeinstellungen öffnen")) { model.openPermissionSettings() }
@@ -35,6 +48,7 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .font(.system(size: 13))
         .frame(width: 520)
+        .onAppear { pandocDraft = model.pandocPath }
     }
 
     private func chooseFolder() {

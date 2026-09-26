@@ -1,5 +1,6 @@
 import AppKit
 import Observation
+import UniformTypeIdentifiers
 import BookScannerKit
 
 /// Zustand der App für Menüleiste, Session-Fenster und Einstellungen.
@@ -7,6 +8,7 @@ import BookScannerKit
 @Observable
 final class AppModel {
     static let sessionRootDefaultsKey = "sessionRootPath"
+    static let pandocPathDefaultsKey = "pandocPath"
     static let cellThumbnailSize = 480
     static let detailImageSize = 2000
 
@@ -16,6 +18,7 @@ final class AppModel {
     }
 
     private let source = DeskViewSource()
+    private let processor = PageProcessor()
     private var hotKey: HotKey?
     private var monitorTask: Task<Void, Never>?
     private var imageCache: [String: CGImage] = [:]
@@ -29,8 +32,19 @@ final class AppModel {
     private(set) var isCapturing = false
     private(set) var isLaunchingDeskView = false
     private(set) var hotKeyRegistered = false
+    private(set) var texts: [UUID: PageText] = [:]
+    private(set) var recognizingPageIDs: Set<UUID> = []
+    /// Titel aus der ersten Seite, solange die Session keinen hat. Nur ein Vorschlag.
+    private(set) var suggestedTitle: String?
+    private(set) var exportStatus: ExportStatus?
+    private(set) var pandocPath: String
     var lastError: String?
     var selectedPageID: UUID?
+
+    enum ExportStatus: Equatable {
+        case recognizing(done: Int, total: Int)
+        case writing(done: Int, total: Int)
+    }
 
     init() {
         if let path = UserDefaults.standard.string(forKey: Self.sessionRootDefaultsKey), !path.isEmpty {
@@ -38,6 +52,7 @@ final class AppModel {
         } else {
             sessionRoot = Self.defaultSessionRoot
         }
+        pandocPath = UserDefaults.standard.string(forKey: Self.pandocPathDefaultsKey) ?? ""
     }
 
     // MARK: Start
@@ -155,7 +170,12 @@ final class AppModel {
         sessionTitle = await store.document.title ?? ""
         pages = await store.orderedPages
         imageCache = [:]
+        texts = [:]
+        suggestedTitle = nil
         selectedPageID = pages.last?.id
+        for page in pages where page.ocrStatus == .pending {
+            recognizeText(for: page)
+        }
     }
 
     private func ensureSession() async throws -> SessionStore {
@@ -199,6 +219,7 @@ final class AppModel {
                 selectedPageID = page.id
                 lastError = nil
                 NSSound(named: "Tink")?.play()
+                recognizeText(for: page)
             } catch {
                 lastError = error.localizedDescription
                 NSSound.beep()
@@ -232,6 +253,7 @@ final class AppModel {
                 pages = await session.orderedPages
                 for id in pageIDs {
                     imageCache = imageCache.filter { !$0.key.hasPrefix(id.uuidString) }
+                    texts[id] = nil
                 }
                 if pages.isEmpty {
                     selectedPageID = nil
@@ -255,5 +277,152 @@ final class AppModel {
         }.value
         if let image { imageCache[key] = image }
         return image
+    }
+}
+
+// MARK: - Texterkennung und Export
+
+extension AppModel {
+    /// Erkennt den Text einer Seite im Hintergrund und merkt ihn sich.
+    func recognizeText(for page: PageRecord) {
+        guard let session, !recognizingPageIDs.contains(page.id), texts[page.id] == nil else { return }
+        recognizingPageIDs.insert(page.id)
+        Task {
+            defer { recognizingPageIDs.remove(page.id) }
+            do {
+                let text = try await processor.text(for: page, in: session)
+                texts[page.id] = text
+                pages = await session.orderedPages
+                if sessionTitle.isEmpty, suggestedTitle == nil, pages.first?.id == page.id {
+                    suggestedTitle = TitleSuggester.suggest(from: text)
+                }
+            } catch {
+                pages = await session.orderedPages
+                lastError = error.localizedDescription
+            }
+        }
+    }
+
+    /// Gespeicherter Text einer Seite, aus dem Cache oder von der Platte.
+    func text(for page: PageRecord) async -> PageText? {
+        if let cached = texts[page.id] { return cached }
+        guard let session, let text = try? await session.loadText(for: page) else { return nil }
+        texts[page.id] = text
+        return text
+    }
+
+    func dismissSuggestedTitle() {
+        suggestedTitle = nil
+    }
+
+    // MARK: Pandoc
+
+    var pandoc: Pandoc? {
+        Pandoc.locate(preferredPath: pandocPath)
+    }
+
+    func setPandocPath(_ path: String) {
+        pandocPath = path.trimmingCharacters(in: .whitespacesAndNewlines)
+        UserDefaults.standard.set(pandocPath, forKey: Self.pandocPathDefaultsKey)
+    }
+
+    // MARK: Export
+
+    var canExport: Bool {
+        !pages.isEmpty && exportStatus == nil
+    }
+
+    func exportPDF() {
+        guard let session, canExport else { return }
+        let createdAt = sessionCreatedAt
+        Task {
+            guard let url = savePanel(fileName: ExportNaming.fileName(createdAt: createdAt, title: sessionTitle, fileExtension: "pdf"), contentType: .pdf) else { return }
+            do {
+                let (urls, texts) = try await collectTexts(session: session)
+                let title = sessionTitle
+                let total = urls.count
+                exportStatus = .writing(done: 0, total: total)
+                try await Task.detached(priority: .userInitiated) { [self] in
+                    try PDFExporter().export(
+                        to: url, title: title.isEmpty ? nil : title, pageCount: total,
+                        load: { index in (try ImageFile.read(urls[index]), texts[index]) },
+                        progress: { done in Task { @MainActor in self.exportStatus = .writing(done: done, total: total) } }
+                    )
+                }.value
+                exportStatus = nil
+                lastError = nil
+                NSWorkspace.shared.activateFileViewerSelecting([url])
+            } catch {
+                exportStatus = nil
+                lastError = error.localizedDescription
+            }
+        }
+    }
+
+    func exportText(format: Pandoc.Format) {
+        guard let session, canExport else { return }
+        let createdAt = sessionCreatedAt
+        let pandoc = self.pandoc
+        if pandoc == nil && format != .markdown {
+            lastError = ExportError.pandocMissing.localizedDescription
+            return
+        }
+        let contentType: UTType = switch format {
+        case .markdown: UTType(filenameExtension: "md") ?? .plainText
+        case .docx: UTType(filenameExtension: "docx") ?? .data
+        case .epub: .epub
+        }
+        Task {
+            guard let url = savePanel(fileName: ExportNaming.fileName(createdAt: createdAt, title: sessionTitle, fileExtension: format.fileExtension), contentType: contentType) else { return }
+            do {
+                let (_, texts) = try await collectTexts(session: session)
+                let numbered = texts.enumerated().compactMap { index, text in text.map { (number: index + 1, text: $0) } }
+                let structurer = DocumentStructurer(wordChecker: SpellCheckerWordChecker(language: "de"))
+                let document = structurer.structure(pages: numbered, title: sessionTitle.isEmpty ? nil : sessionTitle)
+                exportStatus = .writing(done: 0, total: 1)
+                try await Task.detached(priority: .userInitiated) {
+                    try TextExporter.export(document, to: url, format: format, pandoc: pandoc)
+                }.value
+                exportStatus = nil
+                lastError = nil
+                NSWorkspace.shared.activateFileViewerSelecting([url])
+            } catch {
+                exportStatus = nil
+                lastError = error.localizedDescription
+            }
+        }
+    }
+
+    private var sessionCreatedAt: Date {
+        sessionDirectory.flatMap { try? $0.resourceValues(forKeys: [.creationDateKey]).creationDate } ?? .now
+    }
+
+    /// Text aller Seiten in Reihenfolge; erkennt, was noch fehlt.
+    private func collectTexts(session: SessionStore) async throws -> (urls: [URL], texts: [PageText?]) {
+        let pages = self.pages
+        var urls: [URL] = []
+        var result: [PageText?] = []
+        for (index, page) in pages.enumerated() {
+            exportStatus = .recognizing(done: index, total: pages.count)
+            urls.append(await session.fileURL(for: page))
+            do {
+                let text = try await processor.text(for: page, in: session)
+                texts[page.id] = text
+                result.append(text)
+            } catch {
+                result.append(nil)
+            }
+        }
+        self.pages = await session.orderedPages
+        return (urls, result)
+    }
+
+    private func savePanel(fileName: String, contentType: UTType) -> URL? {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [contentType]
+        panel.nameFieldStringValue = fileName
+        panel.canCreateDirectories = true
+        panel.isExtensionHidden = false
+        return panel.runModal() == .OK ? panel.url : nil
     }
 }
