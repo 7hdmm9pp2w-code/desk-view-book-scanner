@@ -262,6 +262,26 @@
         }
       }
     },
+    "Auto-Auslöser": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto Capture"
+          }
+        }
+      }
+    },
+    "Auto-Auslöser an": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto capture on"
+          }
+        }
+      }
+    },
     "Automatisch am Falz": {
       "localizations": {
         "en": {
@@ -282,6 +302,16 @@
         }
       }
     },
+    "Bild aus der gewählten Kamera erfassen (%@, auch aus anderen Apps)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture a frame from the chosen camera (%@, also from other apps)"
+          }
+        }
+      }
+    },
     "Bilder oder PDF importieren…": {
       "localizations": {
         "en": {
@@ -298,26 +328,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose images or PDF scans; pages are appended in this order."
-          }
-        }
-      }
-    },
-    "Bildschirmaufnahme": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Screen Recording"
-          }
-        }
-      }
-    },
-    "Bildschirmaufnahme nicht freigegeben": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Screen recording not allowed"
           }
         }
       }
@@ -372,62 +382,12 @@
         }
       }
     },
-    "Desk View": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Desk View"
-          }
-        }
-      }
-    },
     "Desk View Book Scanner": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Desk View Book Scanner"
-          }
-        }
-      }
-    },
-    "Desk View fotografiert das Buch von oben. Die Kameraauflösung reicht heute für Umschläge und Großdruck, nicht für Fließtext.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Desk View photographs the book from above. Today's camera resolution is enough for covers and large print, not for body text."
-          }
-        }
-      }
-    },
-    "Desk View gefunden": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Desk View found"
-          }
-        }
-      }
-    },
-    "Desk View läuft nicht": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Desk View is not running"
-          }
-        }
-      }
-    },
-    "Desk View starten": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Launch Desk View"
           }
         }
       }
@@ -502,6 +462,16 @@
         }
       }
     },
+    "Eine Kamera über dem Buch, 4K reicht für Fließtext. Der Auto-Auslöser erfasst nach jedem Umblättern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A camera above the book; 4K is enough for body text. Auto capture takes a page after each turn."
+          }
+        }
+      }
+    },
     "Einen Session-Ordner wählen (enthält session.json).": {
       "localizations": {
         "en": {
@@ -558,16 +528,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Export"
-          }
-        }
-      }
-    },
-    "Fenster größer ziehen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enlarge the window"
           }
         }
       }
@@ -672,6 +632,56 @@
         }
       }
     },
+    "Kamera": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera"
+          }
+        }
+      }
+    },
+    "Kamera freigeben…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow Camera…"
+          }
+        }
+      }
+    },
+    "Kamera wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Camera"
+          }
+        }
+      }
+    },
+    "Kameras neu suchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rescan Cameras"
+          }
+        }
+      }
+    },
+    "Kamerazugriff nicht freigegeben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera access not granted"
+          }
+        }
+      }
+    },
     "Kein Schnitt gefunden: keine Doppelseite oder Text über der Schnittlinie.": {
       "localizations": {
         "en": {
@@ -688,6 +698,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No iPhone found. Same Apple ID, Bluetooth and Wi-Fi on, iPhone unlocked and nearby?"
+          }
+        }
+      }
+    },
+    "Keine Kamera gefunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No camera found"
           }
         }
       }
@@ -718,6 +738,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Empty"
+          }
+        }
+      }
+    },
+    "Löst nach dem Umblättern aus, sobald das Bild 1,5 Sekunden ruhig liegt und sich von der letzten Seite unterscheidet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captures after turning the page, once the image has been still for 1.5 seconds and differs from the last page."
           }
         }
       }
@@ -1042,6 +1072,16 @@
         }
       }
     },
+    "Seiten glatt halten, Hände raus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep pages flat, hands out"
+          }
+        }
+      }
+    },
     "Session in den Papierkorb legen…": {
       "localizations": {
         "en": {
@@ -1138,16 +1178,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Keyboard Shortcut"
-          }
-        }
-      }
-    },
-    "Tastenkürzel %@, auch wenn Desk View vorn liegt.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Shortcut %@, also while Desk View is in front."
           }
         }
       }

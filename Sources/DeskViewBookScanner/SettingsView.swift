@@ -40,9 +40,13 @@ struct SettingsView: View {
                 TextField(L("Eigener Pfad zu pandoc"), text: $pandocDraft)
                     .onSubmit { model.setPandocPath(pandocDraft) }
             }
-            Section(L("Bildschirmaufnahme")) {
-                LabeledContent(L("Freigabe"), value: model.permissionGranted ? L("Erteilt") : L("Nicht erteilt"))
-                Button(L("Systemeinstellungen öffnen")) { model.openPermissionSettings() }
+            Section(L("Kamera")) {
+                LabeledContent(L("Freigabe"), value: model.cameraAuthorized ? L("Erteilt") : L("Nicht erteilt"))
+                HStack {
+                    Button(L("Freigabe erteilen…")) { model.requestCameraAccess() }
+                        .disabled(model.cameraAuthorized)
+                    Button(L("Systemeinstellungen öffnen")) { NSWorkspace.shared.open(AppModel.cameraSettingsURL) }
+                }
             }
         }
         .formStyle(.grouped)

@@ -11,6 +11,20 @@ struct PageDetail: View {
     }
 
     var body: some View {
+        VStack(spacing: 0) {
+            if model.captureSource == .camera, model.cameraRunning {
+                CameraPreview(session: model.camera.captureSession)
+                    .frame(height: 260)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .padding(12)
+                Divider()
+            }
+            pageContent
+        }
+    }
+
+    @ViewBuilder
+    private var pageContent: some View {
         if let page {
             VStack(alignment: .leading, spacing: 10) {
                 ZStack {

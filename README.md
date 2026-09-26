@@ -47,6 +47,35 @@ in [doc/UMSETZUNG.md](doc/UMSETZUNG.md).
 - Zum Bauen: Swift-Toolchain (Xcode oder Command Line Tools). Es gibt kein
   Xcode-Projekt, nur ein Swift Package.
 
+## Kamera und Auflösung
+
+Was die Texterkennung braucht, ist Pixel pro Buchstabe. Ein Taschenbuchtext ist ab
+etwa 20 Pixel Zeilenhöhe zuverlässig lesbar, unter 12 wird es Raten. Gemessen über
+AVFoundation, nicht geschätzt:
+
+| Quelle | Echte Auflösung | Reicht für |
+|---|---|---|
+| iPhone-Dokumentenscanner | ca. 1700 × 2700 pro Seite | Fließtext, der empfohlene Weg |
+| 4K-Kamera über dem Buch (z. B. Insta360 Link) | 3840 × 2160 | Fließtext, freihändig mit Auto-Auslöser |
+| Desk View (Mac oder iPhone) | 1920 × 1440, mehr gibt es nicht | Umschläge, Überschriften, Großdruck |
+| iPhone als Webcam | 1920 × 1440 | wie Desk View |
+
+Das Desk-View-Fenster zeigt mehr Pixel, als der Feed hat; das ist Hochskalierung.
+Und der Feed ist nicht überall gleich scharf: Desk View schneidet den unteren Teil
+des Ultraweitwinkel-Bildes aus und entzerrt ihn zu einer Draufsicht. Der ferne Rand
+des Schreibtischs wird dabei am stärksten gestreckt und ist am unschärfsten, die
+Zone an der Tastaturkante am schärfsten. Darum:
+
+- **Buch nah ans Gerät**, an die Tastaturkante, nicht in die Tischmitte.
+- **Trapez in der Desk-View-Einrichtung eng ums Buch ziehen**, damit die 1920 Pixel
+  nicht den halben Tisch abdecken.
+- **Für ganze Bücher** eine 4K-Kamera senkrecht über dem Buch oder der iPhone-Scan.
+  Der Auto-Auslöser erfasst nach jedem Umblättern, sobald das Bild anderthalb
+  Sekunden ruhig liegt und sich von der letzten Seite unterscheidet.
+- Eine unscharfe Seite muss nicht neu einsortiert werden: auswählen, ⇧⌘R, neu erfassen.
+
+`scripts/ocr_stats.py` zeigt je Aufnahme die Zeilenhöhen und Konfidenzen einer Session.
+
 ## Bauen und starten
 
 ```bash
@@ -55,8 +84,7 @@ in [doc/UMSETZUNG.md](doc/UMSETZUNG.md).
 
 Das Skript baut `build/DeskViewBookScanner.app`, signiert es mit der
 Apple-Development-Identität aus dem Schlüsselbund (sonst ad hoc) und startet es.
-Beim ersten Start fragt macOS nach der Freigabe für Bildschirmaufnahme; danach die
-App einmal beenden und neu starten.
+Die Kamera-Quelle fragt beim ersten Start nach der Kamera-Freigabe.
 
 Beim ersten Build lädt `scripts/fetch_pandoc.sh` Pandoc 3.11 für Apple Silicon
 (40 MB Archiv, 181 MB ausgepackt) samt Quell-Tarball nach `build/vendor/` und prüft die
@@ -74,7 +102,9 @@ swift test
 - Seiten kommen aus drei Quellen: **„Mit iPhone scannen"** ⇧⌘S öffnet Apples
   Dokumentenscanner auf dem iPhone (Continuity Camera), der Scan landet direkt in der
   Session; **Import** ⇧⌘I von PDFs und Bildern (Scans aus Notizen, vFlat, Fotos);
-  **Desk View** ⌥⌘S für Umschläge und Großdruck. Für Buchtext braucht es das iPhone.
+  **Kamera** ⌥⌘S holt ein Bild aus jeder Kamera, die AVFoundation sieht, im größten
+  Format: eine 4K-Kamera über dem Buch liefert 3840 × 2160 und lesbaren Fließtext, Desk
+  View bleibt bei 1920 × 1440. Der Auto-Auslöser erfasst nach jedem Umblättern.
 - Vor dem Speichern wird jede Seite aufrecht gedreht und eine Doppelseite am Falz
   geteilt (Menü „Aufnahme": automatisch, Mitte oder gar nicht). Vorhandene Seiten:
   „Seite teilen" ⌘T, drehen ⌘L / ⌘R.

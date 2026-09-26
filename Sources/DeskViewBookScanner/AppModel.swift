@@ -13,7 +13,7 @@ final class AppModel {
 
     /// Woher Seiten kommen. Bestimmt den Hauptknopf und den Leerzustand.
     enum CaptureSource: String, CaseIterable, Identifiable {
-        case iPhone, files, deskView
+        case iPhone, files, camera
         var id: String { rawValue }
     }
     static let cellThumbnailSize = 480
@@ -24,21 +24,23 @@ final class AppModel {
             .appending(path: "Buchscans", directoryHint: .isDirectory)
     }
 
-    let source = DeskViewSource()
+    let camera = CameraSource()
     let processor = PageProcessor()
     var hotKey: HotKey?
-    var monitorTask: Task<Void, Never>?
     /// Verkleinerte Seitenbilder, begrenzt: 300 Einträge sind bei 480-px-Vorschauen rund 150 MB.
     var imageCache = BoundedCache<String, CGImage>(limit: 240)
 
-    var status: DeskViewStatus = .notRunning
+    var cameraDevices: [CameraDeviceInfo] = []
+    var selectedCameraID: String?
+    var cameraRunning = false
+    var autoTrigger = false
+    var motionState: MotionTrigger.State = .idle
     var sessionRoot: URL
     var session: SessionStore?
     var sessionDirectory: URL?
     var sessionTitle: String = ""
     var pages: [PageRecord] = []
     var isCapturing = false
-    var isLaunchingDeskView = false
     var hotKeyRegistered = false
     var texts: [UUID: PageText] = [:]
     var recognizingPageIDs: Set<UUID> = []
@@ -72,15 +74,23 @@ final class AppModel {
             sessionRoot = Self.defaultSessionRoot
         }
         pandocPath = UserDefaults.standard.string(forKey: Self.pandocPathDefaultsKey) ?? ""
-        if let raw = UserDefaults.standard.string(forKey: Self.captureSourceDefaultsKey), let source = CaptureSource(rawValue: raw) {
-            captureSource = source
+        if let raw = UserDefaults.standard.string(forKey: Self.captureSourceDefaultsKey) {
+            // „deskView" aus älteren Versionen wird zur Kamera-Quelle.
+            captureSource = CaptureSource(rawValue: raw) ?? (raw == "deskView" ? .camera : .iPhone)
         }
+        selectedCameraID = UserDefaults.standard.string(forKey: Self.cameraDeviceDefaultsKey)
+        autoTrigger = UserDefaults.standard.bool(forKey: Self.autoTriggerDefaultsKey)
     }
 
     func setCaptureSource(_ source: CaptureSource) {
         captureSource = source
         UserDefaults.standard.set(source.rawValue, forKey: Self.captureSourceDefaultsKey)
-        if source == .deskView { Task { await refreshStatus() } }
+        if source == .camera {
+            refreshCameraDevices()
+            Task { await startCamera() }
+        } else {
+            stopCamera()
+        }
     }
 
     /// Der eine Knopf der gewählten Quelle.
@@ -88,7 +98,7 @@ final class AppModel {
         switch captureSource {
         case .iPhone: scanWithiPhone(.scanDocuments)
         case .files: importFiles()
-        case .deskView: capturePage()
+        case .camera: capturePage()
         }
     }
 
@@ -101,58 +111,10 @@ final class AppModel {
             }
             hotKeyRegistered = hotKey != nil
         }
-        guard monitorTask == nil else { return }
-        monitorTask = Task { [weak self] in
-            while !Task.isCancelled {
-                guard let self else { return }
-                await self.refreshStatus()
-                try? await Task.sleep(for: .seconds(2))
-            }
-        }
-    }
-
-    /// SCShareableContent ist teuer; die Abfrage läuft nur, wenn Desk View die Quelle ist.
-    func refreshStatus() async {
-        guard captureSource == .deskView else { return }
-        status = await source.status()
-    }
-
-    var canCapture: Bool {
-        if case .found = status { return !isCapturing }
-        return false
-    }
-
-    // MARK: Rechte und Desk View
-
-    var permissionGranted: Bool { ScreenCapturePermission.isGranted }
-
-    func requestPermission() {
-        // Zeigt den Systemdialog nur beim allerersten Mal; danach hilft nur der Weg
-        // über die Systemeinstellungen.
-        if !ScreenCapturePermission.request() {
-            openPermissionSettings()
-        }
-        Task { await refreshStatus() }
-    }
-
-    func openPermissionSettings() {
-        NSWorkspace.shared.open(ScreenCapturePermission.settingsURL)
-    }
-
-    func launchDeskView() {
-        guard !isLaunchingDeskView else { return }
-        isLaunchingDeskView = true
-        let screen = NSScreen.main ?? NSScreen.screens.first
-        let frame = screen?.visibleFrame ?? CGRect(x: 0, y: 0, width: 1600, height: 1000)
-        Task {
-            defer { isLaunchingDeskView = false }
-            do {
-                try await source.launch(windowFrame: frame)
-                lastError = nil
-            } catch {
-                lastError = error.localizedDescription
-            }
-            await refreshStatus()
+        wireCameraCallbacks()
+        if captureSource == .camera {
+            refreshCameraDevices()
+            Task { await startCamera() }
         }
     }
 
@@ -262,9 +224,9 @@ final class AppModel {
             defer { isCapturing = false }
             do {
                 let store = try await ensureSession()
-                let result = try await source.captureImage()
+                let image = try await camera.captureImage()
                 let settings = await store.document.settings
-                let prepared = await processor.prepare(result.image, settings: settings)
+                let prepared = await processor.prepare(image, settings: settings)
                 var lastPage: PageRecord?
                 if let target = takeRescanTarget() {
                     let records = try await store.replacePage(target, with: prepared)
@@ -357,7 +319,7 @@ extension AppModel {
         switch captureSource {
         case .iPhone: scanWithiPhone(.scanDocuments)
         case .files: importFiles()
-        case .deskView: capturePage()
+        case .camera: capturePage()
         }
         // Ein abgebrochener Dateidialog lässt das Ziel nicht stehen.
         if captureSource == .files, exportStatus == nil { rescanTargetID = nil }

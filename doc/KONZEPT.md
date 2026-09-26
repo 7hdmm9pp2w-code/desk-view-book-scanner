@@ -38,10 +38,12 @@ Tool macht Session, OCR, PDF und Markdown. Drei Quellen, alle liefern nur ein `C
      das System-Item ohne sichtbares Menü füllen (`submenu.update()`) und auslösen lässt.
      Damit könnte ⇧⌘S den Scan starten, ohne ins Menü zu gehen.
 2. **Desk View** (gebaut): bleibt für Großdruck und als Schnellweg.
-3. **Kamera über AVFoundation** (offen): das iPhone als Continuity-Kamera, Foto in voller
-   Auflösung per `AVCapturePhotoOutput` mit `maxPhotoDimensions`, vom Mac ausgelöst, mit
-   Vorschau im Fenster. Lohnt erst, wenn Import und Bedienung am Buch sitzen; dieselbe
-   Quelle trüge später eine 4K-Kamera am Arm.
+3. **Kamera über AVFoundation** (gebaut, ersetzt den Desk-View-Screenshot): jede Kamera,
+   die AVFoundation sieht, im größten Videoformat, Einzelbild aus dem Live-Feed. Desk
+   View ist darin nur noch ein Gerät mit 1920 × 1440; eine 4K-Kamera über dem Buch
+   liefert 3840 × 2160 und damit Fließtext. Der Auto-Auslöser aus Schritt 4 sitzt hier.
+   Foto in höherer Auflösung als das Video gibt es über AVFoundation von keinem der
+   gemessenen Geräte, auch nicht vom iPhone.
 
 Fertige Apps, die den iPhone-Teil abdecken: Apples „Dokumente scannen" (Notizen,
 Vorschau, Finder), Prizmo 5 für Mac (Continuity Camera, OCR, Glättung), vFlat auf dem
