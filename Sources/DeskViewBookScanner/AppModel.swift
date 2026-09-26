@@ -367,7 +367,11 @@ extension AppModel {
 
     func importFiles(_ urls: [URL]) {
         guard exportStatus == nil else { return }
-        let files = urls.filter { PageImporter.isSupported($0) }
+        // Der Öffnen-Dialog liefert die Auswahlreihenfolge; Seiten gehören nach Dateinamen
+        // sortiert, mit Zahlen numerisch („Aufnahme-9" vor „Aufnahme-10").
+        let files = urls
+            .filter { PageImporter.isSupported($0) }
+            .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
         guard !files.isEmpty else { return }
         Task {
             do {

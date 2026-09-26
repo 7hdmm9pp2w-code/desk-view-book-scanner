@@ -456,9 +456,18 @@ public enum TitleSuggester {
     public static let heightShare: CGFloat = 0.75
     public static let minimumConfidence: Float = 0.3
 
+    /// Die höchste Zeile muss so viel höher sein als der Median der Seite; sonst ist es
+    /// eine Textseite, kein Umschlag, und es gibt keinen Vorschlag.
+    public static let minimumProminence: CGFloat = 1.5
+
     public static func suggest(from page: PageText) -> String? {
         let lines = page.lines.filter { $0.confidence >= minimumConfidence && !$0.text.isEmpty }
         guard let tallest = lines.map(\.box.height).max(), tallest > 0 else { return nil }
+        if lines.count >= 4 {
+            // Unteres Viertel statt Median: auf einem Umschlag sind die meisten Zeilen Titel.
+            let small = lines.map(\.box.height).sorted()[lines.count / 4]
+            guard tallest >= small * minimumProminence else { return nil }
+        }
         let candidates = lines
             .filter { $0.box.height >= tallest * heightShare }
             .sorted { $0.box.midY > $1.box.midY }

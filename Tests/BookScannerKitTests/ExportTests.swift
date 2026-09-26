@@ -283,6 +283,9 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
         ])
         #expect(TitleSuggester.suggest(from: page) == "GOTT UND DER STAAT")
         #expect(TitleSuggester.suggest(from: pageText([])) == nil)
+        // Textseite: alle Zeilen gleich hoch, kein Vorschlag.
+        let body = pageText((0..<8).map { line("die aufgrund von objektiven Tatsachen \($0)", top: 0.9 - Double($0) * 0.04) })
+        #expect(TitleSuggester.suggest(from: body) == nil)
     }
 }
 
