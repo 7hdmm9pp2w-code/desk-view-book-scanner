@@ -593,6 +593,8 @@ extension AppModel {
         panel.nameFieldStringValue = fileName
         panel.canCreateDirectories = true
         panel.isExtensionHidden = false
+        // Standard: neben die Aufnahmen in den Session-Ordner.
+        panel.directoryURL = sessionDirectory
         return panel.runModal() == .OK ? panel.url : nil
     }
 }
