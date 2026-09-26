@@ -399,14 +399,11 @@ extension AppModel {
 
     /// Ausgewählte Doppelseite am Falz teilen (oder in der Mitte, je nach Einstellung).
     func splitSelectedPage() {
-        guard let page = selectedPage else { return }
         let mode: SplitMode = sessionSettings.splitMode == .none ? .automatic : sessionSettings.splitMode
-        replaceSelectedPage { image in
-            let splitter = PageSplitter()
-            let halves = splitter.split(image, mode: mode)
-            return halves.count == 2 ? halves : nil
+        let processor = self.processor
+        replaceSelectedPageAsync { image in
+            await processor.split(image, mode: mode)
         }
-        _ = page
     }
 
     /// Ausgewählte Seite um 90° drehen; positive Werte gegen den Uhrzeigersinn.
@@ -438,14 +435,21 @@ extension AppModel {
     }
 
     private func replaceSelectedPage(_ transform: @escaping @Sendable (CGImage) -> [CGImage]?) {
+        replaceSelectedPageAsync { image in transform(image) }
+    }
+
+    private func replaceSelectedPageAsync(_ transform: @escaping @Sendable (CGImage) async -> [CGImage]?) {
         guard let session, let page = selectedPage, exportStatus == nil else { return }
         Task {
             do {
                 let url = await session.fileURL(for: page)
                 let images = try await Task.detached(priority: .userInitiated) { () -> [CGImage]? in
-                    transform(try ImageFile.read(url))
+                    await transform(try ImageFile.read(url))
                 }.value
-                guard let images else { return }
+                guard let images else {
+                    lastError = L("Kein Schnitt gefunden: keine Doppelseite oder Text über der Schnittlinie.")
+                    return
+                }
                 let records = try await session.replacePage(page.id, with: images)
                 trashedCount = await session.document.trashed.count
                 imageCache = imageCache.filter { !$0.key.hasPrefix(page.id.uuidString) }

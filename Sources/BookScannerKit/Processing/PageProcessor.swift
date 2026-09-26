@@ -13,6 +13,13 @@ public actor PageProcessor {
         self.recognizer = recognizer
     }
 
+    /// Teilt ein bereits aufrechtes Bild mit Hilfe seiner OCR-Zeilen; `nil`, wenn kein Schnitt sinnvoll ist.
+    public func split(_ image: CGImage, mode: SplitMode) async -> [CGImage]? {
+        let lines = (try? await OrientationDetector().analyze(image))?.lines ?? []
+        let halves = PageSplitter().split(image, mode: mode, lines: lines)
+        return halves.count == 2 ? halves : nil
+    }
+
     /// Vor dem Speichern: aufrecht drehen, Doppelseite teilen. Liefert eine oder zwei Seiten.
     public func prepare(_ image: CGImage, settings: SessionSettings) async -> [CGImage] {
         var upright = image

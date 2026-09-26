@@ -144,20 +144,70 @@ public struct PageSplitter: Sendable {
     public var crossingConfidence: Float = 0.5
 
     /// Zwei Hälften oder das Bild unverändert. `lines` (normiert, zum Bild passend)
-    /// verhindern das Teilen, wenn Text über die Schnittlinie läuft.
+    /// bestimmen die textfreie Lücke für den Schnitt und verhindern das Teilen, wenn
+    /// Text über die Schnittlinie läuft.
     public func split(_ image: CGImage, mode: SplitMode, lines: [RecognizedLine] = []) -> [CGImage] {
         guard mode != .none, isDoublePage(image) else { return [image] }
-        let fraction: Double
-        switch mode {
-        case .automatic: fraction = gutterFraction(in: image) ?? 0.5
-        case .middle: fraction = 0.5
-        case .none: return [image]
-        }
-        if textCrosses(cut: fraction, lines: lines) { return [image] }
+        guard let fraction = cutFraction(for: image, mode: mode, lines: lines) else { return [image] }
         let cut = Int((Double(image.width) * fraction).rounded())
         let left = ImageOps.cropped(image, to: CGRect(x: 0, y: 0, width: cut, height: image.height))
         let right = ImageOps.cropped(image, to: CGRect(x: cut, y: 0, width: image.width - cut, height: image.height))
         return [left, right]
+    }
+
+    /// Wo geschnitten wird, als Anteil der Breite; `nil` heißt: nicht teilen.
+    ///
+    /// Automatik: Erst die textfreie Lücke zwischen linkem und rechtem Textblock aus den
+    /// OCR-Zeilen, dann darin das Helligkeitstal, sonst die Lückenmitte. Ohne Zeilen
+    /// bleibt nur das Tal über den ganzen Suchbereich. Bei gewölbten Büchern liegt die
+    /// dunkelste Spalte oft vor dem Falz, wo die Seite abtaucht; die Lücke aus dem
+    /// Text hält den Schnitt davon fern.
+    public func cutFraction(for image: CGImage, mode: SplitMode, lines: [RecognizedLine]) -> Double? {
+        let fraction: Double
+        switch mode {
+        case .none:
+            return nil
+        case .middle:
+            fraction = 0.5
+        case .automatic:
+            if let gap = textFreeGap(in: lines) {
+                fraction = gutterFraction(in: image, within: gap, minimumDepth: minimumDepth / 2) ?? (gap.lowerBound + gap.upperBound) / 2
+            } else {
+                fraction = gutterFraction(in: image, within: searchRange, minimumDepth: minimumDepth) ?? 0.5
+            }
+        }
+        return textCrosses(cut: fraction, lines: lines) ? nil : fraction
+    }
+
+    /// Breiteste textfreie Lücke, deren Mitte im Suchbereich liegt und die links wie
+    /// rechts Text hat. `nil` bei zu wenig Zeilen.
+    public func textFreeGap(in lines: [RecognizedLine], resolution: Int = 1000) -> ClosedRange<Double>? {
+        let usable = lines.filter { $0.confidence >= crossingConfidence && $0.box.width >= 0.05 }
+        guard usable.count >= 4 else { return nil }
+        var covered = [Bool](repeating: false, count: resolution)
+        for line in usable {
+            let lo = max(0, Int(Double(line.box.minX) * Double(resolution)))
+            let hi = min(resolution - 1, Int(Double(line.box.maxX) * Double(resolution)))
+            if lo <= hi { for i in lo...hi { covered[i] = true } }
+        }
+        var best: ClosedRange<Int>?
+        var start: Int?
+        for i in 0...resolution {
+            let free = i < resolution && !covered[i]
+            if free, start == nil { start = i }
+            if !free, let s = start {
+                let run = s...(i - 1)
+                let center = Double(run.lowerBound + run.upperBound) / 2 / Double(resolution)
+                let hasTextLeft = covered[..<run.lowerBound].contains(true)
+                let hasTextRight = run.upperBound + 1 < resolution && covered[(run.upperBound + 1)...].contains(true)
+                if searchRange.contains(center), hasTextLeft, hasTextRight, run.count > (best?.count ?? 0) {
+                    best = run
+                }
+                start = nil
+            }
+        }
+        guard let best, best.count >= resolution / 100 else { return nil }
+        return (Double(best.lowerBound) / Double(resolution))...(Double(best.upperBound + 1) / Double(resolution))
     }
 
     public func textCrosses(cut: Double, lines: [RecognizedLine]) -> Bool {
@@ -172,6 +222,10 @@ public struct PageSplitter: Sendable {
 
     /// Lage des dunkelsten Tals im Suchbereich als Anteil der Breite, `nil` ohne klares Tal.
     public func gutterFraction(in image: CGImage) -> Double? {
+        gutterFraction(in: image, within: searchRange, minimumDepth: minimumDepth)
+    }
+
+    public func gutterFraction(in image: CGImage, within range: ClosedRange<Double>, minimumDepth: Double) -> Double? {
         let small = ImageOps.downscaled(image, maxPixelSize: 600)
         let (pixels, width, height) = ImageOps.grayPixels(small)
         guard width > 10, height > 10 else { return nil }
@@ -189,8 +243,8 @@ public struct PageSplitter: Sendable {
             return smoothed(profile, lo...hi)
         }
         let median = smoothed.sorted()[width / 2]
-        let lower = Int(Double(width) * searchRange.lowerBound)
-        let upper = Int(Double(width) * searchRange.upperBound)
+        let lower = max(0, Int(Double(width) * range.lowerBound))
+        let upper = min(width - 1, Int(Double(width) * range.upperBound))
         guard lower < upper else { return nil }
         var bestX = lower
         for x in lower...upper where smoothed[x] < smoothed[bestX] { bestX = x }

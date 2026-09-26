@@ -472,6 +472,16 @@
         }
       }
     },
+    "Kein Schnitt gefunden: keine Doppelseite oder Text über der Schnittlinie.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No cut found: not a double page, or text crosses the cut line."
+          }
+        }
+      }
+    },
     "Kein iPhone gefunden. Gleiche Apple-ID, Bluetooth und WLAN an, iPhone entsperrt und in der Nähe?": {
       "localizations": {
         "en": {

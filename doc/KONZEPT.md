@@ -243,9 +243,13 @@ PDF-Export wieder durchsuchbar sein. Screenshot und Desk View bleiben Handprobe.
     gewichtete Abstimmung über alle Zeilen ergibt die nötige Vierteldrehung. Der
     Umweg über vier Erkennungsläufe war unnötig, und die schnelle Erkennung
     unterscheidet 0° und 180° ohnehin nicht.
-  - Falz: Helligkeitsprofil der Spalten über das mittlere Drittel der Höhe, geglättet,
-    dunkelstes Tal zwischen 35 % und 65 % der Breite, mindestens 20 Stufen unter dem
-    Median; sonst Mitte. Ein Bild gilt ab Seitenverhältnis 1,15 als Doppelseite.
+  - Falz: Erst die textfreie Lücke zwischen linkem und rechtem Textblock aus den
+    OCR-Zeilen (die für die Drehung ohnehin da sind), dann darin das Helligkeitstal,
+    sonst die Lückenmitte. Grund: Bei gewölbten Büchern liegt die dunkelste Spalte oft
+    vor dem Falz, wo die Seite abtaucht, und der Schnitt kappte Buchstaben. Ohne
+    Zeilen bleibt das Tal über 35 % bis 65 % der Breite, sonst Mitte. Kreuzt Text die
+    Schnittlinie (Umschlag im Querformat), wird nicht geteilt. Ein Bild gilt ab
+    Seitenverhältnis 1,15 als Doppelseite.
   - Beides läuft in `PageProcessor.prepare` vor dem Speichern, für Import, iPhone-Scan
     und Desk View gleichermaßen. Für vorhandene Seiten gibt es „Seite teilen" ⌘T und
     „Drehen" ⌘L/⌘R; `replacePage` setzt die neuen Seiten an dieselbe Stelle und legt

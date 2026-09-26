@@ -104,6 +104,27 @@ func makeDoublePage(width: Int = 1600, height: Int = 1000, gutter: Double? = 0.5
         #expect(splitter.split(image, mode: .automatic, lines: [noise]).count == 2)
     }
 
+    @Test func cutStaysInsideTheTextFreeGap() {
+        // Dunkle Spalte bei 40 %, mitten im linken Textblock (Seite taucht in den Falz ab);
+        // Text links bis 45 %, rechts ab 55 %. Der Schnitt muss in die Lücke.
+        let image = makeDoublePage(gutter: 0.40)
+        var lines: [RecognizedLine] = []
+        for i in 0..<6 {
+            lines.append(line("links \(i)", x: 0.05, top: 0.9 - Double(i) * 0.05, width: 0.40, confidence: 0.9))
+            lines.append(line("rechts \(i)", x: 0.55, top: 0.9 - Double(i) * 0.05, width: 0.40, confidence: 0.9))
+        }
+        let splitter = PageSplitter()
+        let gap = try! #require(splitter.textFreeGap(in: lines))
+        #expect(abs(gap.lowerBound - 0.45) < 0.01 && abs(gap.upperBound - 0.55) < 0.01)
+        let cut = try! #require(splitter.cutFraction(for: image, mode: .automatic, lines: lines))
+        #expect(cut >= 0.45 && cut <= 0.55)
+        // Ohne Zeilen greift das Tal bei 40 % (altes Verhalten als Rückfall).
+        let blind = try! #require(splitter.cutFraction(for: image, mode: .automatic, lines: []))
+        #expect(abs(blind - 0.40) < 0.02)
+        // Zu wenig Zeilen: keine Lücke.
+        #expect(splitter.textFreeGap(in: Array(lines.prefix(2))) == nil)
+    }
+
     @Test func normalizedRectRotatesWithImage() {
         // Rechts-Mitte wandert bei einer Vierteldrehung nach oben-Mitte.
         let rect = CGRect(x: 0.8, y: 0.45, width: 0.2, height: 0.1)
