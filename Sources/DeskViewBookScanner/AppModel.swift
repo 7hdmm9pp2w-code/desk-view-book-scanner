@@ -50,6 +50,9 @@ final class AppModel {
     private(set) var trashedCount = 0
     private(set) var captureSource: CaptureSource = .iPhone
     private var titleSuggestionDismissed = false
+    private(set) var summaries: [SessionSummary] = []
+    private(set) var sessionArchived = false
+    private var sidebarThumbnails: [URL: CGImage] = [:]
     var lastError: String?
     var selectedPageID: UUID?
 
@@ -152,6 +155,7 @@ final class AppModel {
     func setSessionRoot(_ url: URL?) {
         UserDefaults.standard.set(url?.path, forKey: Self.sessionRootDefaultsKey)
         sessionRoot = url ?? Self.defaultSessionRoot
+        refreshSummaries()
     }
 
     var recentSessionDirectories: [URL] {
@@ -201,6 +205,7 @@ final class AppModel {
         pages = await store.orderedPages
         sessionSettings = await store.document.settings
         trashedCount = await store.document.trashed.count
+        sessionArchived = await store.isArchived
         imageCache = [:]
         texts = [:]
         suggestedTitle = nil
@@ -209,6 +214,7 @@ final class AppModel {
         for page in pages where page.ocrStatus == .pending {
             recognizeText(for: page)
         }
+        refreshSummaries()
         // Vorschlag aus schon erkannten ersten Seiten, ohne neue OCR.
         if sessionTitle.isEmpty {
             for page in pages.prefix(TitleSuggester.lookahead + 1) where page.ocrStatus == .done {
@@ -233,6 +239,7 @@ final class AppModel {
                 sessionDirectory = await session.directory
                 sessionTitle = await session.document.title ?? ""
                 lastError = nil
+                refreshSummaries()
             } catch {
                 lastError = error.localizedDescription
             }
@@ -265,6 +272,7 @@ final class AppModel {
                 selectedPageID = lastPage?.id
                 lastError = nil
                 NSSound(named: "Tink")?.play()
+                refreshSummaries()
             } catch {
                 lastError = error.localizedDescription
                 NSSound.beep()
@@ -297,6 +305,7 @@ final class AppModel {
                 try await session.trash(pageIDs: pageIDs)
                 pages = await session.orderedPages
                 trashedCount = await session.document.trashed.count
+                refreshSummaries()
                 for id in pageIDs {
                     imageCache = imageCache.filter { !$0.key.hasPrefix(id.uuidString) }
                     texts[id] = nil
@@ -416,6 +425,7 @@ extension AppModel {
                 }
                 exportStatus = nil
                 lastError = nil
+                refreshSummaries()
             } catch {
                 exportStatus = nil
                 lastError = error.localizedDescription
@@ -471,6 +481,7 @@ extension AppModel {
                 guard let page = try await session.restoreLastTrashed(before: selectedPageID) else { return }
                 pages = await session.orderedPages
                 trashedCount = await session.document.trashed.count
+                refreshSummaries()
                 selectedPageID = page.id
                 if page.ocrStatus != .done { recognizeText(for: page) }
                 lastError = nil
@@ -498,6 +509,7 @@ extension AppModel {
                 }
                 let records = try await session.replacePage(page.id, with: images)
                 trashedCount = await session.document.trashed.count
+                refreshSummaries()
                 imageCache = imageCache.filter { !$0.key.hasPrefix(page.id.uuidString) }
                 texts[page.id] = nil
                 pages = await session.orderedPages
@@ -572,6 +584,7 @@ extension AppModel {
                 }.value
                 exportStatus = nil
                 lastError = nil
+                refreshSummaries()
                 NSWorkspace.shared.activateFileViewerSelecting([url])
             } catch {
                 exportStatus = nil
@@ -606,6 +619,7 @@ extension AppModel {
                 }.value
                 exportStatus = nil
                 lastError = nil
+                refreshSummaries()
                 NSWorkspace.shared.activateFileViewerSelecting([url])
             } catch {
                 exportStatus = nil
@@ -648,4 +662,107 @@ extension AppModel {
         panel.directoryURL = sessionDirectory
         return panel.runModal() == .OK ? panel.url : nil
     }
+}
+
+// MARK: - Seitenleiste und Aufräumen
+
+extension AppModel {
+    var totalBytes: Int64 { summaries.reduce(0) { $0 + $1.totalBytes } }
+
+    /// Übersicht neu einlesen; läuft abseits des Main-Threads, weil sie Dateigrößen summiert.
+    func refreshSummaries() {
+        let root = sessionRoot
+        Task {
+            let result = await Task.detached(priority: .utility) { SessionStore.summaries(in: root) }.value
+            summaries = result
+            let valid = Set(result.compactMap(\.firstPageURL))
+            sidebarThumbnails = sidebarThumbnails.filter { valid.contains($0.key) }
+        }
+    }
+
+    func sidebarThumbnail(for summary: SessionSummary) async -> CGImage? {
+        guard let url = summary.firstPageURL else { return nil }
+        if let cached = sidebarThumbnails[url] { return cached }
+        let image = await Task.detached(priority: .utility) { try? ImageFile.thumbnail(url, maxPixelSize: 96) }.value
+        if let image { sidebarThumbnails[url] = image }
+        return image
+    }
+
+    func revealSession(_ summary: SessionSummary) {
+        NSWorkspace.shared.activateFileViewerSelecting([summary.directory])
+    }
+
+    func deleteSessions(_ summaries: [SessionSummary]) {
+        for summary in summaries {
+            do {
+                try SessionStore.moveToSystemTrash(summary.directory)
+                if summary.directory == sessionDirectory { closeSession() }
+                lastError = nil
+            } catch {
+                lastError = error.localizedDescription
+            }
+        }
+        refreshSummaries()
+    }
+
+    func deleteSession(_ summary: SessionSummary) { deleteSessions([summary]) }
+
+    private func closeSession() {
+        session = nil
+        sessionDirectory = nil
+        sessionTitle = ""
+        pages = []
+        texts = [:]
+        imageCache = [:]
+        selectedPageID = nil
+        suggestedTitle = nil
+        sessionArchived = false
+        trashedCount = 0
+    }
+
+    private func store(for summary: SessionSummary) throws -> SessionStore {
+        if let session, summary.directory == sessionDirectory { return session }
+        return try SessionStore.open(directory: summary.directory)
+    }
+
+    func emptyTrash(of summaries: [SessionSummary]) {
+        Task {
+            for summary in summaries {
+                do {
+                    let store = try store(for: summary)
+                    try await store.emptyTrash()
+                    if summary.directory == sessionDirectory { trashedCount = 0 }
+                    lastError = nil
+                } catch {
+                    lastError = error.localizedDescription
+                }
+            }
+            refreshSummaries()
+        }
+    }
+
+    func emptyTrash(of summary: SessionSummary) { emptyTrash(of: [summary]) }
+
+    func archiveSessions(_ summaries: [SessionSummary]) {
+        Task {
+            for summary in summaries where !summary.archived {
+                do {
+                    let store = try store(for: summary)
+                    try await store.archive()
+                    if summary.directory == sessionDirectory {
+                        sessionArchived = true
+                        trashedCount = 0
+                        imageCache = [:]
+                        pages = await store.orderedPages
+                    }
+                    lastError = nil
+                } catch {
+                    lastError = error.localizedDescription
+                }
+            }
+            refreshSummaries()
+        }
+    }
+
+    func archiveSession(_ summary: SessionSummary) { archiveSessions([summary]) }
 }

@@ -7,21 +7,27 @@ struct SessionWindow: View {
     @Environment(AppModel.self) private var model
     @State private var titleDraft = ""
 
+    @State private var columns: NavigationSplitViewVisibility = .all
+
     var body: some View {
-        VStack(spacing: 0) {
-            StatusBar()
-                .background(alignment: .bottomLeading) {
-                    ContinuityCameraReceiver().frame(width: 2, height: 2)
+        NavigationSplitView(columnVisibility: $columns) {
+            SessionSidebar()
+        } detail: {
+            VStack(spacing: 0) {
+                StatusBar()
+                    .background(alignment: .bottomLeading) {
+                        ContinuityCameraReceiver().frame(width: 2, height: 2)
+                    }
+                Divider()
+                HSplitView {
+                    PageGrid()
+                        .frame(minWidth: 420, maxWidth: .infinity, maxHeight: .infinity)
+                    PageDetail()
+                        .frame(minWidth: 340, idealWidth: 460, maxWidth: 640, maxHeight: .infinity)
                 }
-            Divider()
-            HSplitView {
-                PageGrid()
-                    .frame(minWidth: 420, maxWidth: .infinity, maxHeight: .infinity)
-                PageDetail()
-                    .frame(minWidth: 340, idealWidth: 460, maxWidth: 640, maxHeight: .infinity)
             }
         }
-        .frame(minWidth: 960, minHeight: 600)
+        .frame(minWidth: 1100, minHeight: 620)
         .navigationTitle(windowTitle)
         .navigationSubtitle(model.sessionDirectory?.lastPathComponent ?? "")
         .toolbar {
@@ -40,14 +46,14 @@ struct SessionWindow: View {
                     Label(L("Seite teilen"), systemImage: "rectangle.split.2x1")
                 }
                 .help(L("Doppelseite am Falz in zwei Seiten teilen (⌘T)"))
-                .disabled(model.selectedPageID == nil)
+                .disabled(model.selectedPageID == nil || model.sessionArchived)
                 Button {
                     model.rotateSelectedPage(quarterTurns: 1)
                 } label: {
                     Label(L("Nach links drehen"), systemImage: "rotate.left")
                 }
                 .help(L("Seite um 90° drehen (⌘L / ⌘R)"))
-                .disabled(model.selectedPageID == nil)
+                .disabled(model.selectedPageID == nil || model.sessionArchived)
                 Button {
                     model.trashSelectedPage()
                 } label: {
@@ -161,7 +167,10 @@ struct StatusBar: View {
 
     @ViewBuilder
     private var activity: some View {
-        if model.iPhoneWaiting {
+        if model.sessionArchived {
+            Label(L("Archiviert: nur Text, keine Bilder. Neue Session mit ⌘N."), systemImage: "archivebox")
+                .foregroundStyle(.secondary)
+        } else if model.iPhoneWaiting {
             HStack(spacing: 8) {
                 ProgressView().controlSize(.small)
                 Text(L("Warte auf das iPhone…")).foregroundStyle(.secondary)
@@ -231,6 +240,7 @@ struct StatusBar: View {
     }
 
     private var primaryEnabled: Bool {
+        if model.sessionArchived { return false }
         switch model.captureSource {
         case .iPhone: return !model.iPhoneWaiting && model.exportStatus == nil
         case .files: return model.exportStatus == nil
@@ -250,7 +260,8 @@ struct ExportButtons: View {
             } label: {
                 Label("PDF", systemImage: "doc.richtext")
             }
-            .help(L("PDF mit den Seitenbildern und durchsuchbarer Textebene (⌘E)"))
+            .help(model.sessionArchived ? L("Archivierte Session: die Bilder für das PDF sind entfernt.") : L("PDF mit den Seitenbildern und durchsuchbarer Textebene (⌘E)"))
+            .disabled(model.sessionArchived)
             Button {
                 model.exportText(format: .markdown)
             } label: {
@@ -383,6 +394,8 @@ struct PageCell: View {
                     Image(decorative: thumbnail, scale: 1)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
+                } else if model.sessionArchived {
+                    Image(systemName: "doc.text").font(.system(size: 28)).foregroundStyle(.secondary)
                 } else {
                     ProgressView().controlSize(.small)
                 }
@@ -425,6 +438,8 @@ struct PageDetail: View {
                         Image(decorative: image, scale: 1)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
+                    } else if model.sessionArchived {
+                        Label(L("Bild archiviert"), systemImage: "archivebox").foregroundStyle(.secondary)
                     } else {
                         ProgressView()
                     }

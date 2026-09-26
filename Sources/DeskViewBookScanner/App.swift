@@ -37,7 +37,7 @@ struct DeskViewBookScannerApp: App {
                 Divider()
                 Button(L("Als PDF exportieren…")) { model.exportPDF() }
                     .keyboardShortcut("e")
-                    .disabled(!model.canExport)
+                    .disabled(!model.canExport || model.sessionArchived)
                 Button(L("Als Markdown exportieren…")) { model.exportText(format: .markdown) }
                     .keyboardShortcut("e", modifiers: [.command, .shift])
                     .disabled(!model.canExport)
@@ -72,13 +72,13 @@ struct DeskViewBookScannerApp: App {
             CommandMenu(L("Seite")) {
                 Button(L("Seite teilen")) { model.splitSelectedPage() }
                     .keyboardShortcut("t")
-                    .disabled(model.selectedPageID == nil)
+                    .disabled(model.selectedPageID == nil || model.sessionArchived)
                 Button(L("Nach links drehen")) { model.rotateSelectedPage(quarterTurns: 1) }
                     .keyboardShortcut("l")
-                    .disabled(model.selectedPageID == nil)
+                    .disabled(model.selectedPageID == nil || model.sessionArchived)
                 Button(L("Nach rechts drehen")) { model.rotateSelectedPage(quarterTurns: -1) }
                     .keyboardShortcut("r")
-                    .disabled(model.selectedPageID == nil)
+                    .disabled(model.selectedPageID == nil || model.sessionArchived)
                 Divider()
                 Button(L("Seite löschen")) { model.trashSelectedPage() }
                     .keyboardShortcut(.delete, modifiers: [.command])

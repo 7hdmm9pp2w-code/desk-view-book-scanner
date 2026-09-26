@@ -20,14 +20,19 @@ public enum ImageFileError: Error, LocalizedError {
 /// Lesen und Schreiben von Bilddateien über ImageIO. Ohne AppKit, damit der Kit
 /// in Tests und Werkzeugen ohne UI läuft.
 public enum ImageFile {
-    public static let heicQuality: Double = 0.9
+    /// HEIC-Qualität für gespeicherte Seiten; 0,8 ist für die OCR nicht von 0,9 zu unterscheiden.
+    public static let heicQuality: Double = 0.8
+    /// Längste Kante gespeicherter Seiten. iPhone-Scans liegen darunter, Importe aus
+    /// 600-dpi-PDFs nicht; mehr bringt der OCR nichts und kostet nur Platz.
+    public static let maxStoredPixelSize = 3000
 
-    public static func writeHEIC(_ image: CGImage, to url: URL, quality: Double = heicQuality) throws {
+    public static func writeHEIC(_ image: CGImage, to url: URL, quality: Double = heicQuality, maxPixelSize: Int = maxStoredPixelSize) throws {
         guard let destination = CGImageDestinationCreateWithURL(url as CFURL, UTType.heic.identifier as CFString, 1, nil) else {
             throw ImageFileError.cannotCreateDestination(url)
         }
+        let stored = max(image.width, image.height) > maxPixelSize ? ImageOps.downscaled(image, maxPixelSize: maxPixelSize) : image
         let properties: [CFString: Any] = [kCGImageDestinationLossyCompressionQuality: quality]
-        CGImageDestinationAddImage(destination, image, properties as CFDictionary)
+        CGImageDestinationAddImage(destination, stored, properties as CFDictionary)
         guard CGImageDestinationFinalize(destination) else {
             throw ImageFileError.cannotFinalize(url)
         }

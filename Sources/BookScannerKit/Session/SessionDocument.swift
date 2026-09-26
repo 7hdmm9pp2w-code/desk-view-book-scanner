@@ -66,6 +66,8 @@ public struct SessionDocument: Codable, Sendable, Equatable {
     public var pageOrder: [UUID]
     public var pages: [PageRecord]
     public var trashed: [PageRecord]
+    /// Bilder wurden entfernt, nur Text und Exporte sind noch da.
+    public var archived: Bool
 
     public init(id: UUID = UUID(), createdAt: Date, title: String? = nil) {
         self.version = Self.currentVersion
@@ -77,6 +79,25 @@ public struct SessionDocument: Codable, Sendable, Equatable {
         self.pageOrder = []
         self.pages = []
         self.trashed = []
+        self.archived = false
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case version, id, createdAt, title, settings, captureCounter, pageOrder, pages, trashed, archived
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        version = try c.decode(Int.self, forKey: .version)
+        id = try c.decode(UUID.self, forKey: .id)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        title = try c.decodeIfPresent(String.self, forKey: .title)
+        settings = try c.decodeIfPresent(SessionSettings.self, forKey: .settings) ?? SessionSettings()
+        captureCounter = try c.decodeIfPresent(Int.self, forKey: .captureCounter) ?? 0
+        pageOrder = try c.decodeIfPresent([UUID].self, forKey: .pageOrder) ?? []
+        pages = try c.decodeIfPresent([PageRecord].self, forKey: .pages) ?? []
+        trashed = try c.decodeIfPresent([PageRecord].self, forKey: .trashed) ?? []
+        archived = try c.decodeIfPresent(Bool.self, forKey: .archived) ?? false
     }
 
     /// Seiten in Anzeigereihenfolge. IDs ohne Seite werden übersprungen.
