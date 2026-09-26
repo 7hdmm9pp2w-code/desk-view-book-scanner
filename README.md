@@ -56,9 +56,10 @@ Design notes and the implementation log are in German: [doc/KONZEPT.md](doc/KONZ
   Continuity Camera; the scan lands in the session as pages. *Files* (⇧⌘I) imports PDFs
   and images, for example scans from Notes or vFlat, rendered at their embedded
   resolution. *Camera* (⌥⌘S) grabs a frame from any camera AVFoundation sees, in its
-  largest format, with a live preview and an auto-capture mode.
-- **Rescan** a page in place (⇧⌘R, or the button that appears when hovering over the
-  page image): the next result from the chosen source lands next to the selected page,
+  largest format, with a live preview and an auto-capture mode. With the page grid
+  focused, Space captures (camera) or starts the iPhone scan.
+- **Rescan** a page in place (⇧⌘R, or the button that appears when hovering over a
+  thumbnail): the next result from the chosen source lands next to the selected page,
   both are shown side by side with a hint which one was read better, and the version
   you discard goes to the session's trash.
 - **Before saving**, every page is rotated upright (Vision reads the text direction) and

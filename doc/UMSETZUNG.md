@@ -175,8 +175,8 @@ vom Konzept abwich und den Grund. Neueste Einträge unten.
     bestätigt. Fehlend ist nur, was nirgends in der Session vorkommt; nachgescannte Seiten
     schließen die Lücke. Anzeige am Vorschaubild (Dreieck, gedruckte Zahl) und in der
     Quellenleiste; bei der Kamera ein Ton, wenn die eben erfasste Seite auffällt.
-- **Nachscannen mit Vergleich (27.09.2026):** Beim Überfahren des Seitenbilds erscheint
-  mittig „Seite nachscannen“. Das Ergebnis ersetzt die Seite nicht mehr sofort:
+- **Nachscannen mit Vergleich (27.09.2026):** Beim Überfahren eines Vorschaubilds im
+  Raster erscheint mittig „Nachscannen“. Das Ergebnis ersetzt die Seite nicht mehr sofort:
   `SessionStore.insertPages(_:after:)` legt es hinter die alte, `rescanComparison` merkt
   sich beide, das Detail zeigt sie nebeneinander. Vorgeschlagen (⏎) ist die Fassung mit
   mehr sicher erkannten Zeichen (`PageText.confidentCharacters`, Zeichen × Zeilensicherheit,
@@ -191,3 +191,6 @@ vom Konzept abwich und den Grund. Neueste Einträge unten.
   Wörtern klar erkannt. Die schnelle OCR findet bei 1920 × 1440 oft unter 12 Wörter, dann
   entscheidet der Kachelvergleich. Schalter „Beim Umblättern auslösen" jetzt direkt in der
   Quellenleiste statt im Kameramenü; der Hinweis „Hände raus" ist entfallen.
+- **Leertaste (27.09.2026):** Im Seitenraster löst die Leertaste bei Kamera und iPhone die
+  Aufnahme aus (`captureWithSpace`), beim Dateiimport nicht. Bewusst kein Menü-Kürzel:
+  ein Tastenkürzel ohne Modifier im Menü würde die Leertaste auch im Titelfeld schlucken.

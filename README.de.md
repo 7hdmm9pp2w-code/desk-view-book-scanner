@@ -74,7 +74,7 @@ Zone an der Tastaturkante am schärfsten. Darum:
   Der Auto-Auslöser erfasst nach jedem Umblättern, sobald das Bild anderthalb
   Sekunden ruhig liegt und sich von der letzten Seite unterscheidet.
 - Eine unscharfe Seite muss nicht neu einsortiert werden: auswählen, ⇧⌘R (oder der Knopf,
-  der beim Überfahren des Bildes erscheint), neu erfassen. Alte und neue Fassung stehen
+  der beim Überfahren des Vorschaubilds erscheint), neu erfassen. Alte und neue Fassung stehen
   dann nebeneinander, mit Hinweis, welche besser erkannt wurde; die verworfene wandert in
   den Papierkorb der Session.
 
@@ -109,6 +109,7 @@ swift test
   **Kamera** ⌥⌘S holt ein Bild aus jeder Kamera, die AVFoundation sieht, im größten
   Format: eine 4K-Kamera über dem Buch liefert 3840 × 2160 und lesbaren Fließtext, Desk
   View bleibt bei 1920 × 1440. Der Auto-Auslöser erfasst nach jedem Umblättern.
+  Im Seitenraster löst die Leertaste aus (Kamera) oder startet den iPhone-Scan.
 - Vor dem Speichern wird jede Seite aufrecht gedreht und eine Doppelseite am Falz
   geteilt (Menü „Aufnahme": automatisch, Mitte oder gar nicht). Vorhandene Seiten:
   „Seite teilen" ⌘T, drehen ⌘L / ⌘R.

@@ -204,9 +204,9 @@ struct StatusBar: View {
 
     private var primaryHelp: String {
         switch model.captureSource {
-        case .iPhone: return L("Öffnet den Dokumentenscanner auf dem iPhone; die Seiten landen in dieser Session (⇧⌘S).")
+        case .iPhone: return L("Öffnet den Dokumentenscanner auf dem iPhone; die Seiten landen in dieser Session (Leertaste oder ⇧⌘S).")
         case .files: return L("Scans aus Notizen, vFlat oder Fotos als Seiten anhängen (⇧⌘I)")
-        case .camera: return L("Bild aus der gewählten Kamera erfassen (\(HotKey.captureDisplayName), auch aus anderen Apps)")
+        case .camera: return L("Bild aus der gewählten Kamera erfassen (Leertaste; \(HotKey.captureDisplayName) auch aus anderen Apps)")
         }
     }
 

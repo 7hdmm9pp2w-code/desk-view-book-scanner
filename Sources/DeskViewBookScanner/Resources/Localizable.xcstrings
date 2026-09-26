@@ -312,12 +312,12 @@
         }
       }
     },
-    "Bild aus der gewählten Kamera erfassen (%@, auch aus anderen Apps)": {
+    "Bild aus der gewählten Kamera erfassen (Leertaste; %@ auch aus anderen Apps)": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Capture a frame from the chosen camera (%@, also from other apps)"
+            "value": "Capture a frame from the chosen camera (Space; %@ also from other apps)"
           }
         }
       }
@@ -862,6 +862,16 @@
         }
       }
     },
+    "Nachscannen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rescan"
+          }
+        }
+      }
+    },
     "Nein": {
       "localizations": {
         "en": {
@@ -1068,6 +1078,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "pp. %1$lld–%2$lld"
+          }
+        }
+      }
+    },
+    "Scannt die Seite mit der gewählten Quelle neu; danach entscheidest du, welche Fassung bleibt (⇧⌘R)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rescans the page with the chosen source; then you decide which version stays (⇧⌘R)"
           }
         }
       }
@@ -1482,12 +1502,12 @@
         }
       }
     },
-    "Öffnet den Dokumentenscanner auf dem iPhone; die Seiten landen in dieser Session (⇧⌘S).": {
+    "Öffnet den Dokumentenscanner auf dem iPhone; die Seiten landen in dieser Session (Leertaste oder ⇧⌘S).": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Opens the document scanner on the iPhone; pages go into this session (⇧⌘S)."
+            "value": "Opens the document scanner on the iPhone; pages go into this session (Space or ⇧⌘S)."
           }
         }
       }

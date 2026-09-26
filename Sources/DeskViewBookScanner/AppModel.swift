@@ -103,6 +103,22 @@ final class AppModel {
         }
     }
 
+    /// Leertaste im Seitenraster: erfasst mit Kamera oder iPhone. Beim Dateiimport nicht,
+    /// ein Öffnen-Dialog auf Tastendruck überrascht nur. `false` lässt die Taste durch.
+    func captureWithSpace() -> Bool {
+        switch captureSource {
+        case .camera:
+            guard canCapture else { return false }
+            capturePage()
+        case .iPhone:
+            guard !iPhoneWaiting, exportStatus == nil, !sessionArchived else { return false }
+            scanWithiPhone(.scanDocuments)
+        case .files:
+            return false
+        }
+        return true
+    }
+
     /// Der eine Knopf der gewählten Quelle.
     func performPrimaryAction() {
         switch captureSource {
@@ -336,8 +352,15 @@ extension AppModel {
     /// iPhone-Scan, Dateiimport oder Kamera-Aufnahme. Die neuen Seiten kommen direkt
     /// hinter die alte; welche Fassung bleibt, entscheidet `resolveRescan`.
     func rescanSelectedPage() {
-        guard let page = selectedPage, canRescan else { return }
-        rescanTargetID = page.id
+        guard let page = selectedPage else { return }
+        rescan(pageID: page.id)
+    }
+
+    /// Wählt die Seite aus und scannt sie nach (Knopf am Vorschaubild).
+    func rescan(pageID: UUID) {
+        guard rescanAvailable else { return }
+        selectedPageID = pageID
+        rescanTargetID = pageID
         switch captureSource {
         case .iPhone: scanWithiPhone(.scanDocuments)
         case .files: importFiles()
@@ -347,9 +370,10 @@ extension AppModel {
         if captureSource == .files, exportStatus == nil { rescanTargetID = nil }
     }
 
-    var canRescan: Bool {
-        selectedPageID != nil && exportStatus == nil && !sessionArchived && !iPhoneWaiting
-            && rescanComparison == nil
+    var canRescan: Bool { selectedPageID != nil && rescanAvailable }
+
+    var rescanAvailable: Bool {
+        exportStatus == nil && !sessionArchived && !iPhoneWaiting && rescanComparison == nil
     }
 
     func takeRescanTarget() -> UUID? {
