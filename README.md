@@ -1,17 +1,54 @@
 # Desk View Book Scanner
 
-A macOS app that turns book pages into a session of images, recognized text and
-exports: a searchable PDF, Markdown, Word or EPUB. Pages come from the iPhone's
-document scanner (triggered from the Mac), from imported PDFs and images, or from
-Apple's Desk View camera.
+Digitize books on the Mac: scan page by page, let the text be recognized, and take
+the result along as a searchable PDF, Markdown, Word or EPUB.
 
-Deutsche Fassung: [README.de.md](README.de.md). Design notes and the implementation
-log are in German: [doc/KONZEPT.md](doc/KONZEPT.md), [doc/UMSETZUNG.md](doc/UMSETZUNG.md).
+Deutsche Fassung: [README.de.md](README.de.md).
 
-Target platform: current macOS (27) on Apple silicon. No Xcode project, just a Swift
-package and a build script.
+## What the app does
 
-## What it does
+You leaf through a book and capture every page, ideally with the iPhone through
+Apple's document scanner. The app collects the pages in a **session**, one folder per
+book or chapter, and does the rest itself:
+
+1. **Get pages.** Three ways, all ending up in the same session:
+   - **iPhone scan** via Continuity Camera: trigger the scan on the iPhone, the page
+     appears on the Mac right away. The recommended way for body text.
+   - **Import** of existing PDFs and images, for example from Notes, vFlat or Photos.
+   - **Desk View**: one keystroke captures the Desk View window. Enough for covers,
+     headings and large print; for small book text the resolution is too low.
+2. **Prepare pages.** Every page is rotated upright, a double page is split at the
+   gutter into two pages.
+3. **Recognize text.** After every capture, macOS text recognition (Vision, German and
+   English) runs in the background, entirely on device, no cloud. Paragraphs and
+   headings are preserved, hyphenation at line ends is resolved. The app suggests a
+   title from the cover.
+4. **Export.**
+   - **PDF** with the page images and an invisible text layer: searchable, selectable
+     and copyable in Preview, exactly where the words are in the image.
+   - **Markdown**, **Word** (.docx) and **EPUB** with continuous text across page
+     boundaries, handy for further processing, quoting or reading on an e-reader. In
+     Markdown a comment marks where each book page begins.
+
+Everything lives as ordinary files on disk: page images as HEIC, recognized text as
+JSON next to them, the order in `session.json`. Nothing leaves the Mac.
+
+**Why not just Notes or Prizmo?** They scan well, but they do not give you a book with
+paragraph structure as Markdown, Word or EPUB, nor a session folder to come back to
+later. That is the core here.
+
+Design notes and the implementation log are in German: [doc/KONZEPT.md](doc/KONZEPT.md),
+[doc/UMSETZUNG.md](doc/UMSETZUNG.md).
+
+## Requirements
+
+- Current macOS (27) on Apple silicon
+- For the iPhone scan: an iPhone signed in to the same Apple ID, Bluetooth and Wi-Fi
+  on (Continuity Camera)
+- To build: a Swift toolchain (Xcode or Command Line Tools). There is no Xcode
+  project, just a Swift package.
+
+## Details
 
 - **Sources.** *iPhone* (⇧⌘S) opens Apple's document scanner on your iPhone via
   Continuity Camera; the scan lands in the session as pages. *Files* (⇧⌘I) imports PDFs

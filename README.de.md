@@ -1,14 +1,52 @@
 # Desk View Book Scanner (deutsch)
 
-Eine macOS-App, die Buchseiten zu einer Session aus Bildern, erkanntem Text und
-Exporten macht: durchsuchbares PDF, Markdown, Word oder EPUB. Die Seiten kommen vom
-Dokumentenscanner des iPhones (vom Mac ausgelöst), aus importierten PDFs und Bildern
-oder von Apples Desk View. Englische Fassung: [README.md](README.md). Das Konzept steht
-in [doc/KONZEPT.md](doc/KONZEPT.md), die Befunde aus der Umsetzung in
+Bücher am Mac digitalisieren: Seite für Seite scannen, den Text erkennen lassen und
+das Ergebnis als durchsuchbares PDF, Markdown, Word oder EPUB mitnehmen.
+
+## Was die App macht
+
+Du blätterst ein Buch durch und nimmst jede Seite auf, am besten mit dem iPhone über
+Apples Dokumentenscanner. Die App sammelt die Seiten in einer **Session**, einem
+Ordner pro Buch oder Kapitel, und erledigt den Rest selbst:
+
+1. **Seiten holen.** Drei Wege, alle landen in derselben Session:
+   - **iPhone-Scan** über Continuity Camera: Scan auf dem iPhone auslösen, die Seite
+     erscheint sofort am Mac. Der empfohlene Weg für Fließtext.
+   - **Import** vorhandener PDFs und Bilder, etwa aus Notizen, vFlat oder Fotos.
+   - **Desk View** (Schreibtischansicht): ein Tastendruck fotografiert das
+     Desk-View-Fenster. Reicht für Umschläge, Überschriften und Großdruck, für
+     kleinen Buchtext ist die Auflösung zu gering.
+2. **Seiten aufbereiten.** Jede Seite wird aufrecht gedreht, eine Doppelseite am Falz
+   in zwei Seiten geteilt.
+3. **Text erkennen.** Nach jeder Aufnahme läuft im Hintergrund die Texterkennung von
+   macOS (Vision, Deutsch und Englisch), vollständig lokal, ohne Cloud. Absätze und
+   Überschriften bleiben erhalten, Silbentrennungen am Zeilenende werden aufgelöst.
+   Aus dem Umschlag schlägt die App einen Titel vor.
+4. **Exportieren.**
+   - **PDF** mit den Seitenbildern und einer unsichtbaren Textebene: in Vorschau
+     durchsuchbar, markierbar und kopierbar, genau an der Stelle im Bild.
+   - **Markdown**, **Word** (.docx) und **EPUB** mit durchgehendem Text über
+     Seitengrenzen hinweg, bequem zum Weiterverarbeiten, Zitieren oder Lesen auf dem
+     E-Reader. Im Markdown markiert ein Kommentar, wo jede Buchseite beginnt.
+
+Alles liegt als normale Dateien auf der Platte: Seitenbilder als HEIC, erkannter Text
+als JSON daneben, die Reihenfolge in `session.json`. Nichts verlässt den Mac.
+
+**Warum nicht einfach Notizen oder Prizmo?** Die scannen gut, liefern aber kein
+Buch mit Absatzstruktur als Markdown, Word oder EPUB und keinen Session-Ordner, in
+dem man später weitermachen kann. Das ist der Kern hier.
+
+Englische Fassung: [README.md](README.md). Das Konzept steht in
+[doc/KONZEPT.md](doc/KONZEPT.md), die Befunde aus der Umsetzung in
 [doc/UMSETZUNG.md](doc/UMSETZUNG.md).
 
-Zielplattform: aktuelles macOS (27) auf Apple Silicon, kein Xcode-Projekt, nur ein
-Swift Package.
+## Voraussetzungen
+
+- Aktuelles macOS (27) auf Apple Silicon
+- Für den iPhone-Scan: ein iPhone mit derselben Apple-ID, Bluetooth und WLAN an
+  (Continuity Camera)
+- Zum Bauen: Swift-Toolchain (Xcode oder Command Line Tools). Es gibt kein
+  Xcode-Projekt, nur ein Swift Package.
 
 ## Bauen und starten
 
