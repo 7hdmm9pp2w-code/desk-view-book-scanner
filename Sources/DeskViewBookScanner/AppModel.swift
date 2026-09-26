@@ -9,6 +9,13 @@ import BookScannerKit
 final class AppModel {
     static let sessionRootDefaultsKey = "sessionRootPath"
     static let pandocPathDefaultsKey = "pandocPath"
+    static let captureSourceDefaultsKey = "captureSource"
+
+    /// Woher Seiten kommen. Bestimmt den Hauptknopf und den Leerzustand.
+    enum CaptureSource: String, CaseIterable, Identifiable {
+        case iPhone, files, deskView
+        var id: String { rawValue }
+    }
     static let cellThumbnailSize = 480
     static let detailImageSize = 2000
 
@@ -41,6 +48,7 @@ final class AppModel {
     private(set) var iPhoneWaiting = false
     private(set) var sessionSettings = SessionSettings()
     private(set) var trashedCount = 0
+    private(set) var captureSource: CaptureSource = .iPhone
     var lastError: String?
     var selectedPageID: UUID?
 
@@ -57,6 +65,23 @@ final class AppModel {
             sessionRoot = Self.defaultSessionRoot
         }
         pandocPath = UserDefaults.standard.string(forKey: Self.pandocPathDefaultsKey) ?? ""
+        if let raw = UserDefaults.standard.string(forKey: Self.captureSourceDefaultsKey), let source = CaptureSource(rawValue: raw) {
+            captureSource = source
+        }
+    }
+
+    func setCaptureSource(_ source: CaptureSource) {
+        captureSource = source
+        UserDefaults.standard.set(source.rawValue, forKey: Self.captureSourceDefaultsKey)
+    }
+
+    /// Der eine Knopf der gewählten Quelle.
+    func performPrimaryAction() {
+        switch captureSource {
+        case .iPhone: scanWithiPhone(.scanDocuments)
+        case .files: importFiles()
+        case .deskView: capturePage()
+        }
     }
 
     // MARK: Start

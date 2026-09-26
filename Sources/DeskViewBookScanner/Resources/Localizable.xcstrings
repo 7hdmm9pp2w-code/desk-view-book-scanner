@@ -232,12 +232,52 @@
         }
       }
     },
+    "Dateien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files"
+          }
+        }
+      }
+    },
+    "Der Dokumentenscanner des iPhones liefert die Seiten, ausgelöst vom Mac. Quelle oben wechseln für Dateien oder Desk View.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The iPhone's document scanner delivers the pages, triggered from the Mac. Switch the source above for files or Desk View."
+          }
+        }
+      }
+    },
+    "Desk View": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desk View"
+          }
+        }
+      }
+    },
     "Desk View Book Scanner": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Desk View Book Scanner"
+          }
+        }
+      }
+    },
+    "Desk View fotografiert das Buch von oben. Reicht für Umschläge und Großdruck, nicht für Fließtext.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desk View photographs the book from above. Fine for covers and large print, not for body text."
           }
         }
       }
@@ -272,22 +312,22 @@
         }
       }
     },
-    "Desk View wird gestartet, bitte Einrichtung abschließen…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Launching Desk View, please finish its setup…"
-          }
-        }
-      }
-    },
     "Dokumente mit dem iPhone scannen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Scan Documents with iPhone"
+          }
+        }
+      }
+    },
+    "Dokumentenscanner auf dem iPhone, vom Mac ausgelöst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Document scanner on the iPhone, triggered from the Mac."
           }
         }
       }
@@ -372,12 +412,12 @@
         }
       }
     },
-    "Fenster größer ziehen: unter 1600 px Breite reicht die Auflösung nicht.": {
+    "Fenster größer ziehen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enlarge the window: below 1600 px width the resolution is too low."
+            "value": "Enlarge the window"
           }
         }
       }
@@ -542,16 +582,6 @@
         }
       }
     },
-    "Nach der Freigabe die App einmal beenden und neu starten.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "After granting access, quit and reopen the app once."
-          }
-        }
-      }
-    },
     "Nach links drehen": {
       "localizations": {
         "en": {
@@ -642,6 +672,16 @@
         }
       }
     },
+    "PDFs und Bilder aus Notizen, vFlat oder Fotos werden Seiten dieser Session.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDFs and images from Notes, vFlat or Photos become pages of this session."
+          }
+        }
+      }
+    },
     "Pandoc": {
       "localizations": {
         "en": {
@@ -662,12 +702,52 @@
         }
       }
     },
+    "Quelle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source"
+          }
+        }
+      }
+    },
     "Scans aus Notizen, vFlat oder Fotos als Seiten anhängen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Append scans from Notes, vFlat or Photos as pages"
+          }
+        }
+      }
+    },
+    "Scans aus Notizen, vFlat oder Fotos als Seiten anhängen (⇧⌘I)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Append scans from Notes, vFlat or Photos as pages (⇧⌘I)"
+          }
+        }
+      }
+    },
+    "Scans aus Notizen, vFlat oder Fotos, PDF oder Bilder.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scans from Notes, vFlat or Photos, PDF or images."
+          }
+        }
+      }
+    },
+    "Seite": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page"
           }
         }
       }
@@ -842,12 +922,12 @@
         }
       }
     },
-    "Titelvorschlag vom Umschlag: „%@“, ⏎ im Titelfeld übernimmt.": {
+    "Titelvorschlag: „%@“": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Title suggested from the cover: “%@”, press ⏎ in the title field to apply."
+            "value": "Suggested title: “%@”"
           }
         }
       }
@@ -902,6 +982,16 @@
         }
       }
     },
+    "iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone"
+          }
+        }
+      }
+    },
     "Öffnen": {
       "localizations": {
         "en": {
@@ -928,16 +1018,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Apply"
-          }
-        }
-      }
-    },
-    "⇧⌘S scannt mit dem iPhone. ⇧⌘I importiert Scans aus Notizen, vFlat oder Fotos. ⌥⌘S erfasst das Desk-View-Fenster.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "⇧⌘S scans with the iPhone. ⇧⌘I imports scans from Notes, vFlat or Photos. ⌥⌘S captures the Desk View window."
           }
         }
       }

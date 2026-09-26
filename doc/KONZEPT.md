@@ -161,12 +161,19 @@ DeskViewQuelle ──► Erfassung ──► Verarbeitung ──► Session ─�
   Einstellungen: dann zusätzlich ein Status-Item mit Status, „Seite erfassen" und
   Seitenzähler; das Hauptfenster bleibt über das Item erreichbar. Kein eigener
   Schritt, kommt nach Schritt 4, wenn die Bedienung am Buch klar ist.
-- Hauptfenster: Statusleiste oben (gefunden / nicht gefunden / Rechte fehlen, Pixelmaße
-  des Desk-View-Fensters, großer Button „Seite erfassen", Seitenzähler), darunter
-  Thumbnail-Raster mit Drag-and-drop und Löschen per Taste, rechts Detailansicht mit
-  erkanntem Text daneben. Titelfeld in der Toolbar benennt den Session-Ordner um.
-- Menüs: „Ablage" mit Neue Session ⌘N, Session-Ordner öffnen ⌘O, Letzte Sessions;
-  „Aufnahme" mit Seite erfassen ⌥⌘S, Desk View starten, Seite löschen ⌘⌫.
+- Hauptfenster (Stand 26.09.2026, nach drei Quellen gegliedert): **Quellenleiste** oben
+  mit Segmentwahl „iPhone · Dateien · Desk View", daneben der Zustand der gewählten
+  Quelle (nur Desk View braucht Erklärung: gefunden / nicht gefunden / Rechte fehlen,
+  Pixelmaße), in der Mitte Fortschritt (Import, Texterkennung, Export, Warten aufs
+  iPhone) oder Titelvorschlag, rechts Seitenzähler und der eine Hauptknopf der Quelle
+  („Mit iPhone scannen" ⇧⌘S, „Bilder oder PDF importieren…" ⇧⌘I, „Seite erfassen"
+  ⌥⌘S). Darunter Thumbnail-Raster mit Drag-and-drop, rechts Detailansicht mit
+  erkanntem Text. Toolbar nur Seitenbefehle (teilen, drehen, löschen), Export, Finder.
+  Titelfeld in der Toolbar benennt den Session-Ordner um. Der Leerzustand zeigt die
+  gewählte Quelle mit ihrem Knopf.
+- Menüs: „Ablage" mit Sessions und Export; „Aufnahme" in drei Abschnitten iPhone /
+  Dateien / Desk View; „Seite" mit Teilen ⌘T, Drehen ⌘L/⌘R, Löschen ⌘⌫, Zurückholen
+  ⇧⌘Z und den Session-Einstellungen Doppelseiten teilen und Aufrecht drehen.
 - Hinweise kontextabhängig statt Dauertext: „Seiten glatt halten, Hände raus" nur bei
   laufendem Auto-Auslöser ohne Ruhe; „Fenster größer ziehen" nur bei kleinem Fenster.
 - Schrift ≥ 13 pt, hoher Kontrast, `accessibilityContrast` beachten.

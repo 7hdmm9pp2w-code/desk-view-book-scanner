@@ -34,8 +34,6 @@ struct DeskViewBookScannerApp: App {
                         Button(directory.lastPathComponent) { model.openSession(at: directory) }
                     }
                 }
-                Button(L("Bilder oder PDF importieren…")) { model.importFiles() }
-                    .keyboardShortcut("i", modifiers: [.command, .shift])
                 Divider()
                 Button(L("Als PDF exportieren…")) { model.exportPDF() }
                     .keyboardShortcut("e")
@@ -52,18 +50,26 @@ struct DeskViewBookScannerApp: App {
                     .disabled(model.sessionDirectory == nil)
             }
             CommandMenu(L("Aufnahme")) {
-                Button(L("Dokumente mit dem iPhone scannen")) { model.scanWithiPhone(.scanDocuments) }
-                    .keyboardShortcut("s", modifiers: [.command, .shift])
-                    .disabled(model.iPhoneWaiting)
-                Button(L("Foto mit dem iPhone aufnehmen")) { model.scanWithiPhone(.takePhoto) }
-                    .disabled(model.iPhoneWaiting)
-                Divider()
-                Button(L("Seite erfassen")) { model.capturePage() }
-                    .keyboardShortcut("s", modifiers: [.command, .option])
-                    .disabled(!model.canCapture)
-                Button(L("Desk View starten")) { model.launchDeskView() }
-                    .disabled(model.isLaunchingDeskView)
-                Divider()
+                Section(L("iPhone")) {
+                    Button(L("Dokumente mit dem iPhone scannen")) { model.scanWithiPhone(.scanDocuments) }
+                        .keyboardShortcut("s", modifiers: [.command, .shift])
+                        .disabled(model.iPhoneWaiting)
+                    Button(L("Foto mit dem iPhone aufnehmen")) { model.scanWithiPhone(.takePhoto) }
+                        .disabled(model.iPhoneWaiting)
+                }
+                Section(L("Dateien")) {
+                    Button(L("Bilder oder PDF importieren…")) { model.importFiles() }
+                        .keyboardShortcut("i", modifiers: [.command, .shift])
+                }
+                Section(L("Desk View")) {
+                    Button(L("Seite erfassen")) { model.capturePage() }
+                        .keyboardShortcut("s", modifiers: [.command, .option])
+                        .disabled(!model.canCapture)
+                    Button(L("Desk View starten")) { model.launchDeskView() }
+                        .disabled(model.isLaunchingDeskView)
+                }
+            }
+            CommandMenu(L("Seite")) {
                 Button(L("Seite teilen")) { model.splitSelectedPage() }
                     .keyboardShortcut("t")
                     .disabled(model.selectedPageID == nil)
@@ -73,6 +79,13 @@ struct DeskViewBookScannerApp: App {
                 Button(L("Nach rechts drehen")) { model.rotateSelectedPage(quarterTurns: -1) }
                     .keyboardShortcut("r")
                     .disabled(model.selectedPageID == nil)
+                Divider()
+                Button(L("Seite löschen")) { model.trashSelectedPage() }
+                    .keyboardShortcut(.delete, modifiers: [.command])
+                    .disabled(model.selectedPageID == nil)
+                Button(L("Zuletzt gelöschte Seite zurückholen")) { model.restoreLastTrashedPage() }
+                    .keyboardShortcut("z", modifiers: [.command, .shift])
+                    .disabled(!model.canRestoreTrashed)
                 Divider()
                 Picker(L("Doppelseiten teilen"), selection: Binding(
                     get: { model.sessionSettings.splitMode },
@@ -86,13 +99,6 @@ struct DeskViewBookScannerApp: App {
                     get: { model.sessionSettings.autoRotate },
                     set: { model.setAutoRotate($0) }
                 ))
-                Divider()
-                Button(L("Seite löschen")) { model.trashSelectedPage() }
-                    .keyboardShortcut(.delete, modifiers: [.command])
-                    .disabled(model.selectedPageID == nil)
-                Button(L("Zuletzt gelöschte Seite zurückholen")) { model.restoreLastTrashedPage() }
-                    .keyboardShortcut("z", modifiers: [.command, .shift])
-                    .disabled(!model.canRestoreTrashed)
             }
         }
 

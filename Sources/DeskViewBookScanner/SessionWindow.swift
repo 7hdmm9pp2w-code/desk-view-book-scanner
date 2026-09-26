@@ -33,20 +33,6 @@ struct SessionWindow: View {
                     .disabled(model.sessionDirectory == nil)
             }
             ToolbarItemGroup(placement: .primaryAction) {
-                Button {
-                    model.scanWithiPhone(.scanDocuments)
-                } label: {
-                    Label(L("Mit iPhone scannen"), systemImage: "iphone.and.arrow.forward")
-                }
-                .help(L("Öffnet den Dokumentenscanner auf dem iPhone; die Seiten landen in dieser Session (⇧⌘S)."))
-                .disabled(model.iPhoneWaiting)
-                Button {
-                    model.importFiles()
-                } label: {
-                    Label(L("Bilder oder PDF importieren…"), systemImage: "square.and.arrow.down")
-                }
-                .help(L("Scans aus Notizen, vFlat oder Fotos als Seiten anhängen"))
-                .disabled(model.exportStatus != nil)
                 Menu {
                     Button(L("Als PDF exportieren…")) { model.exportPDF() }
                     Button(L("Als Markdown exportieren…")) { model.exportText(format: .markdown) }
@@ -101,50 +87,37 @@ struct SessionWindow: View {
     }
 }
 
-/// Zeile über dem Raster: Zustand von Desk View, Hinweise, großer Aufnahme-Knopf.
+/// Quellenleiste über dem Raster: Wahl der Quelle, Fortschritt, der eine Hauptknopf.
 struct StatusBar: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
-            statusView
+            Picker(L("Quelle"), selection: Binding(
+                get: { model.captureSource },
+                set: { model.setCaptureSource($0) }
+            )) {
+                Label(L("iPhone"), systemImage: "iphone").tag(AppModel.CaptureSource.iPhone)
+                Label(L("Dateien"), systemImage: "doc.on.doc").tag(AppModel.CaptureSource.files)
+                Label(L("Desk View"), systemImage: "camera.macro").tag(AppModel.CaptureSource.deskView)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .fixedSize()
+
+            sourceStatus
             Spacer(minLength: 12)
-            if model.iPhoneWaiting {
-                HStack(spacing: 8) {
-                    ProgressView().controlSize(.small)
-                    Text(L("Warte auf das iPhone…")).foregroundStyle(.secondary)
-                }
-            }
-            if let status = model.exportStatus {
-                HStack(spacing: 8) {
-                    ProgressView().controlSize(.small)
-                    switch status {
-                    case .importing(let done, let total):
-                        Text(L("Import \(done) von \(total)")).monospacedDigit()
-                    case .recognizing(let done, let total):
-                        Text(L("Texterkennung \(done) von \(total)")).monospacedDigit()
-                    case .writing(let done, let total):
-                        Text(L("Export \(done) von \(total)")).monospacedDigit()
-                    }
-                }
-                .foregroundStyle(.secondary)
-            } else if let suggestion = model.suggestedTitle, model.sessionTitle.isEmpty {
-                HStack(spacing: 6) {
-                    Text(L("Titelvorschlag vom Umschlag: „\(suggestion)“, ⏎ im Titelfeld übernimmt."))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                    Button(L("Übernehmen")) { model.setTitle(suggestion); model.dismissSuggestedTitle() }
-                        .controlSize(.small)
-                }
-            }
+            activity
             if let error = model.lastError {
                 Label(error, systemImage: "exclamationmark.triangle.fill")
                     .foregroundStyle(.red)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            captureButton
+            Text(L("\(model.pages.count) Seiten"))
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+            primaryButton
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -152,62 +125,126 @@ struct StatusBar: View {
         .background(.bar)
     }
 
+    /// Nur Desk View hat einen Zustand, der Erklärung braucht.
     @ViewBuilder
-    private var statusView: some View {
-        switch model.status {
-        case .permissionMissing:
-            HStack(spacing: 10) {
-                Label(L("Bildschirmaufnahme nicht freigegeben"), systemImage: "xmark.octagon.fill")
-                    .foregroundStyle(.red)
-                Button(L("Freigabe erteilen…")) { model.requestPermission() }
-                Text(L("Nach der Freigabe die App einmal beenden und neu starten."))
-                    .foregroundStyle(.secondary)
-            }
-        case .notRunning:
-            HStack(spacing: 10) {
-                Label(L("Desk View läuft nicht"), systemImage: "camera.slash")
-                    .foregroundStyle(.secondary)
-                if model.isLaunchingDeskView {
-                    ProgressView().controlSize(.small)
-                    Text(L("Desk View wird gestartet, bitte Einrichtung abschließen…"))
-                        .foregroundStyle(.secondary)
-                } else {
-                    Button(L("Desk View starten")) { model.launchDeskView() }
+    private var sourceStatus: some View {
+        switch model.captureSource {
+        case .iPhone:
+            Text(L("Dokumentenscanner auf dem iPhone, vom Mac ausgelöst."))
+                .foregroundStyle(.secondary)
+        case .files:
+            Text(L("Scans aus Notizen, vFlat oder Fotos, PDF oder Bilder."))
+                .foregroundStyle(.secondary)
+        case .deskView:
+            switch model.status {
+            case .permissionMissing:
+                HStack(spacing: 8) {
+                    Label(L("Bildschirmaufnahme nicht freigegeben"), systemImage: "xmark.octagon.fill")
+                        .foregroundStyle(.red)
+                    Button(L("Freigabe erteilen…")) { model.requestPermission() }
                 }
-            }
-        case .found(let window):
-            HStack(spacing: 10) {
-                Label(L("Desk View gefunden"), systemImage: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
-                Text(verbatim: "\(window.pixelWidth) × \(window.pixelHeight) px")
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-                if window.isTooSmall {
-                    Label(L("Fenster größer ziehen: unter 1600 px Breite reicht die Auflösung nicht."),
-                          systemImage: "arrow.up.left.and.arrow.down.right")
-                        .foregroundStyle(.orange)
+            case .notRunning:
+                HStack(spacing: 8) {
+                    Label(L("Desk View läuft nicht"), systemImage: "camera.slash")
+                        .foregroundStyle(.secondary)
+                    if model.isLaunchingDeskView {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Button(L("Desk View starten")) { model.launchDeskView() }
+                    }
+                }
+            case .found(let window):
+                HStack(spacing: 8) {
+                    Label(L("Desk View gefunden"), systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                    Text(verbatim: "\(window.pixelWidth) × \(window.pixelHeight) px")
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                    if window.isTooSmall {
+                        Label(L("Fenster größer ziehen"), systemImage: "arrow.up.left.and.arrow.down.right")
+                            .foregroundStyle(.orange)
+                    }
                 }
             }
         }
     }
 
-    private var captureButton: some View {
-        HStack(spacing: 8) {
-            Text(L("\(model.pages.count) Seiten"))
-                .foregroundStyle(.secondary)
-                .monospacedDigit()
-            Button {
-                model.capturePage()
-            } label: {
-                Label(model.isCapturing ? L("Wird erfasst…") : L("Seite erfassen"), systemImage: "camera.viewfinder")
-                    .font(.system(size: 14, weight: .semibold))
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
+    @ViewBuilder
+    private var activity: some View {
+        if model.iPhoneWaiting {
+            HStack(spacing: 8) {
+                ProgressView().controlSize(.small)
+                Text(L("Warte auf das iPhone…")).foregroundStyle(.secondary)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .disabled(!model.canCapture)
-            .help(L("Tastenkürzel \(HotKey.captureDisplayName), auch wenn Desk View vorn liegt."))
+        } else if let status = model.exportStatus {
+            HStack(spacing: 8) {
+                ProgressView().controlSize(.small)
+                switch status {
+                case .importing(let done, let total):
+                    Text(L("Import \(done) von \(total)")).monospacedDigit()
+                case .recognizing(let done, let total):
+                    Text(L("Texterkennung \(done) von \(total)")).monospacedDigit()
+                case .writing(let done, let total):
+                    Text(L("Export \(done) von \(total)")).monospacedDigit()
+                }
+            }
+            .foregroundStyle(.secondary)
+        } else if let suggestion = model.suggestedTitle, model.sessionTitle.isEmpty {
+            HStack(spacing: 6) {
+                Text(L("Titelvorschlag: „\(suggestion)“"))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Button(L("Übernehmen")) { model.setTitle(suggestion); model.dismissSuggestedTitle() }
+                    .controlSize(.small)
+            }
+        }
+    }
+
+    private var primaryButton: some View {
+        Button {
+            model.performPrimaryAction()
+        } label: {
+            Label(primaryTitle, systemImage: primaryIcon)
+                .font(.system(size: 14, weight: .semibold))
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
+        .disabled(!primaryEnabled)
+        .help(primaryHelp)
+    }
+
+    private var primaryTitle: String {
+        switch model.captureSource {
+        case .iPhone: return model.iPhoneWaiting ? L("Warte auf das iPhone…") : L("Mit iPhone scannen")
+        case .files: return L("Bilder oder PDF importieren…")
+        case .deskView: return model.isCapturing ? L("Wird erfasst…") : L("Seite erfassen")
+        }
+    }
+
+    private var primaryIcon: String {
+        switch model.captureSource {
+        case .iPhone: return "iphone.and.arrow.forward"
+        case .files: return "square.and.arrow.down"
+        case .deskView: return "camera.viewfinder"
+        }
+    }
+
+    private var primaryHelp: String {
+        switch model.captureSource {
+        case .iPhone: return L("Öffnet den Dokumentenscanner auf dem iPhone; die Seiten landen in dieser Session (⇧⌘S).")
+        case .files: return L("Scans aus Notizen, vFlat oder Fotos als Seiten anhängen (⇧⌘I)")
+        case .deskView: return L("Tastenkürzel \(HotKey.captureDisplayName), auch wenn Desk View vorn liegt.")
+        }
+    }
+
+    private var primaryEnabled: Bool {
+        switch model.captureSource {
+        case .iPhone: return !model.iPhoneWaiting && model.exportStatus == nil
+        case .files: return model.exportStatus == nil
+        case .deskView: return model.canCapture
         }
     }
 }
@@ -217,18 +254,51 @@ struct PageGrid: View {
     @FocusState private var isFocused: Bool
     private let columns = [GridItem(.adaptive(minimum: 150, maximum: 230), spacing: 12)]
 
+    private var emptyDescription: String {
+        switch model.captureSource {
+        case .iPhone: return L("Der Dokumentenscanner des iPhones liefert die Seiten, ausgelöst vom Mac. Quelle oben wechseln für Dateien oder Desk View.")
+        case .files: return L("PDFs und Bilder aus Notizen, vFlat oder Fotos werden Seiten dieser Session.")
+        case .deskView: return L("Desk View fotografiert das Buch von oben. Reicht für Umschläge und Großdruck, nicht für Fließtext.")
+        }
+    }
+
+    private var emptyButtonTitle: String {
+        switch model.captureSource {
+        case .iPhone: return L("Mit iPhone scannen")
+        case .files: return L("Bilder oder PDF importieren…")
+        case .deskView: return L("Seite erfassen")
+        }
+    }
+
+    private var emptyButtonIcon: String {
+        switch model.captureSource {
+        case .iPhone: return "iphone.and.arrow.forward"
+        case .files: return "square.and.arrow.down"
+        case .deskView: return "camera.viewfinder"
+        }
+    }
+
     var body: some View {
         Group {
             if model.pages.isEmpty {
                 ContentUnavailableView {
                     Label(L("Noch keine Seiten"), systemImage: "book.closed")
                 } description: {
-                    Text(L("⇧⌘S scannt mit dem iPhone. ⇧⌘I importiert Scans aus Notizen, vFlat oder Fotos. ⌥⌘S erfasst das Desk-View-Fenster."))
+                    Text(emptyDescription)
                 } actions: {
-                    Button(L("Mit iPhone scannen")) { model.scanWithiPhone(.scanDocuments) }
-                        .disabled(model.iPhoneWaiting)
-                    Button(L("Bilder oder PDF importieren…")) { model.importFiles() }
+                    Button {
+                        model.performPrimaryAction()
+                    } label: {
+                        Label(emptyButtonTitle, systemImage: emptyButtonIcon)
+                            .frame(width: 240)
+                    }
+                    .keyboardShortcut(.defaultAction)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .disabled(model.iPhoneWaiting || model.exportStatus != nil)
+                    .padding(.top, 4)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 12) {
