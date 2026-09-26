@@ -10,7 +10,7 @@ struct PageGrid: View {
         switch model.captureSource {
         case .iPhone: return L("Der Dokumentenscanner des iPhones liefert die Seiten, ausgelöst vom Mac. Quelle oben wechseln für Dateien oder Desk View.")
         case .files: return L("PDFs und Bilder aus Notizen, vFlat oder Fotos werden Seiten dieser Session.")
-        case .camera: return L("Eine Kamera über dem Buch, 4K reicht für Fließtext. Der Auto-Auslöser erfasst nach jedem Umblättern.")
+        case .camera: return L("Eine Kamera über dem Buch, 4K reicht für Fließtext. Mit dem Schalter „Beim Umblättern auslösen“ erfasst die App jede neue Seite von selbst.")
         }
     }
 
@@ -112,10 +112,23 @@ struct PageCell: View {
                 RoundedRectangle(cornerRadius: 6)
                     .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 3)
             )
-            Text(verbatim: "\(number)")
-                .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
-                .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
-                .monospacedDigit()
+            HStack(spacing: 4) {
+                if let issue = model.sequenceIssues[page.id] {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                        .help(AppModel.describe(issue))
+                        .accessibilityLabel(AppModel.describe(issue))
+                }
+                Text(verbatim: "\(number)")
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                    .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                if let printed = model.printedNumbers[page.id] {
+                    Text(verbatim: "· \(AppModel.describe(printed))")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .monospacedDigit()
         }
         .contentShape(Rectangle())
         .accessibilityLabel(L("Seite \(number)"))

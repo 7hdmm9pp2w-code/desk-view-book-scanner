@@ -39,10 +39,13 @@ final class AppModel {
     var session: SessionStore?
     var sessionDirectory: URL?
     var sessionTitle: String = ""
-    var pages: [PageRecord] = []
+    var pages: [PageRecord] = [] { didSet { refreshPageSequence() } }
     var isCapturing = false
     var hotKeyRegistered = false
-    var texts: [UUID: PageText] = [:]
+    var texts: [UUID: PageText] = [:] { didSet { refreshPageSequence() } }
+    /// Gedruckte Seitenzahlen und Auffälligkeiten ihrer Folge, aus `pages` und `texts`.
+    var printedNumbers: [UUID: ClosedRange<Int>] = [:]
+    var sequenceIssues: [UUID: PageSequenceIssue] = [:]
     var recognizingPageIDs: Set<UUID> = []
     /// Titel aus der ersten Seite, solange die Session keinen hat. Nur ein Vorschlag.
     var suggestedTitle: String?
@@ -171,6 +174,7 @@ final class AppModel {
         trashedCount = await store.document.trashed.count
         sessionArchived = await store.isArchived
         imageCache.removeAll()
+        camera.forgetCapturedPages()
         texts = [:]
         suggestedTitle = nil
         titleSuggestionDismissed = false
@@ -185,6 +189,11 @@ final class AppModel {
                 _ = await text(for: page)
             }
             if let first = pages.first { updateTitleSuggestion(after: first) }
+        }
+        // Übrige Texte laden, für die Prüfung der Seitenzahlen.
+        for page in pages where page.ocrStatus == .done && texts[page.id] == nil {
+            guard session === store else { return }
+            _ = await text(for: page)
         }
     }
 

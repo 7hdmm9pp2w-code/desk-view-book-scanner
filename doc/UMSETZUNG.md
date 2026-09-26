@@ -153,3 +153,33 @@ vom Konzept abwich und den Grund. Neueste Einträge unten.
   Freigabe: Kamera statt Bildschirmaufnahme; Info.plist braucht
   `NSCameraUseContinuityCameraDeviceType`, sonst fehlt das iPhone in der Liste.
   ScreenCaptureKit und `DeskViewSource` sind entfernt.
+- **Umblättererkennung und Seitenfolge (27.09.2026):**
+  - `MotionTrigger` meldet nur noch „nach Bewegung ruhig"; ob umgeblättert wurde,
+    entscheidet `PageTurnJudge`. Mit genug Text (ab 12 Wörtern mit mindestens vier
+    Zeichen aus einer schnellen OCR) zählt der Anteil gemeinsamer Wörter, bezogen auf die
+    kürzere Liste: ab 50 % dieselbe Seite. Das hält gegen Licht, Verrutschen und eine
+    Hand, die die halbe Seite verdeckt. Ohne Text: 320-px-Graubilder auf Mittelwert und
+    Kontrast normiert, bis ±4 px ausgerichtet (grob auf jedem zweiten Pixel, fein um den
+    Treffer; grob allein verwechselt Nachbarn bei dünnen Zeilen), dann 16-px-Kacheln mit
+    Struktur: ab 40 % geänderter Kacheln neu. Verglichen wird mit den letzten drei
+    erfassten Seiten, so löst Zurückblättern nicht aus. Bewegt sich während der Prüfung
+    wieder etwas, verfällt sie.
+  - Die Wischbewegung über den Falz wird nicht ausgewertet: Bei vier Bildern pro Sekunde
+    sieht man von einem Umblättern ein, zwei Bilder, und der Vergleich der Seiteninhalte
+    ist ohnehin der härtere Beleg.
+  - `PageSequence` liest die gedruckte Seitenzahl (reine Zahlenzeile oben oder unten,
+    oben auch Kolumnentitel mit Zahl, bei Doppelseiten zwei aufeinanderfolgende) und
+    meldet fehlende, doppelte und rückwärts laufende Seiten. Seiten ohne Zahl zählen mit,
+    die Seiten pro Scan kommen aus dem Median. Passt die nächste Zahl wieder zur
+    vorherigen, war es ein Lesefehler. Lücken über 30 Seiten nur, wenn die Folgeseite sie
+    bestätigt. Fehlend ist nur, was nirgends in der Session vorkommt; nachgescannte Seiten
+    schließen die Lücke. Anzeige am Vorschaubild (Dreieck, gedruckte Zahl) und in der
+    Quellenleiste; bei der Kamera ein Ton, wenn die eben erfasste Seite auffällt.
+- **Hände im Bild (27.09.2026):** Viele Bücher müssen aufgehalten werden. `MotionTrigger`
+  misst Bewegung deshalb in 16 Kacheln je Zeile und nimmt die Kacheldifferenz, die nur
+  das bewegteste Viertel übersteigt: Umblättern bewegt mehr als ein Viertel der Kacheln,
+  zitternde oder umgreifende Hände weniger. Handprobe mit Desk View: Umgreifen löst nicht
+  aus (31 % und 36 % geänderte Kacheln, Grenze 40 %); Umblättern mit 0–15 % gemeinsamen
+  Wörtern klar erkannt. Die schnelle OCR findet bei 1920 × 1440 oft unter 12 Wörter, dann
+  entscheidet der Kachelvergleich. Schalter „Beim Umblättern auslösen" jetzt direkt in der
+  Quellenleiste statt im Kameramenü; der Hinweis „Hände raus" ist entfallen.

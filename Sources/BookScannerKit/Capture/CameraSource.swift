@@ -48,11 +48,21 @@ public final class CameraSource: NSObject, @unchecked Sendable {
     private var pendingCaptures: [CheckedContinuation<CGImage, Error>] = []
     private var frameCounter = 0
     private var trigger = MotionTrigger()
+    private var judge = PageTurnJudge()
     private var autoTriggerEnabled = false
-    private var lastTriggerFrame: [UInt8]?
+    /// Läuft gerade die Prüfung einer ruhig liegenden Seite?
+    private var judging = false
+    /// Zählt Bewegungen; eine Prüfung, während der sich wieder etwas bewegt hat, verfällt.
+    private var motionEpisode = 0
+    private let quickRecognizer: TextRecognizer = {
+        var recognizer = TextRecognizer()
+        recognizer.accurate = false
+        recognizer.usesLanguageCorrection = false
+        return recognizer
+    }()
     /// Wird auf der Kamera-Queue gerufen, wenn der Auto-Auslöser feuert.
     public var onAutoTrigger: (@Sendable () -> Void)?
-    /// Bewegung im Bild, für den Hinweis „Seiten glatt halten".
+    /// Bewegung im Bild, für den Hinweis in der Quellenleiste.
     public var onMotionState: (@Sendable (MotionTrigger.State) -> Void)?
 
     public private(set) var activeDevice: CameraDeviceInfo?
@@ -137,6 +147,7 @@ public final class CameraSource: NSObject, @unchecked Sendable {
                     session.commitConfiguration()
                     latestBuffer = nil
                     trigger.reset()
+                    judge.reset()
                     session.startRunning()
                     activeDevice = info
                     continuation.resume()
@@ -179,10 +190,39 @@ public final class CameraSource: NSObject, @unchecked Sendable {
         }
     }
 
-    /// Nach einer manuellen Aufnahme, damit der Auslöser dieselbe Seite nicht noch einmal nimmt.
-    public func noteCapturedCurrentFrame() {
-        queue.async { [self] in
-            if let frame = lastTriggerFrame { trigger.didCapture(frame) }
+    /// Vergisst die erfassten Seiten, etwa bei einer neuen Session.
+    public func forgetCapturedPages() {
+        queue.async { [self] in judge.reset() }
+    }
+
+    /// Graubild und schnelle Texterkennung einer Aufnahme, zum Vergleich mit der nächsten.
+    private func snapshot(of image: CGImage, frame: GrayFrame) async -> PageSnapshot {
+        let lines = (try? await quickRecognizer.recognize(image)) ?? []
+        return PageSnapshot(frame: frame, lines: lines.map(\.text))
+    }
+
+    /// Nach einer Aufnahme: Die Seite merken, damit der Auslöser sie nicht noch einmal nimmt.
+    private func rememberCapture(_ image: CGImage, frame: GrayFrame) {
+        Task.detached(priority: .utility) { [self] in
+            let snapshot = await snapshot(of: image, frame: frame)
+            queue.async { [self] in judge.remember(snapshot) }
+        }
+    }
+
+    /// Das Bild steht nach einer Bewegung still: Liegt eine neue Seite da?
+    private func judgeSettledFrame(_ buffer: CVPixelBuffer) {
+        guard !judging, let image = makeImage(buffer) else { return }
+        judging = true
+        let episode = motionEpisode
+        let frame = Self.comparisonFrame(buffer)
+        Task.detached(priority: .userInitiated) { [self] in
+            let snapshot = await snapshot(of: image, frame: frame)
+            queue.async { [self] in
+                judging = false
+                guard autoTriggerEnabled, episode == motionEpisode, judge.isNewPage(snapshot) else { return }
+                judge.remember(snapshot)
+                onAutoTrigger?()
+            }
         }
     }
 
@@ -191,6 +231,13 @@ public final class CameraSource: NSObject, @unchecked Sendable {
     private func makeImage(_ buffer: CVPixelBuffer) -> CGImage? {
         let image = CIImage(cvPixelBuffer: buffer)
         return ciContext.createCGImage(image, from: image.extent)
+    }
+
+    /// Graubild mit rund 320 px Breite zum Vergleich ruhig liegender Seiten.
+    static func comparisonFrame(_ buffer: CVPixelBuffer) -> GrayFrame {
+        let width = CVPixelBufferGetWidth(buffer)
+        let pixels = downsampledGray(buffer, targetWidth: 320)
+        return GrayFrame(pixels: pixels, width: width / max(1, width / 320))
     }
 
     /// Graubild mit rund 160 px Breite für den Auslöser, direkt aus dem BGRA-Puffer.
@@ -227,18 +274,21 @@ extension CameraSource: AVCaptureVideoDataOutputSampleBufferDelegate {
             let waiting = pendingCaptures
             pendingCaptures = []
             for continuation in waiting { continuation.resume(returning: image) }
-            lastTriggerFrame = Self.downsampledGray(buffer)
-            trigger.didCapture(lastTriggerFrame ?? [])
+            trigger.didCapture()
+            if autoTriggerEnabled { rememberCapture(image, frame: Self.comparisonFrame(buffer)) }
         }
 
         // Auslöser mit rund 4 Bildern pro Sekunde, das reicht für Umblättern und Ruhe.
         guard autoTriggerEnabled, frameCounter % 8 == 0 else { return }
         let gray = Self.downsampledGray(buffer)
-        lastTriggerFrame = gray
+        let grayWidth = CVPixelBufferGetWidth(buffer) / max(1, CVPixelBufferGetWidth(buffer) / 160)
         let time = CMTimeGetSeconds(CMSampleBufferGetPresentationTimeStamp(sampleBuffer))
         let stateBefore = trigger.state
-        let fire = trigger.feed(gray, at: time)
-        if trigger.state != stateBefore { onMotionState?(trigger.state) }
-        if fire { onAutoTrigger?() }
+        let settled = trigger.feed(gray, width: grayWidth, at: time)
+        if trigger.state != stateBefore {
+            if trigger.state == .moving { motionEpisode += 1 }
+            onMotionState?(trigger.state)
+        }
+        if settled { judgeSettledFrame(buffer) }
     }
 }

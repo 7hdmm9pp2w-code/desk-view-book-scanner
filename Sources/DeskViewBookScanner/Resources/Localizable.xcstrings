@@ -262,32 +262,22 @@
         }
       }
     },
-    "Auto-Auslöser": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auto Capture"
-          }
-        }
-      }
-    },
-    "Auto-Auslöser an": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auto capture on"
-          }
-        }
-      }
-    },
     "Automatisch am Falz": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Automatically at the Gutter"
+          }
+        }
+      }
+    },
+    "Beim Umblättern auslösen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture on page turn"
           }
         }
       }
@@ -442,6 +432,16 @@
         }
       }
     },
+    "Doppelt: dieselbe Seitenzahl wie Seite %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate: same page number as page %lld"
+          }
+        }
+      }
+    },
     "E-Book (EPUB) für Bücher-App und Reader": {
       "localizations": {
         "en": {
@@ -462,12 +462,12 @@
         }
       }
     },
-    "Eine Kamera über dem Buch, 4K reicht für Fließtext. Der Auto-Auslöser erfasst nach jedem Umblättern.": {
+    "Eine Kamera über dem Buch, 4K reicht für Fließtext. Mit dem Schalter „Beim Umblättern auslösen“ erfasst die App jede neue Seite von selbst.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A camera above the book; 4K is enough for body text. Auto capture takes a page after each turn."
+            "value": "A camera above the book; 4K is enough for body text. With the “Capture on page turn” switch the app captures every new page by itself."
           }
         }
       }
@@ -478,6 +478,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose a session folder (contains session.json)."
+          }
+        }
+      }
+    },
+    "Erfasst jede neue Seite von selbst, sobald nach dem Umblättern Ruhe ist. Dieselbe Seite, eine Hand im Bild oder Zurückblättern lösen nicht aus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captures every new page by itself once the image is still after a page turn. The same page, a hand in the picture or turning back do not trigger it."
           }
         }
       }
@@ -782,6 +792,16 @@
         }
       }
     },
+    "Nach den gedruckten Seitenzahlen. Klicken zeigt die Seite.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on the printed page numbers. Click to show the page."
+          }
+        }
+      }
+    },
     "Nach links drehen": {
       "localizations": {
         "en": {
@@ -972,6 +992,26 @@
         }
       }
     },
+    "S. %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "p. %lld"
+          }
+        }
+      }
+    },
+    "S. %lld–%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pp. %1$lld–%2$lld"
+          }
+        }
+      }
+    },
     "Scans aus Notizen, vFlat oder Fotos als Seiten anhängen": {
       "localizations": {
         "en": {
@@ -1018,6 +1058,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Page %lld"
+          }
+        }
+      }
+    },
+    "Seite %lld fehlt vermutlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page %lld is probably missing"
           }
         }
       }
@@ -1072,12 +1122,22 @@
         }
       }
     },
-    "Seiten glatt halten, Hände raus": {
+    "Seiten %lld–%lld fehlen vermutlich": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep pages flat, hands out"
+            "value": "Pages %1$lld–%2$lld are probably missing"
+          }
+        }
+      }
+    },
+    "Seitenzahl kleiner als davor (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page number lower than before (%lld)"
           }
         }
       }
@@ -1238,6 +1298,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Suggested title: “%@”"
+          }
+        }
+      }
+    },
+    "Umblättern erkannt, Buch kurz ruhig halten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page turn detected, hold the book still for a moment"
           }
         }
       }
