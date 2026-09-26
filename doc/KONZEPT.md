@@ -174,6 +174,19 @@ DeskViewQuelle ──► Erfassung ──► Verarbeitung ──► Session ─�
 - Menüs: „Ablage" mit Sessions und Export; „Aufnahme" in drei Abschnitten iPhone /
   Dateien / Desk View; „Seite" mit Teilen ⌘T, Drehen ⌘L/⌘R, Löschen ⌘⌫, Zurückholen
   ⇧⌘Z und den Session-Einstellungen Doppelseiten teilen und Aufrecht drehen.
+- **Seitenleiste** (26.09.2026, macOS-Stil wie Notizen und Bücher, kein eigenes
+  Fenster): alle Sessions unter dem Sessions-Ordner, je Zeile Vorschaubild der ersten
+  Seite, Titel oder Datum, Seitenzahl, Größe auf der Platte, Marken für vorhandene
+  Exporte, Kopfzeile mit Gesamtgröße. Auswahl wechselt die Session. Kontextmenü:
+  Öffnen, Im Finder zeigen, Papierkorb leeren, Archivieren, Session in den
+  Papierkorb legen. Ein- und ausklappbar mit dem Toolbar-Knopf.
+- **Platz sparen**, drei Stufen: Papierkorb der Session leeren (Seiten in den
+  macOS-Papierkorb, nichts endgültig). Archivieren: Bilder in den macOS-Papierkorb,
+  OCR-Text und Exporte bleiben, Markdown/Word/EPUB gehen weiter, PDF und
+  Bildbefehle sind dann aus. Beim Speichern längste Kante 3000 Pixel und
+  HEIC-Qualität 0,8; iPhone-Scans (2710 px) bleiben unverändert, Importe aus
+  600-dpi-PDFs schrumpfen. Das Löschen einer ganzen Session geht ebenfalls in den
+  macOS-Papierkorb.
 - Hinweise kontextabhängig statt Dauertext: „Seiten glatt halten, Hände raus" nur bei
   laufendem Auto-Auslöser ohne Ruhe; „Fenster größer ziehen" nur bei kleinem Fenster.
 - Schrift ≥ 13 pt, hoher Kontrast, `accessibilityContrast` beachten.

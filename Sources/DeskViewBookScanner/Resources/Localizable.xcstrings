@@ -82,6 +82,16 @@
         }
       }
     },
+    "%lld gelöschte Seiten, %@, wandern in den Papierkorb von macOS.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld deleted pages, %@, move to the macOS Trash."
+          }
+        }
+      }
+    },
     "(braucht Pandoc, siehe Einstellungen)": {
       "localizations": {
         "en": {
@@ -132,6 +142,46 @@
         }
       }
     },
+    "Archivieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive"
+          }
+        }
+      }
+    },
+    "Archivieren: Bilder entfernen, Text behalten…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive: Remove Images, Keep Text…"
+          }
+        }
+      }
+    },
+    "Archiviert: nur Text, keine Bilder. Neue Session mit ⌘N.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archived: text only, no images. New session with ⌘N."
+          }
+        }
+      }
+    },
+    "Archivierte Session: die Bilder für das PDF sind entfernt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archived session: the images for the PDF have been removed."
+          }
+        }
+      }
+    },
     "Aufgenommen": {
       "localizations": {
         "en": {
@@ -172,6 +222,16 @@
         }
       }
     },
+    "Bild archiviert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Image archived"
+          }
+        }
+      }
+    },
     "Bilder oder PDF importieren…": {
       "localizations": {
         "en": {
@@ -188,6 +248,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose images or PDF scans; pages are appended in this order."
+          }
+        }
+      }
+    },
+    "Bilder, Text und Exporte wandern in den Papierkorb von macOS und lassen sich dort zurückholen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Images, text and exports move to the macOS Trash and can be restored from there."
           }
         }
       }
@@ -318,6 +388,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Launch Desk View"
+          }
+        }
+      }
+    },
+    "Die Seitenbilder (%@) wandern in den Papierkorb von macOS. Text und Exporte bleiben; Markdown, Word und EPUB gehen weiter, PDF nicht mehr.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The page images (%@) move to the macOS Trash. Text and exports stay; Markdown, Word and EPUB still work, PDF does not."
           }
         }
       }
@@ -522,6 +602,16 @@
         }
       }
     },
+    "In den Papierkorb legen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to Trash"
+          }
+        }
+      }
+    },
     "In der Mitte": {
       "localizations": {
         "en": {
@@ -562,12 +652,32 @@
         }
       }
     },
+    "Keine Sessions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Sessions"
+          }
+        }
+      }
+    },
     "Keine Sessions vorhanden": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "No sessions yet"
+          }
+        }
+      }
+    },
+    "Leeren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empty"
           }
         }
       }
@@ -652,6 +762,16 @@
         }
       }
     },
+    "Neue Session mit ⌘N, oder Seiten scannen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New session with ⌘N, or scan pages."
+          }
+        }
+      }
+    },
     "Nicht erteilt": {
       "localizations": {
         "en": {
@@ -728,6 +848,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pandoc"
+          }
+        }
+      }
+    },
+    "Papierkorb der Session leeren?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empty the session's trash?"
+          }
+        }
+      }
+    },
+    "Papierkorb leeren (%lld Seiten, %@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empty Trash (%lld pages, %@)"
           }
         }
       }
@@ -842,12 +982,52 @@
         }
       }
     },
+    "Session in den Papierkorb legen…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move Session to Trash…"
+          }
+        }
+      }
+    },
+    "Session „%@“ archivieren?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive session “%@”?"
+          }
+        }
+      }
+    },
+    "Session „%@“ in den Papierkorb legen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move session “%@” to the Trash?"
+          }
+        }
+      }
+    },
     "Session-Ordner öffnen…": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Open Session Folder…"
+          }
+        }
+      }
+    },
+    "Sessions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessions"
           }
         }
       }
@@ -1028,6 +1208,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Restore Last Deleted Page"
+          }
+        }
+      }
+    },
+    "archiviert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "archived"
           }
         }
       }

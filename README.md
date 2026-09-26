@@ -38,7 +38,10 @@ swift test
 - Vor dem Speichern wird jede Seite aufrecht gedreht und eine Doppelseite am Falz
   geteilt (Menü „Aufnahme": automatisch, Mitte oder gar nicht). Vorhandene Seiten:
   „Seite teilen" ⌘T, drehen ⌘L / ⌘R.
-- Hauptfenster: Statusleiste mit „Desk View starten" und „Seite erfassen", darunter
+- Seitenleiste links mit allen Sessions, Größe und Exporten; Rechtsklick für
+  Papierkorb leeren, Archivieren (Bilder weg, Text bleibt) und Löschen, alles in den
+  macOS-Papierkorb.
+- Hauptfenster: Quellenleiste mit dem Hauptknopf der gewählten Quelle, darunter
   die Seiten der Session; rechts die Detailansicht.
 - ⌥⌘S erfasst das Desk-View-Fenster als Seite, auch wenn Desk View vorn liegt.
 - Menü „Ablage": Neue Session ⌘N, Session-Ordner öffnen ⌘O, Letzte Sessions,

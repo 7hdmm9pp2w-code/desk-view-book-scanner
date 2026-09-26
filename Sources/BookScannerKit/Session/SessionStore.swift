@@ -25,7 +25,7 @@ public actor SessionStore {
     public static let imageFileExtension = "heic"
 
     public private(set) var directory: URL
-    public private(set) var document: SessionDocument
+    public internal(set) var document: SessionDocument
 
     private init(directory: URL, document: SessionDocument) {
         self.directory = directory
@@ -141,8 +141,9 @@ public actor SessionStore {
         let fileName = String(format: "Aufnahme-%04d.%@", document.captureCounter, Self.imageFileExtension)
         let url = directory.appending(path: fileName)
         try ImageFile.writeHEIC(image, to: url)
+        let stored = ImageFile.pixelSize(of: url) ?? (image.width, image.height)
 
-        let page = PageRecord(fileName: fileName, capturedAt: capturedAt, pixelWidth: image.width, pixelHeight: image.height)
+        let page = PageRecord(fileName: fileName, capturedAt: capturedAt, pixelWidth: stored.width, pixelHeight: stored.height)
         document.pages.append(page)
         document.pageOrder.append(page.id)
         try save()
@@ -160,8 +161,10 @@ public actor SessionStore {
         for image in images {
             document.captureCounter += 1
             let fileName = String(format: "Aufnahme-%04d.%@", document.captureCounter, Self.imageFileExtension)
-            try ImageFile.writeHEIC(image, to: directory.appending(path: fileName))
-            let record = PageRecord(fileName: fileName, capturedAt: capturedAt, pixelWidth: image.width, pixelHeight: image.height)
+            let url = directory.appending(path: fileName)
+            try ImageFile.writeHEIC(image, to: url)
+            let stored = ImageFile.pixelSize(of: url) ?? (image.width, image.height)
+            let record = PageRecord(fileName: fileName, capturedAt: capturedAt, pixelWidth: stored.width, pixelHeight: stored.height)
             document.pages.append(record)
             records.append(record)
         }
@@ -300,7 +303,7 @@ public actor SessionStore {
 
     // MARK: Speichern
 
-    private static let encoder: JSONEncoder = {
+    static let encoder: JSONEncoder = {
         let e = JSONEncoder()
         e.outputFormatting = [.prettyPrinted, .sortedKeys]
         e.dateEncodingStrategy = .custom { date, encoder in
@@ -310,7 +313,7 @@ public actor SessionStore {
         return e
     }()
 
-    private static let decoder: JSONDecoder = {
+    static let decoder: JSONDecoder = {
         let d = JSONDecoder()
         d.dateDecodingStrategy = .custom { decoder in
             let text = try decoder.singleValueContainer().decode(String.self)
@@ -320,7 +323,7 @@ public actor SessionStore {
         return d
     }()
 
-    private func save() throws {
+    func save() throws {
         try Self.write(document, to: directory)
     }
 
