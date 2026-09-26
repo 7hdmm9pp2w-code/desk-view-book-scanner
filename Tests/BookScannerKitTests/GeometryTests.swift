@@ -99,9 +99,16 @@ func makeDoublePage(width: Int = 1600, height: Int = 1000, gutter: Double? = 0.5
         let leftText = line("links", x: 0.05, top: 0.7, width: 0.4, confidence: 0.9)
         let rightText = line("rechts", x: 0.58, top: 0.7, width: 0.4, confidence: 0.9)
         #expect(splitter.split(image, mode: .automatic, lines: [leftText, rightText]).count == 2)
-        // Unsichere Zeilen zählen nicht.
+        // Ganz unsichere Zeilen zählen nicht.
         let noise = line("???", x: 0.2, top: 0.7, width: 0.6, confidence: 0.2)
         #expect(splitter.split(image, mode: .automatic, lines: [noise]).count == 2)
+        // Rückumschlag: kleiner, unsicher gelesener Text kreuzt den Schnitt.
+        let blurb = line("Ist ein Bombenattentat in Italien die Tat von", x: 0.2, top: 0.6, width: 0.45, confidence: 0.35)
+        #expect(splitter.split(image, mode: .automatic, lines: [blurb]).count == 1)
+        // Text nur links vom Schnitt: Einzelseite, kein Schnitt.
+        let onlyLeft = (0..<5).map { line("Klappentext \($0)", x: 0.1, top: 0.8 - Double($0) * 0.05, width: 0.3, confidence: 0.9) }
+        #expect(splitter.split(image, mode: .automatic, lines: onlyLeft).count == 1)
+        #expect(splitter.split(image, mode: .middle, lines: onlyLeft).count == 1)
     }
 
     @Test func cutStaysInsideTheTextFreeGap() {

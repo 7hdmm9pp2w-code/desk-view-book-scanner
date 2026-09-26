@@ -49,6 +49,7 @@ final class AppModel {
     private(set) var sessionSettings = SessionSettings()
     private(set) var trashedCount = 0
     private(set) var captureSource: CaptureSource = .iPhone
+    private var titleSuggestionDismissed = false
     var lastError: String?
     var selectedPageID: UUID?
 
@@ -203,6 +204,7 @@ final class AppModel {
         imageCache = [:]
         texts = [:]
         suggestedTitle = nil
+        titleSuggestionDismissed = false
         selectedPageID = pages.last?.id
         for page in pages where page.ocrStatus == .pending {
             recognizeText(for: page)
@@ -330,9 +332,7 @@ extension AppModel {
                 let text = try await processor.text(for: page, in: session)
                 texts[page.id] = text
                 pages = await session.orderedPages
-                if sessionTitle.isEmpty, suggestedTitle == nil, pages.first?.id == page.id {
-                    suggestedTitle = TitleSuggester.suggest(from: text)
-                }
+                updateTitleSuggestion(after: page)
             } catch {
                 pages = await session.orderedPages
                 lastError = error.localizedDescription
@@ -350,6 +350,16 @@ extension AppModel {
 
     func dismissSuggestedTitle() {
         suggestedTitle = nil
+        titleSuggestionDismissed = true
+    }
+
+    /// Vorschlag aus Umschlag und den folgenden Seiten, sobald deren Text vorliegt.
+    private func updateTitleSuggestion(after page: PageRecord) {
+        guard sessionTitle.isEmpty, !titleSuggestionDismissed else { return }
+        let first = Array(pages.prefix(TitleSuggester.lookahead + 1))
+        guard first.contains(where: { $0.id == page.id }), let cover = first.first, let coverText = texts[cover.id] else { return }
+        let following = first.dropFirst().compactMap { texts[$0.id] }
+        suggestedTitle = TitleSuggester.suggest(cover: coverText, followingPages: following)
     }
 
     // MARK: Import

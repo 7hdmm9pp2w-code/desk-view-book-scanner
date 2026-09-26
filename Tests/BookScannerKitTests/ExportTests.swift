@@ -286,6 +286,28 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
         // Textseite: alle Zeilen gleich hoch, kein Vorschlag.
         let body = pageText((0..<8).map { line("die aufgrund von objektiven Tatsachen \($0)", top: 0.9 - Double($0) * 0.04) })
         #expect(TitleSuggester.suggest(from: body) == nil)
+        // Titelseite wiederholt den Autor: er kommt davor.
+        let titlePage = pageText([line("Michail Bakunin", top: 0.9), line("Gott und der Staat", top: 0.8), line("Merve Verlag Berlin", top: 0.3)])
+        #expect(TitleSuggester.suggest(cover: page, followingPages: [titlePage]) == "Michail Bakunin – GOTT UND DER STAAT")
+    }
+
+    @Test func titleIgnoresPublisherAndSplitsRecurringLines() {
+        // Baudrillard-Umschlag: Verlag ist die größte Zeile.
+        let cover = pageText([
+            line("Jean Baudrillard", top: 0.75, height: 0.05, width: 0.5),
+            line("Agonie des Realen", top: 0.69, height: 0.05, width: 0.5),
+            line("Merve Verlag Berlin", top: 0.25, height: 0.07, width: 0.6),
+        ])
+        #expect(TitleSuggester.suggest(from: cover) == "Jean Baudrillard Agonie des Realen")
+        let titlePage = pageText([
+            line("Jean Baudrillard", top: 0.9), line("Agonie des Realen", top: 0.86),
+            line("Aus dem Französischen übersetzt von", top: 0.8), line("Merve Verlag Berlin", top: 0.7),
+        ])
+        let bio = pageText([line("Jean Baudrillard, 1929 in Reims geboren, ist Professor", top: 0.9)])
+        #expect(TitleSuggester.suggest(cover: cover, followingPages: [bio, titlePage]) == "Jean Baudrillard – Agonie des Realen")
+        #expect(TitleSuggester.isExcluded("© 1978 by Merve Verlag GmbH"))
+        #expect(TitleSuggester.isExcluded("Paris 1968"))
+        #expect(!TitleSuggester.isExcluded("Agonie des Realen"))
     }
 }
 
