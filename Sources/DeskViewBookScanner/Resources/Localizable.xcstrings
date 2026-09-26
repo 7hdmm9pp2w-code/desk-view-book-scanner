@@ -442,6 +442,16 @@
         }
       }
     },
+    "Doppelt: dieselbe Seitenzahl wie Seite %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate: same page number as page %lld"
+          }
+        }
+      }
+    },
     "E-Book (EPUB) für Bücher-App und Reader": {
       "localizations": {
         "en": {
@@ -782,6 +792,16 @@
         }
       }
     },
+    "Nach den gedruckten Seitenzahlen. Klicken zeigt die Seite.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on the printed page numbers. Click to show the page."
+          }
+        }
+      }
+    },
     "Nach links drehen": {
       "localizations": {
         "en": {
@@ -972,6 +992,26 @@
         }
       }
     },
+    "S. %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "p. %lld"
+          }
+        }
+      }
+    },
+    "S. %lld–%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pp. %1$lld–%2$lld"
+          }
+        }
+      }
+    },
     "Scans aus Notizen, vFlat oder Fotos als Seiten anhängen": {
       "localizations": {
         "en": {
@@ -1018,6 +1058,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Page %lld"
+          }
+        }
+      }
+    },
+    "Seite %lld fehlt vermutlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page %lld is probably missing"
           }
         }
       }
@@ -1072,12 +1122,32 @@
         }
       }
     },
+    "Seiten %lld–%lld fehlen vermutlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pages %1$lld–%2$lld are probably missing"
+          }
+        }
+      }
+    },
     "Seiten glatt halten, Hände raus": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Keep pages flat, hands out"
+          }
+        }
+      }
+    },
+    "Seitenzahl kleiner als davor (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page number lower than before (%lld)"
           }
         }
       }

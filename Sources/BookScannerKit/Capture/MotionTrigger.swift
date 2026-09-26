@@ -1,11 +1,12 @@
 import Foundation
 
-/// Auto-Auslöser: aus einer Folge stark verkleinerter Graubilder eine Entscheidung.
+/// Bewegungsmelder für den Auto-Auslöser: aus einer Folge stark verkleinerter Graubilder
+/// der Moment, in dem nach einer Bewegung Ruhe eingekehrt ist.
 ///
 /// Zustände: *ruhig* → *Bewegung* (Umblättern, Hand im Bild) → *ruhig seit
-/// `settleSeconds`* → unterscheidet sich das Bild deutlich vom zuletzt erfassten →
-/// auslösen. Ohne vorherige Bewegung wird nie ausgelöst, damit ein stilles Bild nicht
-/// laufend erfasst wird. Reine Logik, ohne Kamera, darum testbar.
+/// `settleSeconds`* → melden. Ohne vorherige Bewegung wird nie gemeldet, damit ein
+/// stilles Bild nicht laufend erfasst wird. Ob wirklich umgeblättert wurde, entscheidet
+/// danach der `PageTurnJudge`. Reine Logik, ohne Kamera, darum testbar.
 public struct MotionTrigger: Sendable {
     public enum State: Sendable, Equatable { case idle, moving, settling }
 
@@ -13,19 +14,16 @@ public struct MotionTrigger: Sendable {
     public var motionThreshold: Double = 6
     /// Darunter gilt das Bild als ruhig.
     public var stillThreshold: Double = 2.5
-    /// So lange muss Ruhe herrschen, bevor ausgelöst wird.
+    /// So lange muss Ruhe herrschen, bevor gemeldet wird.
     public var settleSeconds: TimeInterval = 1.5
-    /// Mindestunterschied zur zuletzt erfassten Seite, sonst wurde nicht umgeblättert.
-    public var changeThreshold: Double = 8
 
     public private(set) var state: State = .idle
     private var previous: [UInt8]?
-    private var lastCaptured: [UInt8]?
     private var stillSince: TimeInterval?
 
     public init() {}
 
-    /// Nächstes Bild; `true` heißt: jetzt erfassen. Danach `didCapture` aufrufen.
+    /// Nächstes Bild; `true` heißt: Das Bild steht nach einer Bewegung still.
     public mutating func feed(_ frame: [UInt8], at time: TimeInterval) -> Bool {
         defer { previous = frame }
         guard let previous, previous.count == frame.count else { return false }
@@ -54,17 +52,12 @@ public struct MotionTrigger: Sendable {
             guard time - since >= settleSeconds else { return false }
             state = .idle
             stillSince = nil
-            if let lastCaptured, lastCaptured.count == frame.count,
-               Self.meanAbsoluteDifference(lastCaptured, frame) < changeThreshold {
-                return false
-            }
             return true
         }
     }
 
-    /// Merkt sich das erfasste Bild als Vergleich für die nächste Seite.
-    public mutating func didCapture(_ frame: [UInt8]) {
-        lastCaptured = frame
+    /// Nach einer Aufnahme: Bis zur nächsten Bewegung wird nichts mehr gemeldet.
+    public mutating func didCapture() {
         state = .idle
         stillSince = nil
     }
@@ -72,7 +65,6 @@ public struct MotionTrigger: Sendable {
     public mutating func reset() {
         state = .idle
         previous = nil
-        lastCaptured = nil
         stillSince = nil
     }
 

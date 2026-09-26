@@ -100,7 +100,13 @@ sharpest. Hence:
   do not cover half the desk.
 - **For whole books** use a 4K camera straight above the book, or the iPhone scan.
   Auto capture takes a page after each turn once the image has been still for one and
-  a half seconds and differs from the last page.
+  a half seconds and a new page lies there: it compares the words of a quick text
+  recognition with the last three captured pages, or image tiles when there is little
+  text. A hand on the page, a shifted book, changing light or turning back does not
+  trigger it.
+- **Page order check**: from the printed page numbers the app flags missing pages,
+  duplicates and pages out of order (also for unsplit double pages), marked at the
+  thumbnail and in the source bar. With the camera a sound alerts you right away.
 - A blurry page does not need re-sorting: select it, ⇧⌘R, capture again.
 
 `scripts/ocr_stats.py` prints line heights and confidences per page of a session.

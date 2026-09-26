@@ -22,6 +22,7 @@ struct StatusBar: View {
             sourceStatus
             Spacer(minLength: 12)
             activity
+            sequenceHint
             if let error = model.lastError {
                 Label(error, systemImage: "exclamationmark.triangle.fill")
                     .foregroundStyle(.red)
@@ -151,6 +152,22 @@ struct StatusBar: View {
                 Button(L("Übernehmen")) { model.setTitle(suggestion); model.dismissSuggestedTitle() }
                     .controlSize(.small)
             }
+        }
+    }
+
+    /// Hinweis an der hintersten auffälligen Seite; ein Klick wählt sie aus.
+    @ViewBuilder
+    private var sequenceHint: some View {
+        if let latest = model.latestSequenceIssue {
+            Button {
+                model.selectedPageID = latest.page.id
+            } label: {
+                Label(AppModel.describe(latest.issue), systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+                    .lineLimit(1)
+            }
+            .buttonStyle(.plain)
+            .help(L("Nach den gedruckten Seitenzahlen. Klicken zeigt die Seite."))
         }
     }
 

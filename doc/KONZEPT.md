@@ -86,7 +86,8 @@ DeskViewQuelle ──► Erfassung ──► Verarbeitung ──► Session ─�
   Auflösung (~320 px breit). Daraus nur eine Kennzahl: mittlere Differenz zum Vorbild.
   Zustandsautomat: *Ruhe → Bewegung (Umblättern) → ruhig seit 1,5 s → unterscheidet sich
   deutlich von der zuletzt erfassten Seite → auslösen*. Das Vollbild kommt dann wieder
-  über den Screenshot-Pfad, nicht aus dem Stream.
+  über den Screenshot-Pfad, nicht aus dem Stream. (Seit 27.09.2026 über AVFoundation und
+  mit Umblättererkennung, siehe UMSETZUNG.md.)
 
 ### 3. Verarbeitung (Actor, abseits des Main-Threads; jede Stufe abschaltbar)
 

@@ -112,10 +112,23 @@ struct PageCell: View {
                 RoundedRectangle(cornerRadius: 6)
                     .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 3)
             )
-            Text(verbatim: "\(number)")
-                .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
-                .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
-                .monospacedDigit()
+            HStack(spacing: 4) {
+                if let issue = model.sequenceIssues[page.id] {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                        .help(AppModel.describe(issue))
+                        .accessibilityLabel(AppModel.describe(issue))
+                }
+                Text(verbatim: "\(number)")
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                    .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                if let printed = model.printedNumbers[page.id] {
+                    Text(verbatim: "· \(AppModel.describe(printed))")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .monospacedDigit()
         }
         .contentShape(Rectangle())
         .accessibilityLabel(L("Seite \(number)"))

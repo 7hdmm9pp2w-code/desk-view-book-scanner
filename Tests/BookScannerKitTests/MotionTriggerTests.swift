@@ -16,32 +16,16 @@ import Foundation
         #expect(!step(frame(140)))
         #expect(!step(frame(90)))
         #expect(trigger.state == .moving)
-        // Ruhe auf neuem Bild: erst nach 1,5 s auslösen.
+        // Ruhe auf neuem Bild: erst nach 1,5 s melden.
         var fired = false
         for _ in 0..<5 { fired = step(frame(160)) || fired }
         #expect(!fired)
         for _ in 0..<3 { fired = step(frame(160)) || fired }
         #expect(fired)
         #expect(trigger.state == .idle)
-        trigger.didCapture(frame(160))
+        trigger.didCapture()
         // Wieder Ruhe ohne Bewegung: nichts.
         for _ in 0..<10 { #expect(!step(frame(160))) }
-    }
-
-    @Test func doesNotFireWhenPageDidNotChange() {
-        var trigger = MotionTrigger()
-        trigger.didCapture(frame(100))
-        var t: TimeInterval = 0
-        func step(_ f: [UInt8]) -> Bool { t += 0.25; return trigger.feed(f, at: t) }
-        _ = step(frame(100))
-        _ = step(frame(200))   // Hand im Bild
-        var fired = false
-        for _ in 0..<10 { fired = step(frame(101)) || fired }   // zurück zur alten Seite
-        #expect(!fired)
-        // Danach eine echt neue Seite.
-        _ = step(frame(30))
-        for _ in 0..<10 { fired = step(frame(140)) || fired }
-        #expect(fired)
     }
 
     @Test func intermediateJitterRestartsTheClock() {
