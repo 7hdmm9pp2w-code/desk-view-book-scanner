@@ -104,16 +104,17 @@ public struct PDFExporter: Sendable {
     }
 }
 
-/// Dateinamen für Exporte: `Buchscan 2026-09-26 14-03 Titel.pdf`.
+/// Dateinamen für Exporte: der Titel, wenn es einen gibt (`Jean Baudrillard – Agonie des
+/// Realen.pdf`), sonst `Buchscan 2026-09-26 14-03.pdf`.
 public enum ExportNaming {
     public static func fileName(createdAt: Date, title: String?, fileExtension: String) -> String {
+        if let title, !title.isEmpty {
+            let safe = SessionStore.fileSystemSafe(title)
+            if !safe.isEmpty { return safe + "." + fileExtension }
+        }
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "de_DE_POSIX")
         formatter.dateFormat = "yyyy-MM-dd HH-mm"
-        var name = "Buchscan " + formatter.string(from: createdAt)
-        if let title, !title.isEmpty {
-            name += " " + SessionStore.fileSystemSafe(title)
-        }
-        return name + "." + fileExtension
+        return "Buchscan " + formatter.string(from: createdAt) + "." + fileExtension
     }
 }

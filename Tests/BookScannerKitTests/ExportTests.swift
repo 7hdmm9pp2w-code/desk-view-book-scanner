@@ -414,9 +414,10 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
 
     @Test func exportFileName() {
         let date = Date(timeIntervalSince1970: 1_790_420_502)  // 26.09.2026 13:01 Berlin
-        let name = ExportNaming.fileName(createdAt: date, title: "Gott und der Staat", fileExtension: "pdf")
-        #expect(name.hasPrefix("Buchscan 2026-09-26 ") && name.hasSuffix(" Gott und der Staat.pdf"))
-        #expect(ExportNaming.fileName(createdAt: date, title: nil, fileExtension: "md").hasSuffix(".md"))
+        #expect(ExportNaming.fileName(createdAt: date, title: "Jean Baudrillard – Agonie des Realen", fileExtension: "pdf") == "Jean Baudrillard – Agonie des Realen.pdf")
+        let plain = ExportNaming.fileName(createdAt: date, title: nil, fileExtension: "md")
+        #expect(plain.hasPrefix("Buchscan 2026-09-26 ") && plain.hasSuffix(".md"))
+        #expect(ExportNaming.fileName(createdAt: date, title: "  ", fileExtension: "md") == plain)
     }
 }
 

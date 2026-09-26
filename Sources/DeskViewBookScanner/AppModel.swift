@@ -209,6 +209,13 @@ final class AppModel {
         for page in pages where page.ocrStatus == .pending {
             recognizeText(for: page)
         }
+        // Vorschlag aus schon erkannten ersten Seiten, ohne neue OCR.
+        if sessionTitle.isEmpty {
+            for page in pages.prefix(TitleSuggester.lookahead + 1) where page.ocrStatus == .done {
+                _ = await text(for: page)
+            }
+            if let first = pages.first { updateTitleSuggestion(after: first) }
+        }
     }
 
     private func ensureSession() async throws -> SessionStore {
@@ -541,17 +548,21 @@ extension AppModel {
         !pages.isEmpty && exportStatus == nil
     }
 
+    /// Gesetzter Titel, sonst der Vorschlag vom Umschlag.
+    var effectiveTitle: String? {
+        sessionTitle.isEmpty ? suggestedTitle : sessionTitle
+    }
+
     func exportPDF() {
         guard let session, canExport else { return }
         let createdAt = sessionCreatedAt
         Task {
-            guard let url = savePanel(fileName: ExportNaming.fileName(createdAt: createdAt, title: sessionTitle, fileExtension: "pdf"), contentType: .pdf) else { return }
+            guard let url = savePanel(fileName: ExportNaming.fileName(createdAt: createdAt, title: effectiveTitle, fileExtension: "pdf"), contentType: .pdf) else { return }
             do {
                 let (urls, texts) = try await collectTexts(session: session)
-                let title = sessionTitle
                 let total = urls.count
                 exportStatus = .writing(done: 0, total: total)
-                let pdfTitle = title.isEmpty ? suggestedTitle : title
+                let pdfTitle = effectiveTitle
                 try await Task.detached(priority: .userInitiated) { [self] in
                     try PDFExporter().export(
                         to: url, title: pdfTitle, pageCount: total,
@@ -583,14 +594,12 @@ extension AppModel {
         case .epub: .epub
         }
         Task {
-            guard let url = savePanel(fileName: ExportNaming.fileName(createdAt: createdAt, title: sessionTitle, fileExtension: format.fileExtension), contentType: contentType) else { return }
+            guard let url = savePanel(fileName: ExportNaming.fileName(createdAt: createdAt, title: effectiveTitle, fileExtension: format.fileExtension), contentType: contentType) else { return }
             do {
                 let (_, texts) = try await collectTexts(session: session)
                 let numbered = texts.enumerated().compactMap { index, text in text.map { (number: index + 1, text: $0) } }
                 let structurer = DocumentStructurer(wordChecker: SpellCheckerWordChecker(language: "de"))
-                // Ohne gesetzten Titel nimmt der Export den Vorschlag vom Umschlag.
-                let title = sessionTitle.isEmpty ? suggestedTitle : sessionTitle
-                let document = structurer.structure(pages: numbered, title: title)
+                let document = structurer.structure(pages: numbered, title: effectiveTitle)
                 exportStatus = .writing(done: 0, total: 1)
                 try await Task.detached(priority: .userInitiated) {
                     try TextExporter.export(document, to: url, format: format, pandoc: pandoc)
