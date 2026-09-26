@@ -702,32 +702,12 @@
         }
       }
     },
-    "Keine Sessions vorhanden": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No sessions yet"
-          }
-        }
-      }
-    },
     "Leeren": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Empty"
-          }
-        }
-      }
-    },
-    "Letzte Sessions": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recent Sessions"
           }
         }
       }

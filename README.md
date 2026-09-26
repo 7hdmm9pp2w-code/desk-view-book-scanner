@@ -2,7 +2,7 @@
 
 Eine macOS-App, die Buchseiten aus dem Fenster der Schreibtischansicht
 (Desk View) fotografiert und daraus eine Session mit Seiten, später OCR-Text und ein
-durchsuchbares PDF macht. Das Konzept steht in [doc/KONZEPT.md](doc/KONZEPT.md).
+durchsuchbares PDF macht. Das Konzept steht in [doc/KONZEPT.md](doc/KONZEPT.md), die Befunde aus der Umsetzung in [doc/UMSETZUNG.md](doc/UMSETZUNG.md).
 
 Zielplattform: aktuelles macOS (27) auf Apple Silicon, kein Xcode-Projekt, nur ein
 Swift Package.

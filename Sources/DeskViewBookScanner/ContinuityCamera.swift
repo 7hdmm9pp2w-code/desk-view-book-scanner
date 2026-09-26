@@ -46,8 +46,6 @@ final class ContinuityCamera {
         }
     }
 
-    static let acceptedTypes: [UTType] = [.pdf, .jpeg, .heic, .png, .tiff, .image]
-
     private(set) var isWaiting = false
     private var receiver: ReceiverTextView?
     private var previousResponder: NSResponder?
