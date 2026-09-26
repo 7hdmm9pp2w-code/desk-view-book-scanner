@@ -74,6 +74,8 @@ extension AppModel {
                 for url in files { total += try PageImporter.pageCount(of: url) }
                 var done = 0
                 exportStatus = .importing(done: 0, total: total)
+                let target = takeRescanTarget()
+                var replacements: [CGImage] = []
                 for url in files {
                     let count = try PageImporter.pageCount(of: url)
                     for index in 0..<count {
@@ -81,15 +83,28 @@ extension AppModel {
                             try PageImporter.image(at: index, from: url)
                         }.value
                         let settings = await store.document.settings
-                        for prepared in await processor.prepare(image, settings: settings) {
-                            let page = try await store.addPage(prepared)
-                            selectedPageID = page.id
-                            recognizeText(for: page)
+                        let prepared = await processor.prepare(image, settings: settings)
+                        if target != nil {
+                            replacements.append(contentsOf: prepared)
+                        } else {
+                            for image in prepared {
+                                let page = try await store.addPage(image)
+                                selectedPageID = page.id
+                                recognizeText(for: page)
+                            }
                         }
                         pages = await store.orderedPages
                         done += 1
                         exportStatus = .importing(done: done, total: total)
                     }
+                }
+                if let target, !replacements.isEmpty {
+                    // Nachscannen: alle neuen Seiten rücken an die Stelle der alten.
+                    let records = try await store.replacePage(target, with: replacements)
+                    forgetPage(target)
+                    pages = await store.orderedPages
+                    selectedPageID = records.first?.id
+                    for record in records { recognizeText(for: record) }
                 }
                 exportStatus = nil
                 lastError = nil
@@ -206,6 +221,7 @@ extension AppModel {
         } failure: { [weak self] error in
             guard let self else { return }
             self.iPhoneWaiting = false
+            self.rescanTargetID = nil
             self.lastError = error.localizedDescription
             NSSound.beep()
         }

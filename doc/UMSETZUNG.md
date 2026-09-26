@@ -136,3 +136,20 @@ vom Konzept abwich und den Grund. Neueste Einträge unten.
     `PageDetail`. Reine Verschiebungen, Tests unverändert grün.
   - Das Änderungsprotokoll ist aus dem Konzept hierher gewandert; das Konzept bleibt
     der Plan, diese Datei die Chronik.
+- **Seite nachscannen (26.09.2026):** ⇧⌘R merkt sich die ausgewählte Seite; das nächste
+  Ergebnis der gewählten Quelle (iPhone-Scan, Dateiimport, Desk-View-Aufnahme) ersetzt
+  sie an Ort und Stelle über `replacePage`, die alte wandert in den Papierkorb der
+  Session. Kommen mehrere Seiten (Doppelseite geteilt, mehrere Scans), rücken alle an
+  die Stelle. Ein Abbruch (Dialog, iPhone-Timeout) verwirft das Ziel.
+- **Kamera-Quelle über AVFoundation (26.09.2026, spät):** ersetzt den Screenshot des
+  Desk-View-Fensters. Gemessen: die Desk-View-Kamera (Mac wie iPhone) bietet genau ein
+  Format, 1920 × 1440, das Fenster skaliert nur hoch; das iPhone als Webcam ebenfalls
+  maximal 1920 × 1440, auch als Foto; die Insta360 liefert 3840 × 2160. `CameraSource`
+  listet alle Kameras (Desk View, Continuity, extern, eingebaut), wählt das größte
+  Format und holt Einzelbilder aus dem Live-Feed; Live-Vorschau im Detail, Geräteauswahl
+  in der Quellenleiste. **Auto-Auslöser** (Schritt 4) als testbarer Zustandsautomat
+  `MotionTrigger`: Bewegung, dann 1,5 s Ruhe, dann Vergleich mit der zuletzt erfassten
+  Seite; läuft mit rund vier Bildern pro Sekunde auf 160 px breiten Graubildern. Neue
+  Freigabe: Kamera statt Bildschirmaufnahme; Info.plist braucht
+  `NSCameraUseContinuityCameraDeviceType`, sonst fehlt das iPhone in der Liste.
+  ScreenCaptureKit und `DeskViewSource` sind entfernt.

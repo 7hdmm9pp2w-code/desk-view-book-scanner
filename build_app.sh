@@ -85,8 +85,9 @@ cat > "$OUT/Contents/Info.plist" <<PLIST
   <key>CFBundleVersion</key><string>$VERSION</string>
   <key>LSMinimumSystemVersion</key><string>$MIN_OS</string>
   <key>NSHighResolutionCapable</key><true/>
-  <key>NSScreenCaptureUsageDescription</key>
-  <string>Der Buchscanner fotografiert das Fenster von Desk View, um daraus Seiten zu machen.</string>
+  <key>NSCameraUsageDescription</key>
+  <string>Der Buchscanner erfasst Buchseiten mit der gewählten Kamera, etwa Desk View oder einer 4K-Kamera über dem Buch.</string>
+  <key>NSCameraUseContinuityCameraDeviceType</key><true/>
 </dict>
 </plist>
 PLIST
@@ -97,10 +98,21 @@ if [[ -z "${SIGN_IDENTITY:-}" ]]; then
     | grep -o '"Apple Development: [^"]*"' | head -1 | tr -d '"')"
   SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 fi
+# Hardened Runtime sperrt die Kamera, solange das Entitlement fehlt; ohne es gibt es
+# weder den Freigabedialog noch einen Eintrag in den Systemeinstellungen.
+cat > build/entitlements.plist <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.device.camera</key><true/>
+</dict>
+</plist>
+PLIST
 if [[ -x "$OUT/Contents/Helpers/pandoc" ]]; then
   codesign --force --sign "$SIGN_IDENTITY" --options runtime "$OUT/Contents/Helpers/pandoc"
 fi
-codesign --force --sign "$SIGN_IDENTITY" --identifier "$BUNDLE_ID" --options runtime "$OUT"
+codesign --force --sign "$SIGN_IDENTITY" --identifier "$BUNDLE_ID" --options runtime --entitlements build/entitlements.plist "$OUT"
 echo "Gebaut: $OUT ($CONFIG, $VERSION, signiert mit: $SIGN_IDENTITY)"
 
 if [[ $RUN -eq 1 ]]; then

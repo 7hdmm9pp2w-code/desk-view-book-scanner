@@ -15,8 +15,10 @@ book or chapter, and does the rest itself:
    - **iPhone scan** via Continuity Camera: trigger the scan on the iPhone, the page
      appears on the Mac right away. The recommended way for body text.
    - **Import** of existing PDFs and images, for example from Notes, vFlat or Photos.
-   - **Desk View**: one keystroke captures the Desk View window. Enough for covers,
-     headings and large print; for small book text the resolution is too low.
+   - **Camera**: any camera AVFoundation sees, in its largest format. A 4K camera
+     above the book gives readable body text; Desk View is limited to 1920 × 1440 and
+     is enough for covers, headings and large print. Auto capture takes a page after
+     each turn.
 2. **Prepare pages.** Every page is rotated upright, a double page is split at the
    gutter into two pages.
 3. **Recognize text.** After every capture, macOS text recognition (Vision, German and
@@ -53,8 +55,10 @@ Design notes and the implementation log are in German: [doc/KONZEPT.md](doc/KONZ
 - **Sources.** *iPhone* (⇧⌘S) opens Apple's document scanner on your iPhone via
   Continuity Camera; the scan lands in the session as pages. *Files* (⇧⌘I) imports PDFs
   and images, for example scans from Notes or vFlat, rendered at their embedded
-  resolution. *Desk View* (⌥⌘S) captures the Desk View window; good enough for covers
-  and large print, not for body text (the feed is 1920 × 1440).
+  resolution. *Camera* (⌥⌘S) grabs a frame from any camera AVFoundation sees, in its
+  largest format, with a live preview and an auto-capture mode.
+- **Rescan** a page in place (⇧⌘R): the next result from the chosen source replaces
+  the selected page; the old one goes to the session's trash.
 - **Before saving**, every page is rotated upright (Vision reads the text direction) and
   double pages are split at the gutter, using the text-free gap between the two text
   blocks. Existing pages can be split (⌘T), rotated (⌘L/⌘R) or rescanned in place (⇧⌘R).
@@ -72,6 +76,35 @@ Design notes and the implementation log are in German: [doc/KONZEPT.md](doc/KONZ
   exports; the context menu empties trashes, archives (removes images, keeps text) or
   deletes sessions, always into the macOS Trash.
 
+## Camera and resolution
+
+What text recognition needs is pixels per letter. Paperback body text is reliable
+from about 20 pixels of line height; below 12 it becomes guesswork. Measured via
+AVFoundation, not estimated:
+
+| Source | Real resolution | Enough for |
+|---|---|---|
+| iPhone document scanner | about 1700 × 2700 per page | body text, the recommended way |
+| 4K camera above the book (e.g. Insta360 Link) | 3840 × 2160 | body text, hands-free with auto capture |
+| Desk View (Mac or iPhone) | 1920 × 1440, and no more | covers, headings, large print |
+| iPhone as a webcam | 1920 × 1440 | same as Desk View |
+
+The Desk View window shows more pixels than the feed has; that is upscaling. And the
+feed is not equally sharp everywhere: Desk View crops the lower part of the
+ultra-wide image and dewarps it into a top-down view. The far edge of the desk is
+stretched the most and is the least sharp; the zone next to the keyboard is the
+sharpest. Hence:
+
+- **Put the book close to the Mac**, at the keyboard edge, not in the middle of the desk.
+- **Pull the trapezoid tight around the book** in Desk View's setup so the 1920 pixels
+  do not cover half the desk.
+- **For whole books** use a 4K camera straight above the book, or the iPhone scan.
+  Auto capture takes a page after each turn once the image has been still for one and
+  a half seconds and differs from the last page.
+- A blurry page does not need re-sorting: select it, ⇧⌘R, capture again.
+
+`scripts/ocr_stats.py` prints line heights and confidences per page of a session.
+
 ## Build and run
 
 ```bash
@@ -79,9 +112,9 @@ Design notes and the implementation log are in German: [doc/KONZEPT.md](doc/KONZ
 ```
 
 The script builds `build/DeskViewBookScanner.app`, signs it with the Apple Development
-identity in your keychain (ad hoc otherwise) and launches it. On first launch macOS asks
-for screen-recording access (only needed for Desk View); quit and reopen the app once
-after granting it.
+identity in your keychain (ad hoc otherwise) and launches it. The camera source asks for camera
+access on first use; the build script signs with the camera entitlement the hardened
+runtime requires for that.
 
 The first build downloads Pandoc 3.11 for Apple silicon (40 MB archive, 181 MB unpacked)
 plus its source tarball into `build/vendor/` and verifies the SHA-256. Use
