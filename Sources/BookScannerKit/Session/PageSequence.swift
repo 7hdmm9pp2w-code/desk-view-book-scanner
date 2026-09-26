@@ -25,18 +25,26 @@ public enum PageSequence {
     /// Unten nur eine reine Zahlenzeile, oben auch ein Kolumnentitel mit Zahl am Anfang
     /// oder Ende („24 Einleitung"). Unten wäre das zu oft eine Fußnote.
     public static func printedNumbers(in text: PageText) -> ClosedRange<Int>? {
-        let lines = text.lines.filter { !$0.text.isEmpty }
-        guard let top = lines.map(\.box.midY).max(), let bottom = lines.map(\.box.midY).min(), top > bottom else {
+        printedNumbers(in: text.lines.filter { !$0.text.isEmpty })?.numbers
+    }
+
+    /// Wie oben, dazu die Indizes der reinen Zahlenzeilen in `lines`: Die kann der Export
+    /// weglassen. Kolumnentitel bleiben stehen, eine Kapitelüberschrift „2 Grundlagen“
+    /// oben auf der Seite sähe genauso aus.
+    static func printedNumbers(in lines: [RecognizedLine]) -> (numbers: ClosedRange<Int>, numberLines: [Int])? {
+        guard let top = lines.map(\.box.midY).max(), let bottom = lines.map(\.box.midY).min() else {
             return nil
         }
         let band = 0.02
         var candidates: [(value: Int, x: CGFloat)] = []
-        for line in lines {
+        var numberLines: [Int] = []
+        for (index, line) in lines.enumerated() {
             let atTop = line.box.midY >= top - band
             let atBottom = line.box.midY <= bottom + band
             guard atTop || atBottom else { continue }
             if let value = number(line.text) {
                 candidates.append((value, line.box.midX))
+                numberLines.append(index)
             } else if atTop, let value = headerNumber(line.text) {
                 candidates.append((value, line.box.midX))
             }
@@ -46,12 +54,12 @@ public enum PageSequence {
         candidates = candidates.filter { seen.insert($0.value).inserted }
         switch candidates.count {
         case 1:
-            return candidates[0].value...candidates[0].value
+            return (candidates[0].value...candidates[0].value, numberLines)
         case 2:
             // Doppelseite: links die kleinere, rechts die nächste Zahl.
             let sorted = candidates.sorted { $0.x < $1.x }
             guard sorted[1].value == sorted[0].value + 1 else { return nil }
-            return sorted[0].value...sorted[1].value
+            return (sorted[0].value...sorted[1].value, numberLines)
         default:
             return nil
         }
