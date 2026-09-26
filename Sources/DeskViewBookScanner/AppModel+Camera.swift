@@ -1,6 +1,10 @@
 import AppKit
+import AVFoundation
 import Observation
+import OSLog
 import BookScannerKit
+
+private let cameraLog = Logger(subsystem: "org.crushkilldestroy.DeskViewBookScanner", category: "Kamera")
 
 // MARK: - Kamera-Quelle
 
@@ -27,7 +31,9 @@ extension AppModel {
 
     func requestCameraAccess() {
         Task {
+            cameraLog.notice("Freigabe per Knopf, Status vorher \(AVCaptureDevice.authorizationStatus(for: .video).rawValue)")
             let granted = await CameraSource.requestAccess()
+            cameraLog.notice("Freigabe per Knopf, Ergebnis \(granted)")
             if granted {
                 refreshCameraDevices()
                 if captureSource == .camera { await startCamera() }
@@ -45,8 +51,10 @@ extension AppModel {
 
     /// Startet die gewählte Kamera; ohne Freigabe oder Gerät bleibt sie still.
     func startCamera() async {
+        cameraLog.notice("startCamera: Status \(AVCaptureDevice.authorizationStatus(for: .video).rawValue) (0 unbestimmt, 1 eingeschränkt, 2 verweigert, 3 erlaubt), Gerät \(self.selectedCameraID ?? "-", privacy: .public)")
         if CameraSource.isUndetermined {
-            _ = await CameraSource.requestAccess()
+            let granted = await CameraSource.requestAccess()
+            cameraLog.notice("Freigabe angefragt, Ergebnis \(granted)")
         }
         guard cameraAuthorized else { cameraRunning = false; return }
         if cameraDevices.isEmpty { refreshCameraDevices() }
