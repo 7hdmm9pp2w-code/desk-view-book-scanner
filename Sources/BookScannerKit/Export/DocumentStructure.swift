@@ -218,6 +218,7 @@ public struct DocumentStructurer: Sendable {
         // er beginnt nie mit einem Kleinbuchstaben (das wäre ein Absatzende).
         var footnoteStart = lines.count
         if !isListPage {
+            // Kleinere Schrift am Seitenende (viele Bücher).
             var i = lines.count - 1
             while i > 0, size(lines[i]) < medianSize * 0.92 { i -= 1 }
             let start = i + 1
@@ -229,6 +230,14 @@ public struct DocumentStructurer: Sendable {
                 let startsLower = first.text.first.map { $0.isLetter && $0.isLowercase } ?? false
                 if !startsLower, Self.startsWithFootnoteMarker(first.text) || (block.count >= 2 && blockMedian < medianSize * footnoteRatio) {
                     footnoteStart = start
+                }
+            }
+            // Gleiche Schrift, nur mit Marke (Merve): oberste Markenzeile im unteren
+            // Drittel des Textblocks eröffnet die Fußnoten, alles darunter gehört dazu.
+            if lines.count >= 4, let top = lines.first?.box.midY, let bottom = lines.last?.box.midY, top > bottom {
+                let zone = bottom + (top - bottom) * 0.38
+                if let markerIndex = lines.indices.first(where: { lines[$0].box.midY <= zone && Self.startsWithFootnoteMarker(lines[$0].text) && $0 > 0 }) {
+                    footnoteStart = min(footnoteStart, markerIndex)
                 }
             }
         }
@@ -493,6 +502,8 @@ public struct DocumentStructurer: Sendable {
                 let startsUpper = line.first.map { $0.isUppercase } ?? false
                 if !wordChecker.hasDictionary {
                     result += line                      // Strich bleibt, nichts dazwischen
+                } else if startsUpper, Self.isAllCapsWord(head), Self.isAllCapsWord(tail) {
+                    result = head + line                // „UN-" + „TERWELT": Versalien getrennt
                 } else if startsUpper {
                     result += line                      // „Desk-" + „View": Kompositum
                 } else if Self.conjunctions.contains(tail.lowercased()) {
@@ -511,6 +522,13 @@ public struct DocumentStructurer: Sendable {
             }
         }
         return repairInlineHyphens(in: result, wordChecker: wordChecker)
+    }
+
+    /// Letztes Wort (bzw. der ganze Text) nur aus Großbuchstaben, mindestens zwei.
+    static func isAllCapsWord(_ text: String) -> Bool {
+        let word = text.split(whereSeparator: { $0.isWhitespace }).last.map(String.init) ?? text
+        let letters = word.filter(\.isLetter)
+        return letters.count >= 2 && letters.allSatisfy(\.isUppercase)
     }
 
     /// Wörter, die nach einem Ergänzungsstrich folgen: „Ein- und Zusammenbruch".

@@ -151,8 +151,9 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
         // Silbentrennung: der Strich fällt, ohne Wörterbuch zu fragen.
         #expect(DocumentStructurer.join(["Wör-", "ter"], wordChecker: words) == "Wörter")
         #expect(DocumentStructurer.join(["Unbe-", "kannt"], wordChecker: words) == "Unbekannt")
-        // Versalien: „REI-" + „CHES" ebenso.
-        #expect(DocumentStructurer.join(["des REI-", "CHES jedoch"], wordChecker: words) == "des REI-CHES jedoch")
+        // Versalien getrennt: „REI-" + „CHES", „UN-" + „TERWELT" werden ein Wort.
+        #expect(DocumentStructurer.join(["des REI-", "CHES jedoch"], wordChecker: words) == "des REICHES jedoch")
+        #expect(DocumentStructurer.join(["zurück in die UN-", "TERWELT."], wordChecker: words) == "zurück in die UNTERWELT.")
         // Großer zweiter Teil: echter Kompositum-Strich bleibt.
         #expect(DocumentStructurer.join(["Desk-", "View"], wordChecker: words) == "Desk-View")
         // Ergänzungsstrich vor „und": Strich bleibt, Leerzeichen dazu.
@@ -298,6 +299,27 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
         #expect(blocks3.count == 2)
         let page4 = pageText(body + [line("stellen?", top: 0.6, height: 0.016, width: 0.1)])
         #expect(!DocumentStructurer().structure(page: page4).contains { if case .footnote = $0 { return true } else { return false } })
+    }
+
+    @Test func sameSizeFootnotesAreFoundByMarkerAndPosition() {
+        // Merve: Fußnote in Fließtextgröße, nur „*" und Lage am Seitenende verraten sie.
+        let body = bodyLines("Sieben", count: 12, top: 0.9)
+        let page = pageText(body + [
+            line("ist der Karte nicht mehr vorgelagert, auch über-", top: 0.54, width: 0.6),
+            line("*vgl, J. L. Borges, Von der Strenge der Wissenschaft,", top: 0.50, width: 0.66),
+            line("in: Universalgeschichte der Niedertracht und andere", top: 0.47, width: 0.64),
+            line("Prosastücke, Ffm-Berlin-Wien 1972, S. 71 (A.d. Ü.)", top: 0.44, width: 0.62),
+        ])
+        let blocks = DocumentStructurer().structure(page: page)
+        #expect(blocks.last == .footnote(text: "*vgl, J. L. Borges, Von der Strenge der Wissenschaft, in: Universalgeschichte der Niedertracht und andere Prosastücke, Ffm-Berlin-Wien 1972, S. 71 (A.d. Ü.)"))
+        #expect(blocks.contains { if case .paragraph(let t) = $0 { return t.hasSuffix("auch über-") } else { return false } })
+        // Dieselbe Marke oben auf der Seite ist keine Fußnote.
+        let top = pageText([line("*Arbeitslose sind hier gemeint, nicht Beschäftigte.", top: 0.95, width: 0.7)] + bodyLines("Oben", count: 12, top: 0.9))
+        #expect(!DocumentStructurer().structure(page: top).contains { if case .footnote = $0 { return true } else { return false } })
+        // Und der Absatz läuft über die Seitengrenze, an der Fußnote vorbei.
+        let next = pageText([line("lebt es sie nicht mehr. Von nun an ist es umgekehrt.", top: 0.9, width: 0.8)] + bodyLines("Acht", count: 10, top: 0.87))
+        let doc = DocumentStructurer().structure(pages: [(7, page), (8, next)])
+        #expect(doc.blocks.contains { if case .paragraph(let t) = $0 { return t.contains("auch über-lebt es sie") || t.contains("auch überlebt es sie") } else { return false } })
     }
 
     @Test func duplicateScansAreSkippedAndContinuationCrossesEmptyPages() {
