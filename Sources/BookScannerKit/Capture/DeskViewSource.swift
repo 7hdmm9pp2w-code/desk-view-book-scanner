@@ -10,7 +10,6 @@ public struct DeskViewWindowInfo: Sendable, Equatable {
     /// In Punkten, globale Bildschirmkoordinaten, Ursprung oben links.
     public let frame: CGRect
     public let backingScale: CGFloat
-    public let title: String?
 
     public var pixelWidth: Int { Int((frame.width * backingScale).rounded()) }
     public var pixelHeight: Int { Int((frame.height * backingScale).rounded()) }
@@ -118,7 +117,7 @@ public actor DeskViewSource {
             return nil
         }
         let scale = Self.backingScale(for: window.frame, displays: content.displays)
-        let info = DeskViewWindowInfo(windowID: window.windowID, frame: window.frame, backingScale: scale, title: window.title)
+        let info = DeskViewWindowInfo(windowID: window.windowID, frame: window.frame, backingScale: scale)
         return LocatedWindow(window: window, info: info)
     }
 

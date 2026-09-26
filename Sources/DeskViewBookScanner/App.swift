@@ -25,15 +25,6 @@ struct DeskViewBookScannerApp: App {
                     .keyboardShortcut("n")
                 Button(L("Session-Ordner öffnen…")) { model.chooseAndOpenSession() }
                     .keyboardShortcut("o")
-                Menu(L("Letzte Sessions")) {
-                    let recent = model.recentSessionDirectories.prefix(10)
-                    if recent.isEmpty {
-                        Text(L("Keine Sessions vorhanden"))
-                    }
-                    ForEach(Array(recent), id: \.self) { directory in
-                        Button(directory.lastPathComponent) { model.openSession(at: directory) }
-                    }
-                }
                 Divider()
                 Button(L("Als PDF exportieren…")) { model.exportPDF() }
                     .keyboardShortcut("e")
