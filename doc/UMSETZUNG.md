@@ -153,3 +153,13 @@ vom Konzept abwich und den Grund. Neueste Einträge unten.
   Freigabe: Kamera statt Bildschirmaufnahme; Info.plist braucht
   `NSCameraUseContinuityCameraDeviceType`, sonst fehlt das iPhone in der Liste.
   ScreenCaptureKit und `DeskViewSource` sind entfernt.
+- **Kamera-Freigabe (27.09.2026, nachts):** Die App ist mit Hardened Runtime signiert;
+  ohne das Entitlement `com.apple.security.device.camera` verweigert AVFoundation jede
+  Anfrage still, ohne Dialog und ohne Eintrag in den Systemeinstellungen, obwohl der
+  Freigabedienst (tccd) die Anfrage bereits als erlaubt vermerkt hatte. Das
+  Build-Skript signiert jetzt mit Entitlements; ein `tccutil reset Camera <Bundle-ID>`
+  holte den Dialog nach. Befund am MacBook-Desk-View: der ferne Tischrand ist beim
+  Entzerren am stärksten gestreckt und am unschärfsten, die Tastaturkante am
+  schärfsten; steht so im README unter „Kamera und Auflösung".
+- **Aufräumen (27.09.2026):** PR 5, 6 und 8 gemergt, README in beiden Sprachen auf dem
+  Stand der Kamera-Quelle, verwaiste Branches gelöscht.
