@@ -80,12 +80,33 @@ public struct SessionDocument: Codable, Sendable, Equatable {
 }
 
 extension Date {
-    /// Das Format, in dem `session.json` Zeitstempel speichert.
-    static let sessionFormat = Date.ISO8601FormatStyle(includingFractionalSeconds: true)
+    /// Ganze Millisekunden seit 1970, gerundet. Die Einheit, in der `session.json` denkt.
+    var millisecondsSince1970: Int64 {
+        Int64((timeIntervalSince1970 * 1000).rounded())
+    }
 
-    /// Einmal durch das Dateiformat und zurück, damit der Wert im Speicher exakt dem
-    /// auf der Platte entspricht (Gleitkomma macht `.883` sonst zu `.882`).
+    /// Auf ganze Millisekunden gerundet, damit der Wert im Speicher exakt dem auf der
+    /// Platte entspricht. Idempotent: zweimal runden ändert nichts mehr.
     var roundedToMilliseconds: Date {
-        (try? Date(formatted(Self.sessionFormat), strategy: Self.sessionFormat)) ?? self
+        Date(timeIntervalSince1970: Double(millisecondsSince1970) / 1000)
+    }
+
+    /// ISO 8601 in UTC mit genau drei Nachkommastellen, aus den ganzen Millisekunden
+    /// gebaut. Der Systemformatter schneidet ab statt zu runden und macht aus `.883`
+    /// je nach Gleitkomma-Laune `.882`.
+    var sessionTimestamp: String {
+        let ms = millisecondsSince1970
+        let wholeSeconds = Date(timeIntervalSince1970: Double(ms.quotientAndRemainder(dividingBy: 1000).quotient))
+        let base = wholeSeconds.formatted(.iso8601)          // "2026-09-26T11:01:42Z"
+        let fraction = ms.quotientAndRemainder(dividingBy: 1000).remainder
+        return String(base.dropLast()) + String(format: ".%03dZ", fraction)
+    }
+
+    /// Gegenstück zu `sessionTimestamp`; nimmt auch Werte ohne Bruchteile an.
+    static func fromSessionTimestamp(_ text: String) -> Date? {
+        let withFraction = Date.ISO8601FormatStyle(includingFractionalSeconds: true)
+        if let date = try? Date(text, strategy: withFraction) { return date.roundedToMilliseconds }
+        if let date = try? Date(text, strategy: .iso8601) { return date.roundedToMilliseconds }
+        return nil
     }
 }

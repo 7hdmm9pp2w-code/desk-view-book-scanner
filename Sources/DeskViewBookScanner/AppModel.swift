@@ -137,6 +137,18 @@ final class AppModel {
         }
     }
 
+    /// Ordner mit `session.json` auswählen und öffnen.
+    func chooseAndOpenSession() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.directoryURL = sessionRoot
+        panel.prompt = L("Öffnen")
+        panel.message = L("Einen Session-Ordner wählen (enthält session.json).")
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        openSession(at: url)
+    }
+
     private func adopt(_ store: SessionStore) async {
         session = store
         sessionDirectory = await store.directory

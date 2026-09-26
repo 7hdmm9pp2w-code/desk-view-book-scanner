@@ -62,7 +62,6 @@ cat > "$OUT/Contents/Info.plist" <<PLIST
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>CFBundleVersion</key><string>$VERSION</string>
   <key>LSMinimumSystemVersion</key><string>$MIN_OS</string>
-  <key>LSUIElement</key><true/>
   <key>NSHighResolutionCapable</key><true/>
   <key>NSScreenCaptureUsageDescription</key>
   <string>Der Buchscanner fotografiert das Fenster von Desk View, um daraus Seiten zu machen.</string>
@@ -80,6 +79,13 @@ codesign --force --sign "$SIGN_IDENTITY" --identifier "$BUNDLE_ID" --options run
 echo "Gebaut: $OUT ($CONFIG, $VERSION, signiert mit: $SIGN_IDENTITY)"
 
 if [[ $RUN -eq 1 ]]; then
-  pkill -x "$APP_NAME" 2>/dev/null || true
+  # Alte Instanz beenden und warten, bis sie wirklich weg ist; sonst meldet `open`
+  # Fehler -600, weil LaunchServices den sterbenden Prozess noch kennt.
+  if pkill -x "$APP_NAME" 2>/dev/null; then
+    for _ in {1..30}; do
+      pgrep -x "$APP_NAME" >/dev/null || break
+      sleep 0.1
+    done
+  fi
   open "$OUT"
 fi

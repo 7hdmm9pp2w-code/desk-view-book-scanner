@@ -52,12 +52,12 @@
         }
       }
     },
-    "Beenden": {
+    "Aufnahme": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quit"
+            "value": "Capture"
           }
         }
       }
@@ -102,6 +102,16 @@
         }
       }
     },
+    "Desk View Book Scanner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desk View Book Scanner"
+          }
+        }
+      }
+    },
     "Desk View gefunden": {
       "localizations": {
         "en": {
@@ -142,12 +152,12 @@
         }
       }
     },
-    "Einstellungen…": {
+    "Einen Session-Ordner wählen (enthält session.json).": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Settings…"
+            "value": "Choose a session folder (contains session.json)."
           }
         }
       }
@@ -312,16 +322,6 @@
         }
       }
     },
-    "Noch keine Session. Die erste Aufnahme legt eine an in %@.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No session yet. The first capture creates one in %@."
-          }
-        }
-      }
-    },
     "Ordner wählen…": {
       "localizations": {
         "en": {
@@ -362,22 +362,12 @@
         }
       }
     },
-    "Session": {
+    "Session-Ordner öffnen…": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Session"
-          }
-        }
-      }
-    },
-    "Session öffnen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open Session"
+            "value": "Open Session Folder…"
           }
         }
       }
@@ -432,6 +422,16 @@
         }
       }
     },
+    "Tastenkürzel %@, auch wenn Desk View vorn liegt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcut %@, also while Desk View is in front."
+          }
+        }
+      }
+    },
     "Text liegt vor, Anzeige folgt mit dem PDF-Export.": {
       "localizations": {
         "en": {
@@ -478,6 +478,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose"
+          }
+        }
+      }
+    },
+    "Öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
           }
         }
       }

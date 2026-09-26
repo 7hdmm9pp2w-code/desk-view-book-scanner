@@ -106,28 +106,43 @@ DeskViewQuelle ──► Erfassung ──► Verarbeitung ──► Session ─�
 
 ### Oberfläche
 
-- `MenuBarExtra` (Fensterstil): Status (gefunden / nicht gefunden / Rechte fehlen),
-  großer Button „Seite erfassen", Schalter Auto-Auslöser, Seitenzähler, „Session öffnen".
-- Session-Fenster: Thumbnail-Raster mit Drag-and-drop, Löschen per Taste, Detailansicht
-  mit erkanntem Text daneben.
+- **Normale Fenster-App mit Dock-Symbol**, kein Menüleisten-Item (geändert 26.09.2026
+  nach Schritt 1). Das ursprüngliche Argument für die Menüleiste war, dass Desk View
+  den Bildschirm füllen soll und das Tool nicht im Weg sein darf. Mit zwei Bildschirmen
+  liegt das Session-Fenster einfach auf dem anderen Display, und der globale Hotkey
+  funktioniert in einer normalen App genauso. Eine normale App ist per Spotlight
+  startbar, per ⌘Q beendbar und im Dock sichtbar; ein unsichtbares Status-Item kostet
+  nur Fehlersuche.
+- **Später als Option: Menüleisten-Modus** für den Betrieb mit einem Bildschirm, bei
+  dem Desk View das ganze Display füllt und das Hauptfenster stört. Umschaltbar in den
+  Einstellungen: dann zusätzlich ein Status-Item mit Status, „Seite erfassen" und
+  Seitenzähler; das Hauptfenster bleibt über das Item erreichbar. Kein eigener
+  Schritt, kommt nach Schritt 4, wenn die Bedienung am Buch klar ist.
+- Hauptfenster: Statusleiste oben (gefunden / nicht gefunden / Rechte fehlen, Pixelmaße
+  des Desk-View-Fensters, großer Button „Seite erfassen", Seitenzähler), darunter
+  Thumbnail-Raster mit Drag-and-drop und Löschen per Taste, rechts Detailansicht mit
+  erkanntem Text daneben. Titelfeld in der Toolbar benennt den Session-Ordner um.
+- Menüs: „Ablage" mit Neue Session ⌘N, Session-Ordner öffnen ⌘O, Letzte Sessions;
+  „Aufnahme" mit Seite erfassen ⌥⌘S, Desk View starten, Seite löschen ⌘⌫.
 - Hinweise kontextabhängig statt Dauertext: „Seiten glatt halten, Hände raus" nur bei
   laufendem Auto-Auslöser ohne Ruhe; „Fenster größer ziehen" nur bei kleinem Fenster.
 - Schrift ≥ 13 pt, hoher Kontrast, `accessibilityContrast` beachten.
 - Sprachen: Deutsch und Englisch über String-Kataloge von Anfang an.
 - Hotkey ⌥⌘S über Carbon `RegisterEventHotKey` — die einzige Variante ohne
-  Bedienungshilfen-Freigabe.
+  Bedienungshilfen-Freigabe; er greift auch, wenn Desk View vorn liegt.
 
 ## Projektform
 
 Swift Package mit zwei Targets:
 
 - `BookScannerKit`: Verarbeitung, Session, Export. Ohne UI, testbar.
-- `DeskViewBookScanner`: App (SwiftUI, MenuBarExtra).
+- `DeskViewBookScanner`: App (SwiftUI, ein Hauptfenster).
 
-Dazu `build_app.sh`, das ein `.app`-Bundle mit `Info.plist` (`LSUIElement = true`,
-`NSScreenCaptureUsageDescription`) baut und ad hoc signiert. Grund: die
-Bildschirmaufnahme-Freigabe hängt an einer Bundle-ID; ein loses `swift build`-Binary erbt
-sie vom Terminal und verliert sie beim Neubau. Kein Xcode-Projekt: bringt hier nichts,
+Dazu `build_app.sh`, das ein `.app`-Bundle mit `Info.plist`
+(`NSScreenCaptureUsageDescription`) baut und signiert, mit der Apple-Development-Identität
+aus dem Schlüsselbund, sonst ad hoc. Grund: die Bildschirmaufnahme-Freigabe hängt an
+Bundle-ID und Signatur; ein loses `swift build`-Binary erbt sie vom Terminal und verliert
+sie beim Neubau, ein ad hoc signiertes Bundle wechselt mit jedem Build den Code-Hash. Kein Xcode-Projekt: bringt hier nichts,
 was das Skript nicht kann, und ist schlechter im Git.
 
 Tests gegen den Kit mit synthetischen Bildern: gerenderte Doppelseite mit bekanntem Falz
@@ -155,8 +170,10 @@ PDF-Export wieder durchsuchbar sein. Screenshot und Desk View bleiben Handprobe.
     `CGDisplayCopyDisplayMode` (pixelWidth / width) des Bildschirms unter dem Fenster
     bestimmen.
   - Das Package-Manifest kennt `.macOS(.v26)`, aber kein `.v27`; wir bleiben bei `.v26`.
-  - Der Auto-Auslöser-Schalter fehlt bewusst in der Menüleiste, bis Schritt 4 ihn
+  - Der Auto-Auslöser-Schalter fehlt bewusst in der Oberfläche, bis Schritt 4 ihn
     füllt; ein toter Schalter wäre schlechter als keiner.
+  - Erst als Menüleisten-App gebaut, dann auf ein normales Fenster umgestellt (siehe
+    Oberfläche).
   - Zeitstempel in `session.json` sind ISO 8601 mit Millisekunden; Werte werden beim
     Anlegen durch dasselbe Format normalisiert, damit Speicher und Platte exakt gleich sind.
 

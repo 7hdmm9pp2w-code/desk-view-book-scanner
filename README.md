@@ -1,6 +1,6 @@
 # Desk View Book Scanner
 
-Ein Menüleisten-Tool für macOS, das Buchseiten aus dem Fenster der Schreibtischansicht
+Eine macOS-App, die Buchseiten aus dem Fenster der Schreibtischansicht
 (Desk View) fotografiert und daraus eine Session mit Seiten, später OCR-Text und ein
 durchsuchbares PDF macht. Das Konzept steht in [doc/KONZEPT.md](doc/KONZEPT.md).
 
@@ -25,8 +25,10 @@ swift test
 
 ## Bedienung
 
-- Menüleisten-Symbol (Buch): Status, „Seite erfassen", Sessions.
+- Hauptfenster: Statusleiste mit „Desk View starten" und „Seite erfassen", darunter
+  die Seiten der Session; rechts die Detailansicht.
 - ⌥⌘S erfasst das Desk-View-Fenster als Seite, auch wenn Desk View vorn liegt.
+- Menü „Ablage": Neue Session ⌘N, Session-Ordner öffnen ⌘O, Letzte Sessions.
 - Sessions liegen unter `~/Documents/Buchscans/<Datum Uhrzeit>/`, änderbar in den
   Einstellungen. Jede Aufnahme ist sofort als HEIC auf der Platte; `session.json`
   hält Reihenfolge und Einstellungen. Gelöschte Seiten wandern in `Papierkorb/`.

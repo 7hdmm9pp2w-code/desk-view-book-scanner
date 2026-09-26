@@ -144,3 +144,22 @@ func makeTempRoot() throws -> URL {
         #expect(SessionStore.fileSystemSafe("Ende.") == "Ende")
     }
 }
+
+@Suite struct SessionTimestampTests {
+    @Test func timestampRoundTripIsExactForManyValues() {
+        // Werte rund um die Millisekundengrenzen, wo der Systemformatter abschneidet.
+        for i in 0..<2000 {
+            let raw = Date(timeIntervalSince1970: 1_790_420_502 + Double(i) * 0.000_4997)
+            let stored = raw.roundedToMilliseconds
+            let text = stored.sessionTimestamp
+            #expect(Date.fromSessionTimestamp(text) == stored, "\(text)")
+            #expect(stored.roundedToMilliseconds == stored)
+        }
+    }
+
+    @Test func timestampFormat() {
+        let date = Date(timeIntervalSince1970: 1_790_420_502.883)
+        #expect(date.sessionTimestamp == "2026-09-26T11:01:42.883Z")
+        #expect(Date.fromSessionTimestamp("2026-09-26T11:01:42Z") == Date(timeIntervalSince1970: 1_790_420_502))
+    }
+}

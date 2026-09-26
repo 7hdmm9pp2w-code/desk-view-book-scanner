@@ -1,41 +1,40 @@
 import SwiftUI
 import BookScannerKit
 
-/// Thumbnail-Raster links, Detail mit Bild und (später) erkanntem Text rechts.
+/// Hauptfenster: Statusleiste mit Aufnahme-Knopf oben, darunter Thumbnail-Raster
+/// links und Detail mit Bild und (später) erkanntem Text rechts.
 struct SessionWindow: View {
     @Environment(AppModel.self) private var model
     @State private var titleDraft = ""
 
     var body: some View {
-        HSplitView {
-            PageGrid()
-                .frame(minWidth: 420, maxWidth: .infinity, maxHeight: .infinity)
-            PageDetail()
-                .frame(minWidth: 340, idealWidth: 460, maxWidth: 640, maxHeight: .infinity)
+        VStack(spacing: 0) {
+            StatusBar()
+            Divider()
+            HSplitView {
+                PageGrid()
+                    .frame(minWidth: 420, maxWidth: .infinity, maxHeight: .infinity)
+                PageDetail()
+                    .frame(minWidth: 340, idealWidth: 460, maxWidth: 640, maxHeight: .infinity)
+            }
         }
-        .frame(minWidth: 900, minHeight: 560)
+        .frame(minWidth: 960, minHeight: 600)
         .navigationTitle(windowTitle)
         .navigationSubtitle(model.sessionDirectory?.lastPathComponent ?? "")
         .toolbar {
             ToolbarItemGroup(placement: .principal) {
                 TextField(L("Titel"), text: $titleDraft)
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: 260)
+                    .frame(width: 280)
                     .onSubmit { model.setTitle(titleDraft) }
+                    .disabled(model.sessionDirectory == nil)
             }
             ToolbarItemGroup(placement: .primaryAction) {
-                Button {
-                    model.capturePage()
-                } label: {
-                    Label(L("Seite erfassen"), systemImage: "camera.viewfinder")
-                }
-                .disabled(!model.canCapture)
                 Button {
                     model.trashSelectedPage()
                 } label: {
                     Label(L("Seite löschen"), systemImage: "trash")
                 }
-                .keyboardShortcut(.delete, modifiers: [.command])
                 .disabled(model.selectedPageID == nil)
                 .help(L("Gelöschte Seiten wandern in den Ordner „Papierkorb“ der Session."))
                 Button {
@@ -52,7 +51,89 @@ struct SessionWindow: View {
 
     private var windowTitle: String {
         if !model.sessionTitle.isEmpty { return model.sessionTitle }
-        return model.sessionDirectory?.lastPathComponent ?? L("Session")
+        return model.sessionDirectory?.lastPathComponent ?? L("Desk View Book Scanner")
+    }
+}
+
+/// Zeile über dem Raster: Zustand von Desk View, Hinweise, großer Aufnahme-Knopf.
+struct StatusBar: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 16) {
+            statusView
+            Spacer(minLength: 12)
+            if let error = model.lastError {
+                Label(error, systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.red)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            captureButton
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .font(.system(size: 13))
+        .background(.bar)
+    }
+
+    @ViewBuilder
+    private var statusView: some View {
+        switch model.status {
+        case .permissionMissing:
+            HStack(spacing: 10) {
+                Label(L("Bildschirmaufnahme nicht freigegeben"), systemImage: "xmark.octagon.fill")
+                    .foregroundStyle(.red)
+                Button(L("Freigabe erteilen…")) { model.requestPermission() }
+                Text(L("Nach der Freigabe die App einmal beenden und neu starten."))
+                    .foregroundStyle(.secondary)
+            }
+        case .notRunning:
+            HStack(spacing: 10) {
+                Label(L("Desk View läuft nicht"), systemImage: "camera.slash")
+                    .foregroundStyle(.secondary)
+                if model.isLaunchingDeskView {
+                    ProgressView().controlSize(.small)
+                    Text(L("Desk View wird gestartet, bitte Einrichtung abschließen…"))
+                        .foregroundStyle(.secondary)
+                } else {
+                    Button(L("Desk View starten")) { model.launchDeskView() }
+                }
+            }
+        case .found(let window):
+            HStack(spacing: 10) {
+                Label(L("Desk View gefunden"), systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                Text(verbatim: "\(window.pixelWidth) × \(window.pixelHeight) px")
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+                if window.isTooSmall {
+                    Label(L("Fenster größer ziehen: unter 1600 px Breite reicht die Auflösung nicht."),
+                          systemImage: "arrow.up.left.and.arrow.down.right")
+                        .foregroundStyle(.orange)
+                }
+            }
+        }
+    }
+
+    private var captureButton: some View {
+        HStack(spacing: 8) {
+            Text(L("\(model.pages.count) Seiten"))
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+            Button {
+                model.capturePage()
+            } label: {
+                Label(model.isCapturing ? L("Wird erfasst…") : L("Seite erfassen"), systemImage: "camera.viewfinder")
+                    .font(.system(size: 14, weight: .semibold))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .disabled(!model.canCapture)
+            .help(L("Tastenkürzel \(HotKey.captureDisplayName), auch wenn Desk View vorn liegt."))
+        }
     }
 }
 
