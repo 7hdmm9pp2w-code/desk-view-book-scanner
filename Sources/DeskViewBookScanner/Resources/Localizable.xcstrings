@@ -802,6 +802,16 @@
         }
       }
     },
+    "Neue Session anlegen (⌘N)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a new session (⌘N)"
+          }
+        }
+      }
+    },
     "Neue Session mit ⌘N, oder Seiten scannen.": {
       "localizations": {
         "en": {

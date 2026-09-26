@@ -41,6 +41,7 @@ struct SessionSidebar: View {
             .listStyle(.sidebar)
             .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 360)
             .overlay { emptyOverlay }
+            .safeAreaInset(edge: .bottom) { footer }
             .task { model.refreshSummaries() }
             .onChange(of: selection) { _, urls in selectionChanged(urls) }
             .onChange(of: model.sessionDirectory) { _, directory in
@@ -82,6 +83,8 @@ struct SessionSidebar: View {
                 ForEach(model.summaries) { summary in
                     SessionRow(summary: summary)
                         .tag(summary.directory)
+                        // Doppelklick zeigt den Ordner im Finder; die Auswahl bleibt davon unberührt.
+                        .simultaneousGesture(TapGesture(count: 2).onEnded { model.revealSession(summary) })
                 }
             } header: {
                 header
@@ -91,6 +94,23 @@ struct SessionSidebar: View {
         .contextMenu(forSelectionType: URL.self) { urls in
             contextMenu(for: summaries(for: urls))
         }
+    }
+
+    /// Fußzeile wie in Notizen: neue Session anlegen.
+    private var footer: some View {
+        HStack {
+            Button {
+                model.newSession()
+            } label: {
+                Label(L("Neue Session"), systemImage: "plus")
+            }
+            .buttonStyle(.borderless)
+            .help(L("Neue Session anlegen (⌘N)"))
+            Spacer()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(.bar)
     }
 
     private var header: some View {
