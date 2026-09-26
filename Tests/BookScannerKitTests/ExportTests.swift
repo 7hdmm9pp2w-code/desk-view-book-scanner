@@ -212,11 +212,14 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
         ])
     }
 
-    @Test func tocTitlesBecomeHeadingsAndCapsHeadingsAreFound() {
-        var body: [RecognizedLine] = []
-        for i in 0..<12 {
-            body.append(line("Fließtextzeile Nummer \(i) mit einigen Wörtern darin.", top: 0.8 - Double(i) * 0.03, width: 0.8))
+    /// Fließtextzeilen mit eigenem Wortlaut je Seite, damit die Duplikat-Erkennung nicht anspringt.
+    func bodyLines(_ tag: String, count: Int = 12, top: CGFloat = 0.8) -> [RecognizedLine] {
+        (0..<count).map { i in
+            line("\(tag), Zeile \(i) des Fließtextes mit genügend Zeichen für den Vergleich.", top: top - CGFloat(i) * 0.03, width: 0.8)
         }
+    }
+
+    @Test func tocTitlesBecomeHeadingsAndCapsHeadingsAreFound() {
         let toc = pageText([
             line("INHALT", top: 0.95, width: 0.2),
             line("7 DIE PRÄZESSION DER SIMULAKRA", top: 0.9, width: 0.6),
@@ -225,22 +228,18 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
             line("24 Hyperreal und imaginär", top: 0.81, width: 0.5),
             line("26 Der politische Zauber", top: 0.78, width: 0.5),
         ])
-        let chapter = pageText([line("DIE PRÄZESSION DER SIMULAKRA", top: 0.95, width: 0.55)] + body)
-        let section = pageText([line("Die göttliche Referenzlosigkeit der Bilder", top: 0.95, width: 0.6)] + body)
+        let chapter = pageText([line("DIE PRÄZESSION DER SIMULAKRA", top: 0.95, width: 0.55)] + bodyLines("Kapitel"))
+        let section = pageText([line("Die göttliche Referenzlosigkeit der Bilder", top: 0.95, width: 0.6)] + bodyLines("Abschnitt"))
         let doc = DocumentStructurer().structure(pages: [(1, toc), (2, chapter), (3, section)])
         #expect(doc.blocks.contains(.heading(level: 1, text: "DIE PRÄZESSION DER SIMULAKRA")))
         #expect(doc.blocks.contains(.heading(level: 2, text: "Die göttliche Referenzlosigkeit der Bilder")))
         // Versalienzeile ohne Verzeichnis ist ebenfalls Überschrift.
-        let alone = DocumentStructurer().structure(page: pageText([line("DER POLITISCHE ZAUBER", top: 0.95, width: 0.4)] + body))
+        let alone = DocumentStructurer().structure(page: pageText([line("DER POLITISCHE ZAUBER", top: 0.95, width: 0.4)] + bodyLines("Allein")))
         #expect(alone.first == .heading(level: 2, text: "DER POLITISCHE ZAUBER"))
     }
 
     @Test func pageNumbersFootnotesAndCrossPageParagraphs() {
-        var body: [RecognizedLine] = []
-        for i in 0..<10 {
-            body.append(line("Zeile \(i) des Fließtextes, ganz normal gesetzt und lang.", top: 0.85 - Double(i) * 0.03, width: 0.8))
-        }
-        let pageA = pageText(body + [
+        let pageA = pageText(bodyLines("Seite sieben", count: 10, top: 0.85) + [
             line("auch über-", top: 0.55, width: 0.3),
             line("*vgl. J.L. Borges, Von der Strenge der Wissenschaft", top: 0.30, height: 0.014, width: 0.7),
             line("Ffm-Berlin-Wien 1972, S. 71 (A.d. Ü.)", top: 0.28, height: 0.014, width: 0.5),
@@ -248,7 +247,7 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
         ])
         let pageB = pageText([line("8", top: 0.98, width: 0.02)] + [
             line("lebt es sie nicht mehr. Von nun an ist es umgekehrt.", top: 0.85, width: 0.8),
-        ] + body.dropFirst())
+        ] + bodyLines("Seite acht", count: 9, top: 0.82))
         let doc = DocumentStructurer().structure(pages: [(1, pageA), (2, pageB)])
 
         #expect(doc.blocks.first == .pageBreak(number: 1, printed: "7"))
@@ -260,6 +259,53 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
         let joinedIndex = doc.blocks.firstIndex { $0 == joined }
         #expect(markerIndex != nil && joinedIndex != nil && markerIndex! > joinedIndex!)
         #expect(!doc.blocks.contains(.paragraph(text: "7")) && !doc.blocks.contains(.paragraph(text: "8")))
+    }
+
+    @Test func falseHeadingsAndFootnotesFromTheBook() {
+        let body = bodyLines("Buch", count: 10, top: 0.9)
+        // Zeile nach Bindestrich, Versalien, kurz: trotzdem Fließtext („UN-" / „TERWELT.").
+        let page1 = pageText(body + [
+            line("Wissenschaft stets zu früh um und kehrt zurück in die UN-", top: 0.6, width: 0.8),
+            line("TERWELT.", top: 0.57, height: 0.03, width: 0.15),
+            line("Die Ethnologen wollten dieser Hölle entgehen.", top: 0.54, width: 0.8),
+        ])
+        let blocks1 = DocumentStructurer().structure(page: page1)
+        #expect(!blocks1.contains { if case .heading = $0 { return true } else { return false } })
+        // Hohe Zeile, aber die nächste beginnt klein: Fließtext.
+        let page2 = pageText(body + [
+            line("Wenig später machen es die Jesuiten genauso: sie", top: 0.6, height: 0.03, width: 0.7),
+            line("begründen ihre Politik auf dem Verschwinden GOTTES.", top: 0.57, width: 0.8),
+        ])
+        #expect(!DocumentStructurer().structure(page: page2).contains { if case .heading = $0 { return true } else { return false } })
+        // Fußnote mit Marke ist kleiner und steht unten; ein kleines Absatzende bleibt Absatz.
+        let page3 = pageText(body + [
+            line("auch über-", top: 0.6, width: 0.3),
+            line("*vgl. J.L. Borges, Von der Strenge der Wissenschaft, in:", top: 0.3, height: 0.017, width: 0.7),
+            line("Universalgeschichte der Niedertracht, Ffm 1972, S. 71", top: 0.28, height: 0.017, width: 0.6),
+        ])
+        let blocks3 = DocumentStructurer().structure(page: page3)
+        #expect(blocks3.last == .footnote(text: "*vgl. J.L. Borges, Von der Strenge der Wissenschaft, in: Universalgeschichte der Niedertracht, Ffm 1972, S. 71"))
+        #expect(blocks3.count == 2)
+        let page4 = pageText(body + [line("stellen?", top: 0.6, height: 0.016, width: 0.1)])
+        #expect(!DocumentStructurer().structure(page: page4).contains { if case .footnote = $0 { return true } else { return false } })
+    }
+
+    @Test func duplicateScansAreSkippedAndContinuationCrossesEmptyPages() {
+        let pageA = pageText(bodyLines("Elf", top: 0.9) + [line("sein eigenes Simu-", top: 0.5, width: 0.3)])
+        let empty = pageText([])
+        let pageB = pageText([line("lakrum existiert hat. Von daher ihre Wut.", top: 0.9, width: 0.8)] + bodyLines("Dreizehn", count: 11, top: 0.87))
+        let doc = DocumentStructurer().structure(pages: [(1, pageA), (2, empty), (3, pageB), (4, pageB)])
+        #expect(doc.blocks.contains { if case .paragraph(let t) = $0 { return t.contains("Simu-lakrum existiert") } else { return false } })
+        #expect(doc.blocks.contains(.note(text: "Scan 4 ist ein Duplikat von Scan 3 und wurde übersprungen")))
+        #expect(doc.blocks.filter { if case .paragraph(let t) = $0 { return t.contains("Von daher ihre Wut") } else { return false } }.count == 1)
+    }
+
+    @Test func inlineHyphensAreRepaired() {
+        let words = SetWordChecker(["einer", "Theorie", "Theo", "Immo", "ral", "nichtig", "kitschigen", "Stammes", "und"])
+        #expect(DocumentStructurer.repairInlineHyphens(in: "Effekts, el-ner Energie und der Theo-rie", wordChecker: words) == "Effekts, elner Energie und der Theorie")
+        #expect(DocumentStructurer.repairInlineHyphens(in: "der Immo-ral, der nichtig-kitschigen Stammes-und", wordChecker: words) == "der Immo-ral, der nichtig-kitschigen Stammes-und")
+        #expect(DocumentStructurer.repairInlineHyphens(in: "Desk-View bleibt", wordChecker: words) == "Desk-View bleibt")
+        #expect(DocumentStructurer.repairInlineHyphens(in: "el-ner", wordChecker: NoWordChecker()) == "el-ner")
     }
 
     @Test func uncertainLinesGetANote() {
@@ -324,7 +370,7 @@ func pageText(_ lines: [RecognizedLine]) -> PageText {
             .pageBreak(number: 3, printed: "12"), .listItem(text: "eins"), .listItem(text: "zwei"),
             .note(text: "unsicher: „x“"), .paragraph(text: "Absatz"), .footnote(text: "*Fußnote"),
         ])
-        #expect(MarkdownRenderer.render(extra) == "<!-- Seite 12, Scan 3 -->\n\n- eins\n- zwei\n\n<!-- unsicher: „x“ -->\n\nAbsatz\n\n<small>*Fußnote</small>\n")
+        #expect(MarkdownRenderer.render(extra) == "<!-- Seite 12, Scan 3 -->\n\n- eins\n- zwei\n\n<!-- unsicher: „x“ -->\n\nAbsatz\n\n> *Fußnote\n")
         #expect(PageMarker.restore(in: "@@SEITE 3 S12@@ und \\@@NOTIZ unsicher: „x“@@") == "<!-- Seite 12, Scan 3 --> und <!-- unsicher: „x“ -->")
     }
 

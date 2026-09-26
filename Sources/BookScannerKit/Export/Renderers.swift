@@ -30,7 +30,7 @@ public enum HTMLRenderer {
                 if !inList { out += "<ul>\n"; inList = true }
                 out += "<li>\(escape(text))</li>\n"
             case .footnote(let text):
-                out += "<p><small>\(escape(text))</small></p>\n"
+                out += "<blockquote><p>\(escape(text))</p></blockquote>\n"
             case .note(let text):
                 out += "<p>\(PageMarker.noteMarker(text))</p>\n"
             }
@@ -73,7 +73,7 @@ public enum MarkdownRenderer {
             case .listItem(let text):
                 listBuffer.append(text)
             case .footnote(let text):
-                parts.append("<small>\(text)</small>")
+                parts.append("> " + text)
             case .note(let text):
                 parts.append("<!-- \(text) -->")
             }

@@ -93,7 +93,18 @@ public struct DocumentStructurer: Sendable {
         let tocTitles = tableOfContentsTitles(pages: pages.map(\.text))
 
         var blocks: [DocumentBlock] = []
+        var recentPages: [(number: Int, keys: Set<String>)] = []
         for page in pages {
+            // Doppelter Scan: fast dieselben Zeilen wie eine der letzten Seiten.
+            let keys = Set(page.text.lines.filter { $0.confidence >= 0.5 }.map { Self.normalized($0.text) }.filter { $0.count >= 12 })
+            if keys.count >= 6, let twin = recentPages.first(where: { Self.jaccard($0.keys, keys) >= duplicateThreshold }) {
+                blocks.append(.pageBreak(number: page.number, printed: nil))
+                blocks.append(.note(text: "Scan \(page.number) ist ein Duplikat von Scan \(twin.number) und wurde übersprungen"))
+                continue
+            }
+            recentPages.append((page.number, keys))
+            if recentPages.count > 3 { recentPages.removeFirst() }
+
             let analysis = analyze(page: page.text, stats: stats, tocTitles: tocTitles)
             let marker = DocumentBlock.pageBreak(number: page.number, printed: analysis.printedNumber)
 
@@ -117,12 +128,20 @@ public struct DocumentStructurer: Sendable {
         return StructuredDocument(title: title, blocks: blocks)
     }
 
-    /// Letzter Absatz, hinter dem nur noch Fußnoten oder Notizen stehen.
+    /// Ab dieser Ähnlichkeit der Zeilen gilt eine Seite als Duplikat einer der letzten drei.
+    public var duplicateThreshold = 0.6
+
+    static func jaccard(_ a: Set<String>, _ b: Set<String>) -> Double {
+        let union = a.union(b).count
+        return union == 0 ? 0 : Double(a.intersection(b).count) / Double(union)
+    }
+
+    /// Letzter Absatz, hinter dem nur noch Fußnoten, Notizen oder Marker leerer Seiten stehen.
     static func lastOpenParagraphIndex(in blocks: [DocumentBlock]) -> Int? {
         var index = blocks.count - 1
         while index >= 0 {
             switch blocks[index] {
-            case .footnote, .note: index -= 1
+            case .footnote, .note, .pageBreak: index -= 1
             case .paragraph: return index
             default: return nil
             }
@@ -174,13 +193,23 @@ public struct DocumentStructurer: Sendable {
         let textWidth = max(rightEdge - leftEdge, 0.01)
         let isListPage = Self.isListPage(lines)
 
-        // Fußnoten: kleinere Zeilen am Seitenende unter normal großem Text.
+        // Fußnoten: kleinere Zeilen am Seitenende unter normal großem Text. Der Block
+        // beginnt mit einer Fußnotenmarke oder ist mindestens zwei Zeilen deutlich kleiner;
+        // er beginnt nie mit einem Kleinbuchstaben (das wäre ein Absatzende).
         var footnoteStart = lines.count
         if !isListPage {
             var i = lines.count - 1
-            while i > 0, lines[i].box.height < medianHeight * footnoteRatio { i -= 1 }
-            if i < lines.count - 1, lines[..<(i + 1)].contains(where: { $0.box.height >= medianHeight * 0.9 }) {
-                footnoteStart = i + 1
+            while i > 0, lines[i].box.height < medianHeight * 0.9 { i -= 1 }
+            let start = i + 1
+            if start < lines.count, lines[..<start].contains(where: { $0.box.height >= medianHeight * 0.9 }) {
+                let block = lines[start...]
+                let heights = block.map(\.box.height).sorted()
+                let blockMedian = heights[heights.count / 2]
+                let first = block.first!
+                let startsLower = first.text.first.map { $0.isLetter && $0.isLowercase } ?? false
+                if !startsLower, Self.startsWithFootnoteMarker(first.text) || (block.count >= 2 && blockMedian < medianHeight * footnoteRatio) {
+                    footnoteStart = start
+                }
             }
         }
 
@@ -198,8 +227,22 @@ public struct DocumentStructurer: Sendable {
             let spaced = gapBefore > pitch * 1.5 || gapAfter > pitch * 1.5
             let matchesToc = tocTitles.contains(Self.normalized(line.text))
             let allCaps = Self.isAllCaps(line.text)
+            let previous = index > 0 ? lines[index - 1] : nil
+            let next = index + 1 < lines.count ? lines[index + 1] : nil
+            // Nach einer Zeile mit Bindestrich oder ohne Satzende (und voller Breite) folgt
+            // Fließtext, keine Überschrift; ebenso vor einer Zeile, die klein beginnt.
+            let afterHyphen = previous?.text.last.map { $0 == "-" || $0 == "\u{2010}" } ?? false
+            let afterOpenLine = previous.map { line in
+                let short = (rightEdge - line.box.maxX) > textWidth * shortLineRatio
+                let closed = line.text.last.map { ".!?:".contains($0) || "\"\u{201C}\u{201D})".contains($0) } ?? false
+                return !short && !closed && gapBefore < pitch * 1.5
+            } ?? false
+            let beforeLowercase = next?.text.first.map { $0.isLetter && $0.isLowercase } ?? false
+            let endsOpen = line.text.last.map { ":,;".contains($0) } ?? false
+            let eligible = !startsLower && !endsHyphen && !endsOpen && !afterHyphen && !afterOpenLine && !beforeLowercase
+                && !Self.startsWithNumber(line.text) && !Self.endsWithNumber(line.text) && !Self.startsWithFootnoteMarker(line.text)
 
-            if !startsLower, !endsHyphen, !Self.startsWithNumber(line.text) {
+            if eligible {
                 if ratio > majorHeadingRatio, short || spaced {
                     kinds.append(.heading(1)); continue
                 }
@@ -209,7 +252,7 @@ public struct DocumentStructurer: Sendable {
                 if matchesToc {
                     kinds.append(.heading(allCaps ? 1 : 2)); continue
                 }
-                if allCaps, short, line.text.count >= 4 {
+                if allCaps, short, line.text.filter(\.isLetter).count >= 6 {
                     kinds.append(.heading(2)); continue
                 }
             }
@@ -270,8 +313,10 @@ public struct DocumentStructurer: Sendable {
                     let marker = line.text.first.map { $0 == "*" || $0.isNumber || $0 == "(" } ?? false
                     startsNew = marker || previous.box.midY - line.box.midY > pitch * paragraphGapRatio
                 case (.listItem, .listItem):
-                    // Listenzeile ohne Zahl am Anfang oder Ende hängt an der vorigen.
-                    startsNew = Self.startsWithNumber(line.text) || Self.endsWithNumber(line.text) || Self.endsWithNumber(previous.text)
+                    // Jede Zeile ein Eintrag, außer sie setzt die vorige fort.
+                    let continuation = (previous.text.last.map { $0 == "-" || $0 == "," } ?? false)
+                        || (line.text.first.map { $0.isLetter && $0.isLowercase } ?? false)
+                    startsNew = !continuation
                 default:
                     startsNew = true
                 }
@@ -348,8 +393,23 @@ public struct DocumentStructurer: Sendable {
     static func isAllCaps(_ text: String) -> Bool {
         let letters = text.filter(\.isLetter)
         guard letters.count >= 4 else { return false }
+        let nonLetters = text.filter { !$0.isLetter && !$0.isWhitespace }.count
+        guard Double(nonLetters) <= Double(text.count) * 0.4 else { return false }
         let upper = letters.filter(\.isUppercase).count
         return Double(upper) >= Double(letters.count) * 0.8
+    }
+
+    /// „*", „**", „(1)", „1)" oder eine Ziffer direkt vor Text.
+    static func startsWithFootnoteMarker(_ text: String) -> Bool {
+        guard let first = text.first else { return false }
+        if first == "*" || first == "†" { return true }
+        if first == "(" { return text.dropFirst().first?.isNumber ?? false }
+        if first.isNumber {
+            let digits = text.prefix { $0.isNumber }
+            let rest = text.dropFirst(digits.count)
+            return rest.first == ")" || (rest.first?.isLetter ?? false)
+        }
+        return false
     }
 
     /// Vergleichsform für Inhaltsverzeichnis und Überschriften: klein, ohne Satzzeichen, Leerraum gebündelt.
@@ -400,7 +460,11 @@ public struct DocumentStructurer: Sendable {
                 continue
             }
             let tail = String(line.prefix { $0.isLetter })
-            if let last = result.last, last == "-" || last == "\u{2010}" {
+            if let last = result.last, last == "-" || last == "\u{2010}", tail.isEmpty {
+                // Bindestrich, dann eine Zeile, die nicht mit Buchstaben beginnt (Marke,
+                // Klammer, Zahl): nichts zusammenziehen.
+                result += " " + line
+            } else if let last = result.last, last == "-" || last == "\u{2010}" {
                 let head = String(result.dropLast())
                 let stem = head.split(whereSeparator: { $0.isWhitespace }).last.map(String.init) ?? head
                 let stemLetters = String(stem.reversed().prefix { $0.isLetter }.reversed())
@@ -422,6 +486,28 @@ public struct DocumentStructurer: Sendable {
                 } else {
                     result += " " + line
                 }
+            }
+        }
+        return repairInlineHyphens(in: result, wordChecker: wordChecker)
+    }
+
+    /// Bindestriche mitten in einer Zeile, die aus zusammengelegten Zeilen stammen:
+    /// „el-ner", „Theo-rie". Dieselbe Regel wie am Zeilenende, nur bei kleinem zweiten
+    /// Teil; echte Komposita aus zwei bekannten Wörtern bleiben.
+    static func repairInlineHyphens(in text: String, wordChecker: any WordChecker) -> String {
+        guard wordChecker.hasDictionary, text.contains("-") else { return text }
+        guard let regex = try? NSRegularExpression(pattern: "(\\p{L}{2,})-(\\p{Ll}\\p{L}{1,})") else { return text }
+        var result = text
+        let matches = regex.matches(in: result, range: NSRange(result.startIndex..., in: result)).reversed()
+        for match in matches {
+            guard let whole = Range(match.range, in: result),
+                  let stemRange = Range(match.range(at: 1), in: result),
+                  let tailRange = Range(match.range(at: 2), in: result) else { continue }
+            let stem = String(result[stemRange]), tail = String(result[tailRange])
+            if wordChecker.knows(stem + tail) {
+                result.replaceSubrange(whole, with: stem + tail)
+            } else if !(wordChecker.knows(stem) && wordChecker.knows(tail)) {
+                result.replaceSubrange(whole, with: stem + tail)
             }
         }
         return result

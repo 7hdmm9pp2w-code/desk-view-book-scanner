@@ -304,6 +304,17 @@ PDF-Export wieder durchsuchbar sein. Screenshot und Desk View bleiben Handprobe.
   - Ohne Session-Titel nimmt der Export den Titelvorschlag vom Umschlag.
   - Nicht heilbar in der Strukturierung: OCR-Fehler im Scan („Bildröäre", „Uberdruck")
     und fehlende Zeilen in Falznähe.
+  - Zweite Runde nach dem Export des ganzen Buchs (114 Scans): Überschrift nie nach
+    einer Bindestrich-Zeile oder einer offenen Zeile voller Breite, nie vor einer klein
+    beginnenden Zeile, nie mit Zahl am Ende, Fußnotenmarke am Anfang oder Doppelpunkt
+    am Ende; Versalien brauchen sechs Buchstaben und wenig Sonderzeichen. Fußnoten:
+    Block kleiner Zeilen am Seitenende, beginnt mit Marke oder ist mindestens zwei
+    Zeilen deutlich kleiner, beginnt nie klein; Ausgabe als Zitatblock, weil Pandoc
+    `<small>` zu einem Span macht. Absatz über die Seitengrenze auch über leere Scans
+    und Fußnoten hinweg. Doppelte Scans (Jaccard der Zeilen ≥ 0,6 zu einer der letzten
+    drei Seiten) werden übersprungen und gemeldet. Listenseiten: jede Zeile ein Eintrag,
+    außer nach Komma oder Bindestrich. Bindestriche mitten in der Zeile (aus von Vision
+    zusammengelegten Zeilen, „el-ner") laufen durch dieselbe Silbenregel.
 
 ## Bekannte Risiken
 
