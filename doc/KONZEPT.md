@@ -274,6 +274,37 @@ PDF-Export wieder durchsuchbar sein. Screenshot und Desk View bleiben Handprobe.
   Menüeintrag selbst bleibt in der SwiftUI-App ausgegraut, weil SwiftUIs
   Hosting-View die Anfrage nach einem Empfänger nicht weiterreicht; das ist egal.
 
+- **Strukturierung nach der ersten Markdown-Prüfung (26.09.2026, Baudrillard,
+  „Agonie des Realen"):** Die OCR war gut, fast alle Fehler kamen aus der Strukturierung,
+  und die meisten hatten eine Wurzel: Typografie pro Seite gemessen. Jetzt gilt:
+  - Zeilenhöhe und Zeilenabstand als Median über das ganze Dokument (ab 20 Zeilen),
+    pro Seite nur als Rückfall. Umschlag, Titelei und Inhalt haben zu wenig Zeilen.
+  - Zwei harte Absatzregeln vor allen Heuristiken: Eine Zeile, die mit Bindestrich
+    endet, beendet nie einen Absatz; eine Zeile, die mit Kleinbuchstaben beginnt,
+    beginnt nie einen. Einzug ist nur Absatzbeginn, wenn die Zeile davor kurz war oder
+    die Zeile danach an den Rand zurückkehrt (hängender Einzug im Glossar sonst).
+  - Überschrift nur, wenn kurz oder freistehend, nicht klein beginnend, nicht mit
+    Bindestrich endend, nicht mit Zahl beginnend. Zusätzlich: Versalienzeilen, und
+    Zeilen, die einem Eintrag des Inhaltsverzeichnisses entsprechen (Seite mit
+    „Inhalt" oder überwiegend nummerierten Zeilen; Ebene 1 bei Versalien).
+  - Listenseiten (ab 40 % Zeilen mit Zahl am Anfang oder Ende): jede Zeile ein
+    Listenpunkt. Trifft Inhalt, Bibliografie, Titelei.
+  - Silbentrennung: Wörterbuch auch über Grundform („REICHES" → „Reiches"); Strich
+    bleibt nur bei großem zweiten Teil („Desk-View") oder wenn beide Teile Wörter sind;
+    unbekannte Bruchstücke werden zusammengezogen. Fehlt der Strich im Scan
+    („Territo riums"), wird zusammengezogen, wenn beide Teile unbekannt und das Ganze
+    bekannt ist.
+  - Fußnoten: kleinere Zeilen am Seitenende unter normalem Text, als eigener Block.
+  - Absatz über die Seitengrenze wird fortgesetzt (Bindestrich oder kein Satzende und
+    kleiner Anfang); der Seitenmarker rückt hinter den fortgesetzten Absatz.
+  - Gedruckte Seitenzahl (reine Ziffernzeile oben oder unten) wandert in den Marker:
+    `<!-- Seite 12, Scan 10 -->`.
+  - Zeilen unter Konfidenz 0,5 werden als Kommentar `<!-- unsicher: … -->` vor dem
+    Absatz gemeldet; Pandoc-Weg über Marker wie bei den Seitenwechseln.
+  - Ohne Session-Titel nimmt der Export den Titelvorschlag vom Umschlag.
+  - Nicht heilbar in der Strukturierung: OCR-Fehler im Scan („Bildröäre", „Uberdruck")
+    und fehlende Zeilen in Falznähe.
+
 ## Bekannte Risiken
 
 1. Desk View blendet Overlays ein (Einrichtungstrapez, Hinweise). Beim Start hilft

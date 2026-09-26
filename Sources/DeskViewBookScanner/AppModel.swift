@@ -537,9 +537,10 @@ extension AppModel {
                 let title = sessionTitle
                 let total = urls.count
                 exportStatus = .writing(done: 0, total: total)
+                let pdfTitle = title.isEmpty ? suggestedTitle : title
                 try await Task.detached(priority: .userInitiated) { [self] in
                     try PDFExporter().export(
-                        to: url, title: title.isEmpty ? nil : title, pageCount: total,
+                        to: url, title: pdfTitle, pageCount: total,
                         load: { index in (try ImageFile.read(urls[index]), texts[index]) },
                         progress: { done in Task { @MainActor in self.exportStatus = .writing(done: done, total: total) } }
                     )
@@ -573,7 +574,9 @@ extension AppModel {
                 let (_, texts) = try await collectTexts(session: session)
                 let numbered = texts.enumerated().compactMap { index, text in text.map { (number: index + 1, text: $0) } }
                 let structurer = DocumentStructurer(wordChecker: SpellCheckerWordChecker(language: "de"))
-                let document = structurer.structure(pages: numbered, title: sessionTitle.isEmpty ? nil : sessionTitle)
+                // Ohne gesetzten Titel nimmt der Export den Vorschlag vom Umschlag.
+                let title = sessionTitle.isEmpty ? suggestedTitle : sessionTitle
+                let document = structurer.structure(pages: numbered, title: title)
                 exportStatus = .writing(done: 0, total: 1)
                 try await Task.detached(priority: .userInitiated) {
                     try TextExporter.export(document, to: url, format: format, pandoc: pandoc)
