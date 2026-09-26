@@ -33,17 +33,7 @@ struct SessionWindow: View {
                     .disabled(model.sessionDirectory == nil)
             }
             ToolbarItemGroup(placement: .primaryAction) {
-                Menu {
-                    Button(L("Als PDF exportieren…")) { model.exportPDF() }
-                    Button(L("Als Markdown exportieren…")) { model.exportText(format: .markdown) }
-                    Button(L("Als Word (DOCX) exportieren…")) { model.exportText(format: .docx) }
-                        .disabled(model.pandoc == nil)
-                    Button(L("Als EPUB exportieren…")) { model.exportText(format: .epub) }
-                        .disabled(model.pandoc == nil)
-                } label: {
-                    Label(L("Exportieren"), systemImage: "square.and.arrow.up")
-                }
-                .disabled(!model.canExport)
+                ExportButtons()
                 Button {
                     model.splitSelectedPage()
                 } label: {
@@ -246,6 +236,51 @@ struct StatusBar: View {
         case .files: return model.exportStatus == nil
         case .deskView: return model.canCapture
         }
+    }
+}
+
+/// Vier beschriftete Export-Knöpfe statt eines Menüs: man sieht, was man bekommt.
+struct ExportButtons: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        ControlGroup {
+            Button {
+                model.exportPDF()
+            } label: {
+                Label("PDF", systemImage: "doc.richtext")
+            }
+            .help(L("PDF mit den Seitenbildern und durchsuchbarer Textebene (⌘E)"))
+            Button {
+                model.exportText(format: .markdown)
+            } label: {
+                Label("Markdown", systemImage: "text.alignleft")
+            }
+            .help(pandocHelp(L("Markdown mit Absätzen, Überschriften und Seitenmarkern (⇧⌘E)")))
+            Button {
+                model.exportText(format: .docx)
+            } label: {
+                Label("Word", systemImage: "doc.text")
+            }
+            .help(pandocHelp(L("Word-Dokument (DOCX) mit Absätzen und Überschriften")))
+            .disabled(model.pandoc == nil)
+            Button {
+                model.exportText(format: .epub)
+            } label: {
+                Label("EPUB", systemImage: "book")
+            }
+            .help(pandocHelp(L("E-Book (EPUB) für Bücher-App und Reader")))
+            .disabled(model.pandoc == nil)
+        } label: {
+            Label(L("Exportieren"), systemImage: "square.and.arrow.up")
+        }
+        .controlGroupStyle(.navigation)
+        .labelStyle(.titleAndIcon)
+        .disabled(!model.canExport)
+    }
+
+    private func pandocHelp(_ text: String) -> String {
+        model.pandoc == nil ? text + " " + L("(braucht Pandoc, siehe Einstellungen)") : text
     }
 }
 

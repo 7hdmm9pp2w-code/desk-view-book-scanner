@@ -138,10 +138,15 @@ public struct PageSplitter: Sendable {
         Double(image.width) / Double(max(image.height, 1)) >= landscapeRatio
     }
 
-    /// Kreuzt eine sichere Textzeile die Schnittlinie mit so viel Anteil auf beiden
-    /// Seiten, ist es keine Doppelseite (Umschlag, Tabelle, Querformat-Text).
+    /// Kreuzt eine Textzeile die Schnittlinie mit so viel Anteil auf beiden Seiten, ist
+    /// es keine Doppelseite (Umschlag, Tabelle, Querformat-Text). Dafür reichen schon
+    /// unsichere Zeilen; kleiner Umschlagtext liest sich schlecht.
     public var crossingShare = 0.15
-    public var crossingConfidence: Float = 0.5
+    public var crossingConfidence: Float = 0.3
+    /// Für die Suche der textfreien Lücke zählen nur sichere Zeilen.
+    public var gapConfidence: Float = 0.5
+    /// So weit muss Text vom Schnitt entfernt sein, um als „links" oder „rechts" zu gelten.
+    public var sideMargin = 0.02
 
     /// Zwei Hälften oder das Bild unverändert. `lines` (normiert, zum Bild passend)
     /// bestimmen die textfreie Lücke für den Schnitt und verhindern das Teilen, wenn
@@ -176,13 +181,22 @@ public struct PageSplitter: Sendable {
                 fraction = gutterFraction(in: image, within: searchRange, minimumDepth: minimumDepth) ?? 0.5
             }
         }
-        return textCrosses(cut: fraction, lines: lines) ? nil : fraction
+        if textCrosses(cut: fraction, lines: lines) { return nil }
+        // Gibt es Text, muss er beiderseits des Schnitts stehen; Text nur auf einer
+        // Seite heißt Einzelseite im Querformat (Rückumschlag, Klappentext).
+        let usable = lines.filter { $0.confidence >= crossingConfidence }
+        if !usable.isEmpty {
+            let left = usable.contains { Double($0.box.maxX) < fraction - sideMargin }
+            let right = usable.contains { Double($0.box.minX) > fraction + sideMargin }
+            guard left && right else { return nil }
+        }
+        return fraction
     }
 
     /// Breiteste textfreie Lücke, deren Mitte im Suchbereich liegt und die links wie
     /// rechts Text hat. `nil` bei zu wenig Zeilen.
     public func textFreeGap(in lines: [RecognizedLine], resolution: Int = 1000) -> ClosedRange<Double>? {
-        let usable = lines.filter { $0.confidence >= crossingConfidence && $0.box.width >= 0.05 }
+        let usable = lines.filter { $0.confidence >= gapConfidence && $0.box.width >= 0.05 }
         guard usable.count >= 4 else { return nil }
         var covered = [Bool](repeating: false, count: resolution)
         for line in usable {

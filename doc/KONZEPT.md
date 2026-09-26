@@ -274,6 +274,62 @@ PDF-Export wieder durchsuchbar sein. Screenshot und Desk View bleiben Handprobe.
   Menüeintrag selbst bleibt in der SwiftUI-App ausgegraut, weil SwiftUIs
   Hosting-View die Anfrage nach einem Empfänger nicht weiterreicht; das ist egal.
 
+- **Strukturierung nach der ersten Markdown-Prüfung (26.09.2026, Baudrillard,
+  „Agonie des Realen"):** Die OCR war gut, fast alle Fehler kamen aus der Strukturierung,
+  und die meisten hatten eine Wurzel: Typografie pro Seite gemessen. Jetzt gilt:
+  - Zeilenhöhe und Zeilenabstand als Median über das ganze Dokument (ab 20 Zeilen),
+    pro Seite nur als Rückfall. Umschlag, Titelei und Inhalt haben zu wenig Zeilen.
+  - Zwei harte Absatzregeln vor allen Heuristiken: Eine Zeile, die mit Bindestrich
+    endet, beendet nie einen Absatz; eine Zeile, die mit Kleinbuchstaben beginnt,
+    beginnt nie einen. Einzug ist nur Absatzbeginn, wenn die Zeile davor kurz war oder
+    die Zeile danach an den Rand zurückkehrt (hängender Einzug im Glossar sonst).
+  - Überschrift nur, wenn kurz oder freistehend, nicht klein beginnend, nicht mit
+    Bindestrich endend, nicht mit Zahl beginnend. Zusätzlich: Versalienzeilen, und
+    Zeilen, die einem Eintrag des Inhaltsverzeichnisses entsprechen (Seite mit
+    „Inhalt" oder überwiegend nummerierten Zeilen; Ebene 1 bei Versalien).
+  - Listenseiten (ab 40 % Zeilen mit Zahl am Anfang oder Ende): jede Zeile ein
+    Listenpunkt. Trifft Inhalt, Bibliografie, Titelei.
+  - Silbentrennung: Wörterbuch auch über Grundform („REICHES" → „Reiches"); Strich
+    bleibt nur bei großem zweiten Teil („Desk-View") oder wenn beide Teile Wörter sind;
+    unbekannte Bruchstücke werden zusammengezogen. Fehlt der Strich im Scan
+    („Territo riums"), wird zusammengezogen, wenn beide Teile unbekannt und das Ganze
+    bekannt ist.
+  - Fußnoten: kleinere Zeilen am Seitenende unter normalem Text, als eigener Block.
+  - Absatz über die Seitengrenze wird fortgesetzt (Bindestrich oder kein Satzende und
+    kleiner Anfang); der Seitenmarker rückt hinter den fortgesetzten Absatz.
+  - Gedruckte Seitenzahl (reine Ziffernzeile oben oder unten) wandert in den Marker:
+    `<!-- Seite 12, Scan 10 -->`.
+  - Zeilen unter Konfidenz 0,5 werden als Kommentar `<!-- unsicher: … -->` vor dem
+    Absatz gemeldet; Pandoc-Weg über Marker wie bei den Seitenwechseln.
+  - Ohne Session-Titel nimmt der Export den Titelvorschlag vom Umschlag.
+  - Nicht heilbar in der Strukturierung: OCR-Fehler im Scan („Bildröäre", „Uberdruck")
+    und fehlende Zeilen in Falznähe.
+  - Zweite Runde nach dem Export des ganzen Buchs (114 Scans): Überschrift nie nach
+    einer Bindestrich-Zeile oder einer offenen Zeile voller Breite, nie vor einer klein
+    beginnenden Zeile, nie mit Zahl am Ende, Fußnotenmarke am Anfang oder Doppelpunkt
+    am Ende; Versalien brauchen sechs Buchstaben und wenig Sonderzeichen. Fußnoten:
+    Block kleiner Zeilen am Seitenende, beginnt mit Marke oder ist mindestens zwei
+    Zeilen deutlich kleiner, beginnt nie klein; Ausgabe als Zitatblock, weil Pandoc
+    `<small>` zu einem Span macht. Absatz über die Seitengrenze auch über leere Scans
+    und Fußnoten hinweg. Doppelte Scans (Jaccard der Zeilen ≥ 0,6 zu einer der letzten
+    drei Seiten) werden übersprungen und gemeldet. Listenseiten: jede Zeile ein Eintrag,
+    außer nach Komma oder Bindestrich. Bindestriche mitten in der Zeile (aus von Vision
+    zusammengelegten Zeilen, „el-ner") laufen durch dieselbe Silbenregel.
+  - Dritte Runde, zwei Grundsatzkorrekturen: **Schriftgröße über die Zeichenbreite**
+    (Boxbreite geteilt durch Zeichenzahl) statt über die Boxhöhe. Gemessen am
+    Bakunin-Scan schwankt die Höhe von Fließtextzeilen derselben Schrift zwischen 0,62
+    und 1,22 des Medians (Ober- und Unterlängen), die Zeichenbreite nur um ±5 %;
+    Überschriften liegen bei 2,5- bis 3-facher Zeichenbreite. Gilt für Überschriften,
+    Fußnoten und Titelvorschlag. Und **Silbentrennung ohne Wörterbuch**: Das
+    Systemwörterbuch hält „el", „ner", „ie", „positivs" für Wörter, damit taugt es
+    nicht für Bruchstücke. Am Zeilenende fällt der Strich immer, außer der zweite Teil
+    beginnt groß („Desk-View") oder ist „und/oder" (Ergänzungsstrich, „Ein- und").
+    Mitten in der Zeile fällt er, wenn das Ganze bekannt ist, ein Teil unter vier
+    Buchstaben hat oder ein Teil unbekannt ist; „nichtig-kitschigen" bleibt.
+    DOCX und EPUB bekommen Seitenmarker und Notizen als HTML-Kommentare, die Pandoc
+    verschluckt; vorher standen die Platzhalter wörtlich im Buch. Umschlagzeilen, die
+    im Dokumenttitel stecken oder Verlagszeilen sind, werden keine Überschriften.
+
 ## Bekannte Risiken
 
 1. Desk View blendet Overlays ein (Einrichtungstrapez, Hinweise). Beim Start hilft

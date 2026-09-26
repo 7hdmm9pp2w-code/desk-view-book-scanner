@@ -99,7 +99,7 @@ public enum TextExporter {
             try MarkdownRenderer.render(document).write(to: url, atomically: true, encoding: .utf8)
             return
         }
-        let html = HTMLRenderer.render(document)
+        let html = HTMLRenderer.render(document, markers: format == .markdown ? .placeholders : .comments)
         let tempDirectory = FileManager.default.temporaryDirectory
             .appending(path: "Buchscan-\(UUID().uuidString)", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)

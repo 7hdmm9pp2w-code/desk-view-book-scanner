@@ -82,6 +82,16 @@
         }
       }
     },
+    "(braucht Pandoc, siehe Einstellungen)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(needs Pandoc, see Settings)"
+          }
+        }
+      }
+    },
     "Als EPUB exportieren…": {
       "localizations": {
         "en": {
@@ -352,6 +362,16 @@
         }
       }
     },
+    "E-Book (EPUB) für Bücher-App und Reader": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-book (EPUB) for the Books app and readers"
+          }
+        }
+      }
+    },
     "Eigener Pfad zu pandoc": {
       "localizations": {
         "en": {
@@ -562,6 +582,16 @@
         }
       }
     },
+    "Markdown mit Absätzen, Überschriften und Seitenmarkern (⇧⌘E)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markdown with paragraphs, headings and page markers (⇧⌘E)"
+          }
+        }
+      }
+    },
     "Mit iPhone scannen": {
       "localizations": {
         "en": {
@@ -668,6 +698,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose Folder…"
+          }
+        }
+      }
+    },
+    "PDF mit den Seitenbildern und durchsuchbarer Textebene (⌘E)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF with the page images and a searchable text layer (⌘E)"
           }
         }
       }
@@ -958,6 +998,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Capturing…"
+          }
+        }
+      }
+    },
+    "Word-Dokument (DOCX) mit Absätzen und Überschriften": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Word document (DOCX) with paragraphs and headings"
           }
         }
       }

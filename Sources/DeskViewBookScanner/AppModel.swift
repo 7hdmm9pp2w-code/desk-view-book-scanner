@@ -49,6 +49,7 @@ final class AppModel {
     private(set) var sessionSettings = SessionSettings()
     private(set) var trashedCount = 0
     private(set) var captureSource: CaptureSource = .iPhone
+    private var titleSuggestionDismissed = false
     var lastError: String?
     var selectedPageID: UUID?
 
@@ -203,9 +204,17 @@ final class AppModel {
         imageCache = [:]
         texts = [:]
         suggestedTitle = nil
+        titleSuggestionDismissed = false
         selectedPageID = pages.last?.id
         for page in pages where page.ocrStatus == .pending {
             recognizeText(for: page)
+        }
+        // Vorschlag aus schon erkannten ersten Seiten, ohne neue OCR.
+        if sessionTitle.isEmpty {
+            for page in pages.prefix(TitleSuggester.lookahead + 1) where page.ocrStatus == .done {
+                _ = await text(for: page)
+            }
+            if let first = pages.first { updateTitleSuggestion(after: first) }
         }
     }
 
@@ -330,9 +339,7 @@ extension AppModel {
                 let text = try await processor.text(for: page, in: session)
                 texts[page.id] = text
                 pages = await session.orderedPages
-                if sessionTitle.isEmpty, suggestedTitle == nil, pages.first?.id == page.id {
-                    suggestedTitle = TitleSuggester.suggest(from: text)
-                }
+                updateTitleSuggestion(after: page)
             } catch {
                 pages = await session.orderedPages
                 lastError = error.localizedDescription
@@ -350,6 +357,16 @@ extension AppModel {
 
     func dismissSuggestedTitle() {
         suggestedTitle = nil
+        titleSuggestionDismissed = true
+    }
+
+    /// Vorschlag aus Umschlag und den folgenden Seiten, sobald deren Text vorliegt.
+    private func updateTitleSuggestion(after page: PageRecord) {
+        guard sessionTitle.isEmpty, !titleSuggestionDismissed else { return }
+        let first = Array(pages.prefix(TitleSuggester.lookahead + 1))
+        guard first.contains(where: { $0.id == page.id }), let cover = first.first, let coverText = texts[cover.id] else { return }
+        let following = first.dropFirst().compactMap { texts[$0.id] }
+        suggestedTitle = TitleSuggester.suggest(cover: coverText, followingPages: following)
     }
 
     // MARK: Import
@@ -367,7 +384,11 @@ extension AppModel {
 
     func importFiles(_ urls: [URL]) {
         guard exportStatus == nil else { return }
-        let files = urls.filter { PageImporter.isSupported($0) }
+        // Der Öffnen-Dialog liefert die Auswahlreihenfolge; Seiten gehören nach Dateinamen
+        // sortiert, mit Zahlen numerisch („Aufnahme-9" vor „Aufnahme-10").
+        let files = urls
+            .filter { PageImporter.isSupported($0) }
+            .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
         guard !files.isEmpty else { return }
         Task {
             do {
@@ -527,19 +548,24 @@ extension AppModel {
         !pages.isEmpty && exportStatus == nil
     }
 
+    /// Gesetzter Titel, sonst der Vorschlag vom Umschlag.
+    var effectiveTitle: String? {
+        sessionTitle.isEmpty ? suggestedTitle : sessionTitle
+    }
+
     func exportPDF() {
         guard let session, canExport else { return }
         let createdAt = sessionCreatedAt
         Task {
-            guard let url = savePanel(fileName: ExportNaming.fileName(createdAt: createdAt, title: sessionTitle, fileExtension: "pdf"), contentType: .pdf) else { return }
+            guard let url = savePanel(fileName: ExportNaming.fileName(createdAt: createdAt, title: effectiveTitle, fileExtension: "pdf"), contentType: .pdf) else { return }
             do {
                 let (urls, texts) = try await collectTexts(session: session)
-                let title = sessionTitle
                 let total = urls.count
                 exportStatus = .writing(done: 0, total: total)
+                let pdfTitle = effectiveTitle
                 try await Task.detached(priority: .userInitiated) { [self] in
                     try PDFExporter().export(
-                        to: url, title: title.isEmpty ? nil : title, pageCount: total,
+                        to: url, title: pdfTitle, pageCount: total,
                         load: { index in (try ImageFile.read(urls[index]), texts[index]) },
                         progress: { done in Task { @MainActor in self.exportStatus = .writing(done: done, total: total) } }
                     )
@@ -568,12 +594,12 @@ extension AppModel {
         case .epub: .epub
         }
         Task {
-            guard let url = savePanel(fileName: ExportNaming.fileName(createdAt: createdAt, title: sessionTitle, fileExtension: format.fileExtension), contentType: contentType) else { return }
+            guard let url = savePanel(fileName: ExportNaming.fileName(createdAt: createdAt, title: effectiveTitle, fileExtension: format.fileExtension), contentType: contentType) else { return }
             do {
                 let (_, texts) = try await collectTexts(session: session)
                 let numbered = texts.enumerated().compactMap { index, text in text.map { (number: index + 1, text: $0) } }
                 let structurer = DocumentStructurer(wordChecker: SpellCheckerWordChecker(language: "de"))
-                let document = structurer.structure(pages: numbered, title: sessionTitle.isEmpty ? nil : sessionTitle)
+                let document = structurer.structure(pages: numbered, title: effectiveTitle)
                 exportStatus = .writing(done: 0, total: 1)
                 try await Task.detached(priority: .userInitiated) {
                     try TextExporter.export(document, to: url, format: format, pandoc: pandoc)
