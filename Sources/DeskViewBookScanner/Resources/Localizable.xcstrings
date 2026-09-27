@@ -1521,6 +1521,26 @@
           }
         }
       }
+    },
+    "Nicht ausgelöst: Seite schien schon erfasst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not captured: page looked already captured"
+          }
+        }
+      }
+    },
+    "Der Text sah aus wie auf einer der zuletzt erfassten Seiten. Ist es doch eine neue Seite, mit ⌥⌘S erfassen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The text looked like one of the pages captured last. If it is a new page after all, capture it with ⌥⌘S."
+          }
+        }
+      }
     }
   }
 }

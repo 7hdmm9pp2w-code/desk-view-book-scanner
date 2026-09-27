@@ -35,6 +35,8 @@ final class AppModel {
     var cameraRunning = false
     var autoTrigger = false
     var motionState: MotionTrigger.State = .idle
+    /// Nach dem Umblättern nicht ausgelöst, weil die Seite schon erfasst schien.
+    var skippedKnownPage = false
     var sessionRoot: URL
     var session: SessionStore?
     var sessionDirectory: URL?
@@ -252,6 +254,7 @@ final class AppModel {
     func capturePage() {
         guard !isCapturing else { return }
         isCapturing = true
+        skippedKnownPage = false
         Task {
             defer { isCapturing = false }
             do {
