@@ -72,6 +72,11 @@ struct StatusBar: View {
                     Label(L("Umblättern erkannt, Buch kurz ruhig halten"), systemImage: "book.pages")
                         .foregroundStyle(.orange)
                         .lineLimit(1)
+                } else if model.cameraRunning, model.autoTrigger, model.skippedKnownPage {
+                    Label(L("Nicht ausgelöst: Seite schien schon erfasst"), systemImage: "exclamationmark.triangle")
+                        .foregroundStyle(.orange)
+                        .lineLimit(1)
+                        .help(L("Der Text sah aus wie auf einer der zuletzt erfassten Seiten. Ist es doch eine neue Seite, mit ⌥⌘S erfassen."))
                 } else if model.cameraDevices.isEmpty {
                     Text(L("Keine Kamera gefunden")).foregroundStyle(.secondary)
                 }

@@ -22,7 +22,8 @@ let package = Package(
         ),
         .testTarget(
             name: "BookScannerKitTests",
-            dependencies: ["BookScannerKit"]
+            dependencies: ["BookScannerKit"],
+            resources: [.copy("Fixtures")]
         ),
     ]
 )

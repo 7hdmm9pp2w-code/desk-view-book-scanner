@@ -54,9 +54,9 @@ public struct PageTurnJudge: Sendable {
     /// paar Zeilen fallen im kleinen Graubild kaum auf.
     public var fewWords = 3
     /// Anteil gemeinsamer Wörter, ab dem es dieselbe Seite ist, bezogen auf die kürzere.
-    /// Gemessen an Bildern aus einem Mitschnitt: dieselbe Seite 0,53 bis 0,60, eine andere
-    /// höchstens 0,31.
-    public var sameTextShare = 0.45
+    /// Gemessen an einem Mitschnitt über einem Taschenbuch (Seiten ab 40 Wörtern): dieselbe
+    /// Seite 0,72 bis 0,94, eine andere höchstens 0,44, auch 32 gegen 350 Wörter.
+    public var sameTextShare = 0.6
     /// Anteil geänderter Kacheln mit Struktur, ab dem die Seite neu ist.
     public var changedTileShare = 0.4
     /// Mittlere normierte Differenz einer Kachel, ab der sie als geändert gilt.
@@ -101,17 +101,22 @@ public struct PageTurnJudge: Sendable {
         return changedShare(a.frame, b.frame) < changedTileShare
     }
 
-    /// Anteil der Wörter der kürzeren Liste, die in der anderen vorkommen, bis auf einen
-    /// Buchstaben (ab sieben Buchstaben zwei). Die Texterkennung auf dem ganzen Kamerabild
-    /// liest dieselbe Seite nicht zweimal gleich: „fursten“, „färsten“, „Fürsten“.
+    /// Anteil der verschiedenen Wörter der kürzeren Liste, die auch in der anderen stehen.
+    /// Die Texterkennung auf dem ganzen Kamerabild liest dieselbe Seite nicht zweimal gleich
+    /// („fursten“, „färsten“, „Fürsten“), darum gilt ab fünf Buchstaben ein Buchstabe
+    /// Abstand, ab sieben zwei, bei gleichem Anfangsbuchstaben. Kürzere Wörter und andere
+    /// Anfänge nur genau: Gegen eine volle Seite mit 300 Wörtern fände sonst fast jedes
+    /// Wort irgendeinen Nachbarn, und zwei verschiedene Textseiten kämen auf 0,5.
     public static func sharedWordShare(_ a: [String], _ b: [String]) -> Double {
-        let (short, long) = a.count <= b.count ? (a, b) : (b, a)
+        let setA = Set(a), setB = Set(b)
+        let (short, long) = setA.count <= setB.count ? (setA, setB) : (setB, setA)
         guard !short.isEmpty else { return 0 }
-        let exact = Set(long)
-        let candidates = long.map { Array($0) }
+        var byInitial: [Character: [[Character]]] = [:]
+        for word in long where word.count >= 4 { byInitial[word.first!, default: []].append(Array(word)) }
         var shared = 0
         for word in short {
-            if exact.contains(word) { shared += 1; continue }
+            if long.contains(word) { shared += 1; continue }
+            guard word.count >= 5, let first = word.first, let candidates = byInitial[first] else { continue }
             let letters = Array(word)
             let tolerance = letters.count >= 7 ? 2 : 1
             if candidates.contains(where: { abs($0.count - letters.count) <= tolerance && editDistance(letters, $0, limit: tolerance) <= tolerance }) {

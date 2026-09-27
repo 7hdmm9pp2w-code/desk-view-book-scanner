@@ -85,11 +85,21 @@ extension AppModel {
 
     /// Verbindet die Rückrufe der Kamera-Queue mit dem Main-Actor.
     func wireCameraCallbacks() {
+        // Mitschnitt zum Einstellen des Auslösers, nur per `defaults write … AusloeserMitschnitt <Ordner>`.
+        if let path = UserDefaults.standard.string(forKey: "AusloeserMitschnitt"), !path.isEmpty {
+            camera.recordingDirectory = URL(filePath: path, directoryHint: .isDirectory)
+        }
         camera.onAutoTrigger = { [weak self] in
             Task { @MainActor in self?.capturePage() }
         }
         camera.onMotionState = { [weak self] state in
-            Task { @MainActor in self?.motionState = state }
+            Task { @MainActor in
+                self?.motionState = state
+                if state != .idle { self?.skippedKnownPage = false }
+            }
+        }
+        camera.onSkippedKnownPage = { [weak self] in
+            Task { @MainActor in self?.skippedKnownPage = true }
         }
     }
 }

@@ -69,6 +69,11 @@ public final class CameraSource: NSObject, @unchecked Sendable {
     public var onAutoTrigger: (@Sendable () -> Void)?
     /// Bewegung im Bild, für den Hinweis in der Quellenleiste.
     public var onMotionState: (@Sendable (MotionTrigger.State) -> Void)?
+    /// Nach dem Umblättern lag eine Seite still, galt aber als schon erfasst.
+    public var onSkippedKnownPage: (@Sendable () -> Void)?
+    /// Mitschnitt zum Einstellen des Auslösers: Jede ruhige und jede erfasste Seite landet
+    /// hier als Bild mit den erkannten Wörtern. `nil` schaltet ihn ab.
+    public var recordingDirectory: URL?
 
     public private(set) var activeDevice: CameraDeviceInfo?
 
@@ -221,6 +226,7 @@ public final class CameraSource: NSObject, @unchecked Sendable {
     private func rememberCapture(_ image: CGImage, frame: GrayFrame) {
         Task.detached(priority: .utility) { [self] in
             let snapshot = await snapshot(of: image, frame: frame)
+            record("erfasst", image: image, snapshot: snapshot, verdict: nil)
             queue.async { [self] in judge.remember(snapshot) }
         }
     }
@@ -236,10 +242,35 @@ public final class CameraSource: NSObject, @unchecked Sendable {
             queue.async { [self] in
                 judging = false
                 let isNew = judge.isNewPage(snapshot)
-                triggerLog.notice("Seite ruhig: \(snapshot.words.count) Wörter, neu \(isNew), überholt \(episode != self.motionEpisode)")
-                guard autoTriggerEnabled, episode == motionEpisode, isNew else { return }
+                // Nur Zahlen, kein Buchtext im Systemprotokoll: Anteil gemeinsamer Wörter und
+                // geänderter Kacheln gegen jede der zuletzt erfassten Seiten.
+                let shares = judge.recent.map { recent in
+                    String(format: "Wörter %.2f, Kacheln %.2f", PageTurnJudge.sharedWordShare(snapshot.words, recent.words),
+                           judge.changedShare(snapshot.frame, recent.frame))
+                }
+                record("ruhig", image: image, snapshot: snapshot, verdict: isNew)
+                triggerLog.notice("Seite ruhig: \(snapshot.words.count) Wörter, neu \(isNew), überholt \(episode != self.motionEpisode); \(shares.joined(separator: " | "), privacy: .public)")
+                guard autoTriggerEnabled, episode == motionEpisode else { return }
+                guard isNew else { onSkippedKnownPage?(); return }
                 judge.remember(snapshot)
                 onAutoTrigger?()
+            }
+        }
+    }
+
+    /// Schreibt Bild und Wörter in den Mitschnitt, falls einer eingestellt ist.
+    private func record(_ kind: String, image: CGImage, snapshot: PageSnapshot, verdict: Bool?) {
+        guard let directory = recordingDirectory else { return }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HHmmss.SSS"
+        let name = "\(formatter.string(from: .now))-\(kind)"
+        var entry: [String: Any] = ["words": snapshot.words]
+        if let verdict { entry["neu"] = verdict }
+        Task.detached(priority: .background) {
+            try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            try? ImageFile.writeHEIC(image, to: directory.appending(path: name + ".heic"), maxPixelSize: 1400)
+            if let data = try? JSONSerialization.data(withJSONObject: entry) {
+                try? data.write(to: directory.appending(path: name + ".json"))
             }
         }
     }

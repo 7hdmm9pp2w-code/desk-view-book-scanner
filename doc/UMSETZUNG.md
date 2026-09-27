@@ -207,3 +207,17 @@ vom Konzept abwich und den Grund. Neueste Einträge unten.
   Mitschnittbildern dieselbe Seite 0,53–0,60, andere höchstens 0,31, Grenze 0,45). Ab drei
   Wörtern zeigen fremde Wörter eine neue Seite an, etwa Zwischentitel nach einer Textseite.
   Log-Kategorie „Auslöser": Bewegungsmaß (debug) und Urteil je ruhiger Seite.
+- **Auslöser an vollen Textseiten (27.09.2026, v0.1.2):** Seit die genaue OCR 300 und mehr
+  Wörter liest, galten neue Textseiten oft als „schon erfasst", meist gegen die vorletzte
+  Seite. Der Anteil bezog sich auf die kürzere Liste, und mit einem Buchstaben Toleranz
+  ab vier Buchstaben fand fast jedes Wort in 300 fremden einen Nachbarn: verschiedene
+  Seiten bis 0,50, dieselbe ab 0,47, Grenze 0,45. Jetzt jedes Wort einmal, unscharf erst
+  ab fünf Buchstaben und nur bei gleichem Anfangsbuchstaben, Grenze 0,6. Gemessen an einem
+  Mitschnitt (Fixture `umblaettern-mitschnitt.json`, Wahrheit am Bild bestimmt): dieselbe
+  Seite ab 40 Wörtern 0,72–0,94, andere höchstens 0,44. Seiten mit wenig, winziger Schrift
+  (Impressum) lesen sich jedes Mal anders (15 Wörter, 0,47 gegen sich selbst) und können
+  doppelt auslösen; eine doppelte Seite fällt im Raster auf, eine verpasste nicht.
+  Löst der Auslöser nicht aus, weil die Seite schon erfasst schien, sagt das die Leiste.
+  Mitschnitt zum Nachmessen: `defaults write org.crushkilldestroy.DeskViewBookScanner
+  AusloeserMitschnitt <Ordner>` speichert jede ruhige und erfasste Seite als Bild mit Wörtern,
+  `defaults delete … AusloeserMitschnitt` schaltet ihn ab.

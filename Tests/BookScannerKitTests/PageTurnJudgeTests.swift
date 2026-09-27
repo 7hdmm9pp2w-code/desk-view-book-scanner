@@ -76,6 +76,42 @@ import Foundation
         #expect(PageTurnJudge.editDistance(Array("fürsten"), Array("fursten"), limit: 2) == 1)
     }
 
+    struct Recording: Decodable {
+        struct Shot: Decodable {
+            var aufnahme: String
+            var art: String
+            var doppelseite: Int
+            var woerter: [String]
+        }
+        var aufnahmen: [Shot]
+    }
+
+    /// Mitschnitt über einem Taschenbuch, abgespielt: Jede ruhige Aufnahme ist eine neue
+    /// Doppelseite, außer der zweiten von Doppelseite 6 (davor nicht ausgelöst). Mit dem
+    /// alten Vergleich galten vier davon als schon erfasst, darunter volle Textseiten mit
+    /// 300 Wörtern und ein Zwischentitel mit 32 Wörtern nach einer vollen Seite.
+    @Test func recordedPageTurnsAreNewPages() throws {
+        let url = try #require(Bundle.module.url(forResource: "umblaettern-mitschnitt", withExtension: "json", subdirectory: "Fixtures"))
+        let shots = try JSONDecoder().decode(Recording.self, from: Data(contentsOf: url)).aufnahmen
+        var judge = PageTurnJudge()
+        var captured: Set<Int> = []
+        for shot in shots {
+            // Kacheln je Doppelseite verschieden, damit nur Seiten mit wenig Text an ihnen hängen.
+            let snapshot = PageSnapshot(frame: page(seed: UInt64(shot.doppelseite)), words: shot.woerter)
+            if shot.art == "erfasst" {
+                judge.remember(snapshot)
+                captured.insert(shot.doppelseite)
+            } else {
+                #expect(judge.isNewPage(snapshot) == !captured.contains(shot.doppelseite), "\(shot.aufnahme)")
+            }
+        }
+        // Dieselbe Seite zweimal gelesen: Ab 40 Wörtern erkennt der Text sie wieder.
+        for (ruhig, erfasst) in zip(shots, shots.dropFirst()) where ruhig.art == "ruhig" && erfasst.art == "erfasst"
+            && ruhig.doppelseite == erfasst.doppelseite && min(ruhig.woerter.count, erfasst.woerter.count) >= 40 {
+            #expect(PageTurnJudge.sharedWordShare(ruhig.woerter, erfasst.woerter) >= PageTurnJudge().sameTextShare, "\(erfasst.aufnahme)")
+        }
+    }
+
     @Test func fewForeignWordsMakeANewPage() {
         let frame = page(seed: 1)
         let text = PageSnapshot(frame: frame, lines: ["Wer diese Übungen regelmäßig wiederholt, entwickelt schnell ein Gefühl für Bildausschnitt, Perspektive, Bewegung und Licht."])
