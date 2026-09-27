@@ -39,6 +39,20 @@ Deutsche Fassung: [README.de.md](README.de.md).
 Needs macOS 27 on Apple silicon; for the iPhone scan an iPhone on the same Apple ID
 (Continuity Camera). Building: see [For developers](#for-developers).
 
+### Download the app
+
+[Releases](https://github.com/7hdmm9pp2w-code/desk-view-book-scanner/releases) have
+the app as a ZIP. It is **not notarized**, since there is no paid Apple developer account
+behind it, so macOS blocks it on first launch:
+
+1. Unzip, drag the app into Applications and open it once. macOS says it cannot be
+   opened.
+2. System Settings → Privacy & Security → next to the message about the app, choose
+   "Open Anyway" and confirm.
+
+Or in Terminal: `xattr -dr com.apple.quarantine "/Applications/DeskViewBookScanner.app"`.
+If you would rather not trust the prebuilt app, build it from source.
+
 ## How it works
 
 1. **Capture.** Every page lands in the session right away, one folder per book. The
@@ -139,6 +153,12 @@ is described in German in the [concept](doc/KONZEPT.md) and the
 
 The bundle ships [Pandoc](https://github.com/jgm/pandoc) (© John MacFarlane,
 GPL-2.0-or-later) as a separate helper under `Contents/Helpers/pandoc`; the app is not a
-derivative work. License text under `Contents/Resources/Lizenzen/`, source of the
-bundled version under `build/vendor/pandoc-<version>-src.tar.gz` (offer it alongside
-any release).
+derivative work. License text under `Contents/Resources/Lizenzen/`; the source of the
+bundled version is attached to every release as `pandoc-<version>-src.tar.gz` (when
+building, under `build/vendor/`).
+
+## Thanks
+
+Word, EPUB and the good Markdown come from [Pandoc](https://pandoc.org). Thanks to John
+MacFarlane and everyone who works on Pandoc, for the tool and for letting others ship it
+freely.

@@ -31,7 +31,12 @@ done
 
 APP_NAME="DeskViewBookScanner"
 BUNDLE_ID="org.crushkilldestroy.DeskViewBookScanner"
-VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo 0.1)"
+# Versionsnummer aus dem letzten Tag (v0.1.0 → 0.1.0), Build-Nummer aus der Zahl der
+# Commits. Ohne Tag gilt 0.0.0; der genaue Stand steht zusätzlich in GitDescribe.
+VERSION="$(git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || echo v0.0.0)"
+VERSION="${VERSION#v}"
+BUILD_NUMBER="$(git rev-list --count HEAD 2>/dev/null || echo 1)"
+GIT_DESCRIBE="$(git describe --tags --always --dirty 2>/dev/null || echo unbekannt)"
 MIN_OS="26.0"
 
 swift build -c "$CONFIG" --product "$APP_NAME"
@@ -82,7 +87,8 @@ cat > "$OUT/Contents/Info.plist" <<PLIST
   <key>CFBundleName</key><string>$APP_NAME</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
-  <key>CFBundleVersion</key><string>$VERSION</string>
+  <key>CFBundleVersion</key><string>$BUILD_NUMBER</string>
+  <key>GitDescribe</key><string>$GIT_DESCRIBE</string>
   <key>LSMinimumSystemVersion</key><string>$MIN_OS</string>
   <key>NSHighResolutionCapable</key><true/>
   <key>NSCameraUsageDescription</key>
@@ -113,7 +119,7 @@ if [[ -x "$OUT/Contents/Helpers/pandoc" ]]; then
   codesign --force --sign "$SIGN_IDENTITY" --options runtime "$OUT/Contents/Helpers/pandoc"
 fi
 codesign --force --sign "$SIGN_IDENTITY" --identifier "$BUNDLE_ID" --options runtime --entitlements build/entitlements.plist "$OUT"
-echo "Gebaut: $OUT ($CONFIG, $VERSION, signiert mit: $SIGN_IDENTITY)"
+echo "Gebaut: $OUT ($CONFIG, $VERSION ($BUILD_NUMBER), $GIT_DESCRIBE, signiert mit: $SIGN_IDENTITY)"
 
 if [[ $RUN -eq 1 ]]; then
   # Alte Instanz beenden und warten, bis sie wirklich weg ist; sonst meldet `open`

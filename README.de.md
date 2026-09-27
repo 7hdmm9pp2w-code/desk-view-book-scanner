@@ -40,6 +40,20 @@ English version: [README.md](README.md).
 Braucht macOS 27 auf Apple Silicon, für den iPhone-Scan ein iPhone mit derselben
 Apple-ID (Continuity Camera). Bauen: siehe [Für Entwickler](#für-entwickler).
 
+### Fertige App herunterladen
+
+Unter [Releases](https://github.com/7hdmm9pp2w-code/desk-view-book-scanner/releases)
+liegt die App als ZIP. Sie ist **nicht notarisiert**, weil kein bezahlter
+Apple-Entwickler-Account dahintersteht. macOS blockiert sie deshalb beim ersten Start:
+
+1. ZIP entpacken, die App in den Ordner Programme ziehen und einmal öffnen. macOS
+   meldet, die App könne nicht geöffnet werden.
+2. Systemeinstellungen → Datenschutz & Sicherheit → unten bei der Meldung zur App
+   „Trotzdem öffnen" wählen und bestätigen.
+
+Alternativ im Terminal: `xattr -dr com.apple.quarantine "/Applications/DeskViewBookScanner.app"`.
+Wer der fertigen App nicht traut, baut sie selbst aus dem Quellcode.
+
 ## Ablauf
 
 1. **Erfassen.** Jede Seite landet sofort in der Session, einem Ordner pro Buch. Die
@@ -141,5 +155,11 @@ steht im [Konzept](doc/KONZEPT.md) und im [Umsetzungsprotokoll](doc/UMSETZUNG.md
 Das Bundle enthält [Pandoc](https://github.com/jgm/pandoc) (© John MacFarlane,
 GPL-2.0-or-later) als getrenntes Hilfsprogramm unter `Contents/Helpers/pandoc`; die App
 ist kein abgeleitetes Werk. Lizenztext unter `Contents/Resources/Lizenzen/`, Quellcode
-der gebündelten Version unter `build/vendor/pandoc-<Version>-src.tar.gz` (bei einem
-Release mit anbieten).
+der gebündelten Version liegt jedem Release als `pandoc-<Version>-src.tar.gz` bei (beim
+Bauen unter `build/vendor/`).
+
+## Dank
+
+Word, EPUB und das gute Markdown kommen von [Pandoc](https://pandoc.org). Danke an John
+MacFarlane und alle, die an Pandoc mitarbeiten, für das Werkzeug und dafür, dass man es
+frei mitgeben darf.
