@@ -1062,22 +1062,22 @@
         }
       }
     },
-    "S. %lld": {
+    "S. %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "p. %lld"
+            "value": "p. %@"
           }
         }
       }
     },
-    "S. %lld–%lld": {
+    "S. %@–%@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "pp. %1$lld–%2$lld"
+            "value": "pp. %1$@–%2$@"
           }
         }
       }
@@ -1152,12 +1152,12 @@
         }
       }
     },
-    "Seite %lld fehlt vermutlich": {
+    "Seite %@ fehlt vermutlich": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Page %lld is probably missing"
+            "value": "Page %@ is probably missing"
           }
         }
       }
@@ -1212,22 +1212,22 @@
         }
       }
     },
-    "Seiten %lld–%lld fehlen vermutlich": {
+    "Seiten %@–%@ fehlen vermutlich": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pages %1$lld–%2$lld are probably missing"
+            "value": "Pages %1$@–%2$@ are probably missing"
           }
         }
       }
     },
-    "Seitenzahl kleiner als davor (%lld)": {
+    "Seitenzahl kleiner als davor (%@)": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Page number lower than before (%lld)"
+            "value": "Page number lower than before (%@)"
           }
         }
       }

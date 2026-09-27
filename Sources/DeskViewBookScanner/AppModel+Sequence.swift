@@ -37,17 +37,17 @@ extension AppModel {
     static func describe(_ issue: PageSequenceIssue) -> String {
         switch issue {
         case .missing(let from, let to) where from == to:
-            return L("Seite \(from) fehlt vermutlich")
+            return L("Seite \(String(from)) fehlt vermutlich")
         case .missing(let from, let to):
-            return L("Seiten \(from)–\(to) fehlen vermutlich")
+            return L("Seiten \(String(from))–\(String(to)) fehlen vermutlich")
         case .duplicate(let scan):
             return L("Doppelt: dieselbe Seitenzahl wie Seite \(scan)")
         case .outOfOrder(let previous):
-            return L("Seitenzahl kleiner als davor (\(previous))")
+            return L("Seitenzahl kleiner als davor (\(String(previous)))")
         }
     }
 
     static func describe(_ range: ClosedRange<Int>) -> String {
-        range.count == 1 ? L("S. \(range.lowerBound)") : L("S. \(range.lowerBound)–\(range.upperBound)")
+        range.count == 1 ? L("S. \(String(range.lowerBound))") : L("S. \(String(range.lowerBound))–\(String(range.upperBound))")
     }
 }
