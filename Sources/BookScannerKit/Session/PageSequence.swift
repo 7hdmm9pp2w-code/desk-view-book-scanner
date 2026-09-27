@@ -101,26 +101,36 @@ public enum PageSequence {
 
         var issues: [Int: PageSequenceIssue] = [:]
         var reliable: [Int] = []
+        /// Verlässliche Scans, die Teil einer lückenlosen Folge von mindestens zwei Seiten sind.
+        var confirmed: Set<Int> = []
         for index in numbers.indices {
             guard let range = numbers[index] else { continue }
             if let earlier = reliable.last(where: { numbers[$0]!.overlaps(range) }) {
                 issues[index] = .duplicate(scan: earlier + 1)
                 continue
             }
+            let next = nextNumbered(after: index)
+            let nextConfirms = next.map { numbers[$0]!.lowerBound == expected(at: $0, after: index) } ?? false
+            // Eine Zahl ohne Anschluss weicht einer Folge, die weitergeht: „insel taschenbuch
+            // 1207“ auf der Titelseite ist keine Seitenzahl. Steht sie ganz vorn, auch ohne
+            // Bestätigung, sonst piept es beim Scannen schon auf der ersten echten Seite.
+            while let anchor = reliable.last, !confirmed.contains(anchor), nextConfirms || reliable.count == 1,
+                  range.lowerBound < numbers[anchor]!.lowerBound {
+                reliable.removeLast()
+                issues[anchor] = nil
+            }
             guard let anchor = reliable.last else { reliable.append(index); continue }
             let want = expected(at: index, after: anchor)
-            if range.lowerBound == want { reliable.append(index); continue }
+            if range.lowerBound == want { confirmed.formUnion([anchor, index]); reliable.append(index); continue }
 
             // Lesefehler? Dann passt die nächste Zahl zur vorherigen statt zu dieser.
-            let next = nextNumbered(after: index)
             if let next, numbers[next]!.lowerBound == expected(at: next, after: anchor) { continue }
 
             if range.lowerBound < numbers[anchor]!.lowerBound {
                 issues[index] = .outOfOrder(previous: numbers[anchor]!.upperBound)
                 reliable.append(index)
             } else if range.lowerBound > want {
-                let confirmed = next.map { numbers[$0]!.lowerBound == expected(at: $0, after: index) } ?? false
-                if confirmed || range.lowerBound - want <= unconfirmedGapLimit {
+                if nextConfirms || range.lowerBound - want <= unconfirmedGapLimit {
                     issues[index] = .missing(from: want, to: range.lowerBound - 1)
                 }
                 reliable.append(index)

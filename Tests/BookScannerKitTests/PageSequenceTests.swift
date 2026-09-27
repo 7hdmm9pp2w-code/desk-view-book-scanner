@@ -40,6 +40,15 @@ import Foundation
         #expect(PageSequence.check([10...11, 12...13, 16...17])[2] == .missing(from: 14, to: 15))
     }
 
+    @Test func seriesNumberOnTheTitlePageIsNoAnchor() {
+        // „insel taschenbuch 1207“ oben auf der Titelseite, danach die echte Folge.
+        #expect(PageSequence.check([r(1207), nil, r(5), r(6), r(7)]).isEmpty)
+        // Beim Scannen: Seite 5 ist gerade erst da, die 6 fehlt noch.
+        #expect(PageSequence.check([r(1207), nil, r(5)]).isEmpty)
+        // Echt vertauscht bleibt vertauscht: Die kleinere Zahl hat keine Folge hinter sich.
+        #expect(PageSequence.check([r(20), r(21), r(23), r(22)]) == [3: .outOfOrder(previous: 23)])
+    }
+
     func line(_ text: String, x: CGFloat = 0.5, y: CGFloat) -> RecognizedLine {
         RecognizedLine(text: text, confidence: 1, box: CGRect(x: x - 0.1, y: y - 0.01, width: 0.2, height: 0.02))
     }
