@@ -221,3 +221,10 @@ vom Konzept abwich und den Grund. Neueste Einträge unten.
   Mitschnitt zum Nachmessen: `defaults write org.crushkilldestroy.DeskViewBookScanner
   AusloeserMitschnitt <Ordner>` speichert jede ruhige und erfasste Seite als Bild mit Wörtern,
   `defaults delete … AusloeserMitschnitt` schaltet ihn ab.
+- **Seitenzahl im Kamerabild (27.09.2026):** Als eindeutiges Merkmal für den Auslöser
+  untersucht, verworfen. Mitschnitt mit 15 Doppelseiten bei 1920 × 1440: Die Ziffern sind
+  rund 10 px hoch. Genaue OCR auf dem ganzen Bild fand keine Seitenzahl, auch nicht mit
+  kleinerer Mindesthöhe; in vierfach vergrößerten Kacheln der unteren Hälfte eine von 30,
+  bei 0,4 s je Prüfung. Die Prüfung der Seitenfolge liest sie weiter auf den erfassten
+  Seiten. Der Mitschnitt speichert seitdem Bilder in voller Auflösung und alle Zeilen mit
+  Lage, auch reine Zahlen.

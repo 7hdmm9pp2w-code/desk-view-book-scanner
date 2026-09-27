@@ -217,16 +217,16 @@ public final class CameraSource: NSObject, @unchecked Sendable {
     }
 
     /// Graubild und schnelle Texterkennung einer Aufnahme, zum Vergleich mit der nächsten.
-    private func snapshot(of image: CGImage, frame: GrayFrame) async -> PageSnapshot {
+    private func snapshot(of image: CGImage, frame: GrayFrame) async -> (PageSnapshot, [RecognizedLine]) {
         let lines = (try? await quickRecognizer.recognize(image)) ?? []
-        return PageSnapshot(frame: frame, lines: lines.map(\.text))
+        return (PageSnapshot(frame: frame, lines: lines.map(\.text)), lines)
     }
 
     /// Nach einer Aufnahme: Die Seite merken, damit der Auslöser sie nicht noch einmal nimmt.
     private func rememberCapture(_ image: CGImage, frame: GrayFrame) {
         Task.detached(priority: .utility) { [self] in
-            let snapshot = await snapshot(of: image, frame: frame)
-            record("erfasst", image: image, snapshot: snapshot, verdict: nil)
+            let (snapshot, lines) = await snapshot(of: image, frame: frame)
+            record("erfasst", image: image, lines: lines, verdict: nil)
             queue.async { [self] in judge.remember(snapshot) }
         }
     }
@@ -238,7 +238,7 @@ public final class CameraSource: NSObject, @unchecked Sendable {
         let episode = motionEpisode
         let frame = Self.comparisonFrame(buffer)
         Task.detached(priority: .userInitiated) { [self] in
-            let snapshot = await snapshot(of: image, frame: frame)
+            let (snapshot, lines) = await snapshot(of: image, frame: frame)
             queue.async { [self] in
                 judging = false
                 let isNew = judge.isNewPage(snapshot)
@@ -248,7 +248,7 @@ public final class CameraSource: NSObject, @unchecked Sendable {
                     String(format: "Wörter %.2f, Kacheln %.2f", PageTurnJudge.sharedWordShare(snapshot.words, recent.words),
                            judge.changedShare(snapshot.frame, recent.frame))
                 }
-                record("ruhig", image: image, snapshot: snapshot, verdict: isNew)
+                record("ruhig", image: image, lines: lines, verdict: isNew)
                 triggerLog.notice("Seite ruhig: \(snapshot.words.count) Wörter, neu \(isNew), überholt \(episode != self.motionEpisode); \(shares.joined(separator: " | "), privacy: .public)")
                 guard autoTriggerEnabled, episode == motionEpisode else { return }
                 guard isNew else { onSkippedKnownPage?(); return }
@@ -258,18 +258,19 @@ public final class CameraSource: NSObject, @unchecked Sendable {
         }
     }
 
-    /// Schreibt Bild und Wörter in den Mitschnitt, falls einer eingestellt ist.
-    private func record(_ kind: String, image: CGImage, snapshot: PageSnapshot, verdict: Bool?) {
+    /// Schreibt Bild in voller Auflösung und die erkannten Zeilen samt Lage in den
+    /// Mitschnitt, falls einer eingestellt ist.
+    private func record(_ kind: String, image: CGImage, lines: [RecognizedLine], verdict: Bool?) {
         guard let directory = recordingDirectory else { return }
         let formatter = DateFormatter()
         formatter.dateFormat = "HHmmss.SSS"
         let name = "\(formatter.string(from: .now))-\(kind)"
-        var entry: [String: Any] = ["words": snapshot.words]
-        if let verdict { entry["neu"] = verdict }
+        struct Entry: Encodable { var neu: Bool?; var pixelWidth: Int; var pixelHeight: Int; var lines: [RecognizedLine] }
+        let entry = Entry(neu: verdict, pixelWidth: image.width, pixelHeight: image.height, lines: lines)
         Task.detached(priority: .background) {
             try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-            try? ImageFile.writeHEIC(image, to: directory.appending(path: name + ".heic"), maxPixelSize: 1400)
-            if let data = try? JSONSerialization.data(withJSONObject: entry) {
+            try? ImageFile.writeHEIC(image, to: directory.appending(path: name + ".heic"), maxPixelSize: max(image.width, image.height))
+            if let data = try? JSONEncoder().encode(entry) {
                 try? data.write(to: directory.appending(path: name + ".json"))
             }
         }
