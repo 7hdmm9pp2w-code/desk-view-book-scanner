@@ -1,190 +1,145 @@
-# Desk View Book Scanner (deutsch)
+# Desk View Book Scanner
 
-Bücher am Mac digitalisieren: Seite für Seite scannen, den Text erkennen lassen und
-das Ergebnis als durchsuchbares PDF, Markdown, Word oder EPUB mitnehmen.
+**Ein Buch umblättern, fertig ist der Text.** Seite hinlegen, die App erfasst sie,
+dreht sie gerade, teilt die Doppelseite und erkennt den Text in unter einer Sekunde,
+noch bevor die nächste Seite liegt. Am Ende steht das Buch als durchsuchbares PDF,
+Markdown, Word oder EPUB auf der Platte, mit Absätzen, Überschriften und Fußnoten.
+
+- **Schnell.** iPhone-Scan per Tastendruck, die Seite ist sofort am Mac. Mit einer
+  Kamera über dem Buch reicht Umblättern: Der Auto-Auslöser nimmt jede neue Seite
+  von selbst.
+- **Lokal.** Texterkennung von macOS, Deutsch und Englisch, keine Cloud, kein Konto.
+  Nichts verlässt den Mac.
+- **Ein Buch, kein Stapel Fotos.** Durchgehender Text über Seitengrenzen,
+  aufgelöste Silbentrennung, Seitenmarker. Fehlende oder doppelte Seiten meldet die
+  App schon beim Scannen.
 
 ![Auto-Auslöser mit Desk View: umblättern, die App erfasst die Seite von selbst](doc/media/demo.gif)
 
-## Was die App macht
+Im Video liefert **Desk View** die Bilder, auf Deutsch „Schreibtischansicht": Eine
+Funktion von macOS, die mit der Kamera des Macs oder eines iPhones am Bildschirmrand
+von oben auf den Tisch schaut. Kein Stativ, kein Umbau, das Buch liegt einfach vor der
+Tastatur. Für kleinen Fließtext ist ihr Bild allerdings zu grob; dafür gibt es den
+iPhone-Scan oder eine 4K-Kamera (siehe [Tipps](#tipps-für-gute-scans)).
 
-Du blätterst ein Buch durch und nimmst jede Seite auf, am besten mit dem iPhone über
-Apples Dokumentenscanner. Die App sammelt die Seiten in einer **Session**, einem
-Ordner pro Buch oder Kapitel, und erledigt den Rest selbst:
+Notizen oder Prizmo scannen auch gut, liefern aber kein Buch mit Absatzstruktur und
+keinen Session-Ordner, in dem man später weitermacht.
 
-1. **Seiten holen.** Drei Wege, alle landen in derselben Session:
-   - **iPhone-Scan** über Continuity Camera: Scan auf dem iPhone auslösen, die Seite
-     erscheint sofort am Mac. Der empfohlene Weg für Fließtext.
-   - **Import** vorhandener PDFs und Bilder, etwa aus Notizen, vFlat oder Fotos.
-   - **Desk View** (Schreibtischansicht): ein Tastendruck fotografiert das
-     Desk-View-Fenster. Reicht für Umschläge, Überschriften und Großdruck, für
-     kleinen Buchtext ist die Auflösung zu gering.
-2. **Seiten aufbereiten.** Jede Seite wird aufrecht gedreht, eine Doppelseite am Falz
-   in zwei Seiten geteilt.
-3. **Text erkennen.** Nach jeder Aufnahme läuft im Hintergrund die Texterkennung von
-   macOS (Vision, Deutsch und Englisch), vollständig lokal, ohne Cloud. Absätze und
-   Überschriften bleiben erhalten, Silbentrennungen am Zeilenende werden aufgelöst.
-   Aus dem Umschlag schlägt die App einen Titel vor.
-4. **Exportieren.**
-   - **PDF** mit den Seitenbildern und einer unsichtbaren Textebene: in Vorschau
-     durchsuchbar, markierbar und kopierbar, genau an der Stelle im Bild.
-   - **Markdown**, **Word** (.docx) und **EPUB** mit durchgehendem Text über
-     Seitengrenzen hinweg, bequem zum Weiterverarbeiten, Zitieren oder Lesen auf dem
-     E-Reader. Im Markdown markiert ein Kommentar, wo jede Buchseite beginnt.
+English version: [README.md](README.md).
 
-Alles liegt als normale Dateien auf der Platte: Seitenbilder als HEIC, erkannter Text
-als JSON daneben, die Reihenfolge in `session.json`. Nichts verlässt den Mac.
-
-**Warum nicht einfach Notizen oder Prizmo?** Die scannen gut, liefern aber kein
-Buch mit Absatzstruktur als Markdown, Word oder EPUB und keinen Session-Ordner, in
-dem man später weitermachen kann. Das ist der Kern hier.
-
-Englische Fassung: [README.md](README.md). Das Konzept steht in
-[doc/KONZEPT.md](doc/KONZEPT.md), die Befunde aus der Umsetzung in
-[doc/UMSETZUNG.md](doc/UMSETZUNG.md).
-
-## Voraussetzungen
-
-- Aktuelles macOS (27) auf Apple Silicon
-- Für den iPhone-Scan: ein iPhone mit derselben Apple-ID, Bluetooth und WLAN an
-  (Continuity Camera)
-- Zum Bauen: Swift-Toolchain (Xcode oder Command Line Tools). Es gibt kein
-  Xcode-Projekt, nur ein Swift Package.
-
-## Kamera und Auflösung
-
-Was die Texterkennung braucht, ist Pixel pro Buchstabe. Ein Taschenbuchtext ist ab
-etwa 20 Pixel Zeilenhöhe zuverlässig lesbar, unter 12 wird es Raten. Gemessen über
-AVFoundation, nicht geschätzt:
-
-| Quelle | Echte Auflösung | Reicht für |
-|---|---|---|
-| iPhone-Dokumentenscanner | ca. 1700 × 2700 pro Seite | Fließtext, der empfohlene Weg |
-| 4K-Kamera über dem Buch (z. B. Insta360 Link) | 3840 × 2160 | Fließtext, freihändig mit Auto-Auslöser |
-| Desk View (Mac oder iPhone) | 1920 × 1440, mehr gibt es nicht | Umschläge, Überschriften, Großdruck |
-| iPhone als Webcam | 1920 × 1440 | wie Desk View |
-
-Das Desk-View-Fenster zeigt mehr Pixel, als der Feed hat; das ist Hochskalierung.
-Und der Feed ist nicht überall gleich scharf: Desk View schneidet den unteren Teil
-des Ultraweitwinkel-Bildes aus und entzerrt ihn zu einer Draufsicht. Der ferne Rand
-des Schreibtischs wird dabei am stärksten gestreckt und ist am unschärfsten, die
-Zone an der Tastaturkante am schärfsten. Darum:
-
-- **Buch nah ans Gerät**, an die Tastaturkante, nicht in die Tischmitte.
-- **Trapez in der Desk-View-Einrichtung eng ums Buch ziehen**, damit die 1920 Pixel
-  nicht den halben Tisch abdecken.
-- **Für ganze Bücher** eine 4K-Kamera senkrecht über dem Buch oder der iPhone-Scan.
-  Der Auto-Auslöser erfasst nach jedem Umblättern, sobald das Bild anderthalb
-  Sekunden ruhig liegt und sich von der letzten Seite unterscheidet.
-- Eine unscharfe Seite muss nicht neu einsortiert werden: auswählen, ⇧⌘R (oder der Knopf,
-  der beim Überfahren des Vorschaubilds erscheint), neu erfassen. Alte und neue Fassung stehen
-  dann nebeneinander, mit Hinweis, welche besser erkannt wurde; die verworfene wandert in
-  den Papierkorb der Session.
-
-`scripts/ocr_stats.py` zeigt je Aufnahme die Zeilenhöhen und Konfidenzen einer Session.
-
-## Tipps für gute Scans
-
-Was sich beim Scannen ganzer Bücher bewährt hat. Die meisten Fehler im Export kommen
-nicht aus der Texterkennung, sondern aus fehlenden Pixeln, einem gewölbten Falz oder
-Seiten, die der App keinen Anhalt geben.
-
-**Vor dem ersten Umblättern**
-
-- **Umschlag zuerst.** Die erste Seite liefert den Titelvorschlag für Session und Export.
-- **Inhaltsverzeichnis mitscannen.** Die App erkennt Überschriften auch daran, dass sie
-  im Inhalt stehen; ohne Inhalt bleiben nur Größe und Versalien als Anhalt.
-- **Seitenzahlen im Bild lassen.** Aus ihnen prüft die App die Seitenfolge und setzt die
-  Marker `<!-- Seite 12, Scan 10 -->`. Wer beim Zuschneiden oben oder unten kappt,
-  verliert beides.
-- **Mit Zeilenhöhe rechnen, nicht mit Megapixeln.** Unter etwa 20 px Zeilenhöhe wird
-  Fließtext unzuverlässig; Desk View bringt Taschenbuchtext auf rund 8 px, der
-  iPhone-Scan auf rund 60 px. `scripts/ocr_stats.py` zeigt nach den ersten Seiten,
-  wo man liegt.
-
-**Beim Scannen**
-
-- **Das Buch flach drücken, am Rand halten.** In Falznähe fehlen bei gewölbten Seiten
-  Zeilen, und das lässt sich hinterher nicht heilen. Hände an den Rändern stören den
-  Auto-Auslöser nicht, sie verdecken nur Text, wenn sie auf der Seite liegen.
-- **Doppelseite oder Einzelseite ist egal.** Doppelseiten werden am Falz geteilt, die Lage
-  wird aus dem Text erkannt, schief oder kopfüber ist also kein Problem. Bei hellen
-  Büchern oder Spiralbindung kann die Falzsuche danebenliegen; dann unter Aufnahme >
-  Doppelseiten teilen „In der Mitte" oder „Nicht teilen" wählen.
-- **Nach dem Umblättern kurz stillhalten.** Der Auto-Auslöser wartet anderthalb Sekunden
-  Ruhe und prüft dann, ob wirklich eine neue Seite daliegt. Beim Einschalten lädt die
-  Texterkennung einmal bis zu 25 s; so lange mit der ersten Seite warten.
-- **Auf den Ton achten.** Bei der Kamera meldet ein Ton sofort, wenn die eben erfasste
-  Seite nicht in die Folge passt (übersprungen, doppelt, zurückgeblättert). Dann gleich
-  zurückblättern, statt das Buch später noch einmal aufzuschlagen.
-
-**Danach**
-
-- **Dreiecke im Raster abarbeiten.** Sie markieren fehlende, doppelte und vertauschte
-  Seiten; ein Klick in der Quellenleiste springt zur letzten auffälligen.
-- **Unscharfe Seiten nachscannen, nicht neu sortieren.** Vorschaubild überfahren,
-  „Nachscannen", neu erfassen; die App schlägt die besser erkannte Fassung vor.
-- **Im Markdown nach `unsicher` suchen.** Zeilen mit geringer Erkennungssicherheit stehen
-  dort als Kommentar vor dem Absatz; das sind die Kandidaten fürs Nachscannen.
-- **Doppelt gescannte Seiten muss man nicht löschen.** Der Export erkennt sie und lässt
-  sie weg.
-
-## Bauen und starten
+## Schnellstart
 
 ```bash
 ./build_app.sh --run
 ```
 
-Das Skript baut `build/DeskViewBookScanner.app`, signiert es mit der
-Apple-Development-Identität aus dem Schlüsselbund (sonst ad hoc) und startet es.
-Die Kamera-Quelle fragt beim ersten Start nach der Kamera-Freigabe.
+1. Quelle oben im Fenster wählen: iPhone, Kamera oder Dateien.
+2. Scannen: ⇧⌘S (iPhone), Leertaste (Kamera) oder „Beim Umblättern auslösen" einschalten.
+3. Exportieren: ⌘E für PDF, ⇧⌘E für Markdown, Word und EPUB im Menü Ablage.
 
-Beim ersten Build lädt `scripts/fetch_pandoc.sh` Pandoc 3.11 für Apple Silicon
-(40 MB Archiv, 181 MB ausgepackt) samt Quell-Tarball nach `build/vendor/` und prüft die
-SHA-256. `./build_app.sh --without-pandoc` baut ohne, dann nutzt die App ein
-installiertes Pandoc oder schreibt Markdown selbst.
+Braucht macOS 27 auf Apple Silicon, für den iPhone-Scan ein iPhone mit derselben
+Apple-ID (Continuity Camera). Bauen: siehe [Für Entwickler](#für-entwickler).
 
-Tests laufen gegen den Kit ohne UI:
+## Ablauf
+
+1. **Erfassen.** Jede Seite landet sofort in der Session, einem Ordner pro Buch. Die
+   App dreht sie aufrecht und teilt Doppelseiten am Falz; der Text wird im Hintergrund
+   erkannt, der Umschlag liefert den Titelvorschlag.
+2. **Prüfen.** Aus den gedruckten Seitenzahlen erkennt die App fehlende, doppelte und
+   vertauschte Seiten und markiert sie mit einem Dreieck, bei der Kamera zusätzlich mit
+   einem Ton. Unscharfe Seiten nachscannen (⇧⌘R oder Knopf am Vorschaubild): Alte und
+   neue Fassung stehen nebeneinander, die besser erkannte ist vorgeschlagen.
+3. **Exportieren.**
+
+| Format | Was man bekommt |
+|---|---|
+| PDF | Seitenbilder mit unsichtbarer Textebene, in Vorschau durchsuchbar und kopierbar |
+| Markdown | durchgehender Text mit Überschriften, Fußnoten, `<!-- Seite 12, Scan 10 -->`-Markern und markierten unsicheren Zeilen |
+| Word, EPUB | derselbe Text, zum Weiterschreiben oder für den E-Reader |
+
+## Tipps für gute Scans
+
+Die meisten Fehler im Export kommen nicht aus der Texterkennung, sondern aus zu wenig
+Pixeln, einem gewölbten Falz oder Seiten ohne Anhalt.
+
+**Die richtige Quelle.** Entscheidend ist die Zeilenhöhe im Bild: ab etwa 20 px ist
+Fließtext zuverlässig, unter 12 px wird geraten. Gemessen, nicht geschätzt:
+
+| Quelle | Echte Auflösung | Reicht für |
+|---|---|---|
+| iPhone-Dokumentenscanner | ca. 1700 × 2700 pro Seite | Fließtext, der empfohlene Weg |
+| 4K-Kamera über dem Buch (z. B. Insta360 Link) | 3840 × 2160 | Fließtext, freihändig mit Auto-Auslöser |
+| Desk View (Mac- oder iPhone-Kamera von oben), iPhone als Webcam | 1920 × 1440 | Umschläge, Überschriften, Großdruck |
+
+- **Desk View: Buch an die Tastaturkante, Trapez eng ziehen.** Desk View entzerrt den
+  Rand eines Weitwinkelbilds; der ferne Tischrand ist am unschärfsten, und jedes
+  Stück Tisch im Trapez kostet Pixel am Buch.
+- **Umschlag und Inhaltsverzeichnis zuerst.** Der Umschlag gibt den Titel, das
+  Inhaltsverzeichnis hilft, Überschriften zu erkennen.
+- **Seitenzahlen im Bild lassen.** Ohne sie keine Prüfung der Seitenfolge und keine
+  Seitenmarker.
+- **Buch flach drücken, am Rand halten.** Zeilen, die im gewölbten Falz fehlen, lassen
+  sich nicht zurückholen. Hände am Rand stören den Auto-Auslöser nicht.
+- **Nach dem Umblättern kurz stillhalten.** Der Auto-Auslöser wartet anderthalb
+  Sekunden Ruhe. Beim ersten Einschalten lädt die Texterkennung bis zu 25 s.
+- **Helle Bücher, Spiralbindung:** Falzsuche kann danebenliegen, dann unter Aufnahme >
+  Doppelseiten teilen „In der Mitte" oder „Nicht teilen".
+- **Nach `unsicher` im Markdown suchen.** Das sind die Kandidaten fürs Nachscannen.
+  `scripts/ocr_stats.py` zeigt Zeilenhöhe und Sicherheit je Seite.
+
+## Tastenkürzel
+
+| | |
+|---|---|
+| ⇧⌘S | Mit dem iPhone scannen |
+| ⌥⌘S | Seite mit der Kamera erfassen (im Seitenraster auch Leertaste) |
+| ⇧⌘I | Bilder oder PDF importieren |
+| ⇧⌘R | Seite nachscannen |
+| ⌘T, ⌘L, ⌘R | Seite teilen, nach links, nach rechts drehen |
+| ⌘⌫, ⇧⌘Z | Seite löschen, zuletzt gelöschte zurückholen |
+| ⌘N, ⌘O | Neue Session, Session-Ordner öffnen |
+| ⌘E, ⇧⌘E | Als PDF, als Markdown exportieren |
+
+## Wo die Daten liegen
+
+Jede Session ist ein Ordner unter `~/Documents/Buchscans/` (änderbar in den
+Einstellungen): Seiten als HEIC, erkannter Text als JSON daneben, Reihenfolge in
+`session.json`, gelöschte Seiten in `Papierkorb/`. Die Seitenleiste zeigt alle
+Sessions; per Rechtsklick archivieren (Bilder weg, Text bleibt) oder löschen, immer
+in den macOS-Papierkorb.
+
+## Für Entwickler
+
+Swift Package ohne Xcode-Projekt; Xcode oder die Command Line Tools reichen.
+
+```bash
+./build_app.sh --run
+```
 
 ```bash
 swift test
 ```
 
-## Bedienung
+Das Build-Skript signiert mit der Apple-Development-Identität aus dem Schlüsselbund
+(sonst ad hoc) und mit dem Kamera-Entitlement. Beim ersten Build lädt es Pandoc 3.11
+(für Word, EPUB und besseres Markdown) samt Quell-Tarball nach `build/vendor/` und prüft
+die SHA-256; `--without-pandoc` baut ohne.
 
-- Seiten kommen aus drei Quellen: **„Mit iPhone scannen"** ⇧⌘S öffnet Apples
-  Dokumentenscanner auf dem iPhone (Continuity Camera), der Scan landet direkt in der
-  Session; **Import** ⇧⌘I von PDFs und Bildern (Scans aus Notizen, vFlat, Fotos);
-  **Kamera** ⌥⌘S holt ein Bild aus jeder Kamera, die AVFoundation sieht, im größten
-  Format: eine 4K-Kamera über dem Buch liefert 3840 × 2160 und lesbaren Fließtext, Desk
-  View bleibt bei 1920 × 1440. Der Auto-Auslöser erfasst nach jedem Umblättern.
-  Im Seitenraster löst die Leertaste aus (Kamera) oder startet den iPhone-Scan.
-- Vor dem Speichern wird jede Seite aufrecht gedreht und eine Doppelseite am Falz
-  geteilt (Menü „Aufnahme": automatisch, Mitte oder gar nicht). Vorhandene Seiten:
-  „Seite teilen" ⌘T, drehen ⌘L / ⌘R.
-- Seitenleiste links mit allen Sessions, Größe und Exporten; Rechtsklick für
-  Papierkorb leeren, Archivieren (Bilder weg, Text bleibt) und Löschen, alles in den
-  macOS-Papierkorb.
-- Hauptfenster: Quellenleiste mit dem Hauptknopf der gewählten Quelle, darunter
-  die Seiten der Session; rechts die Detailansicht.
-- ⌥⌘S erfasst das Desk-View-Fenster als Seite, auch wenn Desk View vorn liegt.
-- Menü „Ablage": Neue Session ⌘N, Session-Ordner öffnen ⌘O, Letzte Sessions,
-  Export als PDF ⌘E, Markdown ⇧⌘E, Word und EPUB.
-- Texterkennung läuft nach jeder Aufnahme im Hintergrund (Vision, Deutsch und
-  Englisch). Das PDF bekommt eine unsichtbare Textebene, Vorschau findet den Text
-  genau dort, wo er im Bild steht. Die erste Aufnahme liefert einen Titelvorschlag.
-- Sessions liegen unter `~/Documents/Buchscans/<Datum Uhrzeit>/`, änderbar in den
-  Einstellungen. Jede Aufnahme ist sofort als HEIC auf der Platte; `session.json`
-  hält Reihenfolge und Einstellungen. Gelöschte Seiten wandern in `Papierkorb/`.
+- `BookScannerKit`: Aufnahme, Session, OCR, Drehen und Teilen, Strukturierung, Export.
+  Ohne UI, voll getestet.
+- `DeskViewBookScanner`: die SwiftUI-App.
+- `scripts/`: Pandoc-Download, Icon, OCR-Statistik.
+
+Wie die App innen entscheidet (Falzsuche, Auto-Auslöser, Absätze und Überschriften),
+steht im [Konzept](doc/KONZEPT.md) und im [Umsetzungsprotokoll](doc/UMSETZUNG.md).
 
 ## Lizenz
 
-[EUPL-1.2](LICENSE) (European Union Public Licence). Amtliche Fassungen in allen
-EU-Sprachen, darunter die deutsche, unter
+[EUPL-1.2](LICENSE), amtliche Fassungen in allen EU-Sprachen unter
 <https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12>.
 
-Das App-Bundle enthält [Pandoc](https://github.com/jgm/pandoc) als eigenständiges
-Hilfsprogramm unter `Contents/Helpers/pandoc`. Pandoc ist © John MacFarlane und steht
-unter der GPL-2.0-or-later; die App ruft es als getrennten Prozess auf und ist kein
-abgeleitetes Werk. Lizenztext und Copyright liegen im Bundle unter
-`Contents/Resources/Lizenzen/`, der Quellcode der gebündelten Version unter
-`build/vendor/pandoc-<Version>-src.tar.gz` (bei einem Release mit anbieten).
+Das Bundle enthält [Pandoc](https://github.com/jgm/pandoc) (© John MacFarlane,
+GPL-2.0-or-later) als getrenntes Hilfsprogramm unter `Contents/Helpers/pandoc`; die App
+ist kein abgeleitetes Werk. Lizenztext unter `Contents/Resources/Lizenzen/`, Quellcode
+der gebündelten Version unter `build/vendor/pandoc-<Version>-src.tar.gz` (bei einem
+Release mit anbieten).
