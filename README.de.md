@@ -82,6 +82,52 @@ Zone an der Tastaturkante am schärfsten. Darum:
 
 `scripts/ocr_stats.py` zeigt je Aufnahme die Zeilenhöhen und Konfidenzen einer Session.
 
+## Tipps für gute Scans
+
+Was sich beim Scannen ganzer Bücher bewährt hat. Die meisten Fehler im Export kommen
+nicht aus der Texterkennung, sondern aus fehlenden Pixeln, einem gewölbten Falz oder
+Seiten, die der App keinen Anhalt geben.
+
+**Vor dem ersten Umblättern**
+
+- **Umschlag zuerst.** Die erste Seite liefert den Titelvorschlag für Session und Export.
+- **Inhaltsverzeichnis mitscannen.** Die App erkennt Überschriften auch daran, dass sie
+  im Inhalt stehen; ohne Inhalt bleiben nur Größe und Versalien als Anhalt.
+- **Seitenzahlen im Bild lassen.** Aus ihnen prüft die App die Seitenfolge und setzt die
+  Marker `<!-- Seite 12, Scan 10 -->`. Wer beim Zuschneiden oben oder unten kappt,
+  verliert beides.
+- **Mit Zeilenhöhe rechnen, nicht mit Megapixeln.** Unter etwa 20 px Zeilenhöhe wird
+  Fließtext unzuverlässig; Desk View bringt Taschenbuchtext auf rund 8 px, der
+  iPhone-Scan auf rund 60 px. `scripts/ocr_stats.py` zeigt nach den ersten Seiten,
+  wo man liegt.
+
+**Beim Scannen**
+
+- **Das Buch flach drücken, am Rand halten.** In Falznähe fehlen bei gewölbten Seiten
+  Zeilen, und das lässt sich hinterher nicht heilen. Hände an den Rändern stören den
+  Auto-Auslöser nicht, sie verdecken nur Text, wenn sie auf der Seite liegen.
+- **Doppelseite oder Einzelseite ist egal.** Doppelseiten werden am Falz geteilt, die Lage
+  wird aus dem Text erkannt, schief oder kopfüber ist also kein Problem. Bei hellen
+  Büchern oder Spiralbindung kann die Falzsuche danebenliegen; dann unter Aufnahme >
+  Doppelseiten teilen „In der Mitte" oder „Nicht teilen" wählen.
+- **Nach dem Umblättern kurz stillhalten.** Der Auto-Auslöser wartet anderthalb Sekunden
+  Ruhe und prüft dann, ob wirklich eine neue Seite daliegt. Beim Einschalten lädt die
+  Texterkennung einmal bis zu 25 s; so lange mit der ersten Seite warten.
+- **Auf den Ton achten.** Bei der Kamera meldet ein Ton sofort, wenn die eben erfasste
+  Seite nicht in die Folge passt (übersprungen, doppelt, zurückgeblättert). Dann gleich
+  zurückblättern, statt das Buch später noch einmal aufzuschlagen.
+
+**Danach**
+
+- **Dreiecke im Raster abarbeiten.** Sie markieren fehlende, doppelte und vertauschte
+  Seiten; ein Klick in der Quellenleiste springt zur letzten auffälligen.
+- **Unscharfe Seiten nachscannen, nicht neu sortieren.** Vorschaubild überfahren,
+  „Nachscannen", neu erfassen; die App schlägt die besser erkannte Fassung vor.
+- **Im Markdown nach `unsicher` suchen.** Zeilen mit geringer Erkennungssicherheit stehen
+  dort als Kommentar vor dem Absatz; das sind die Kandidaten fürs Nachscannen.
+- **Doppelt gescannte Seiten muss man nicht löschen.** Der Export erkennt sie und lässt
+  sie weg.
+
 ## Bauen und starten
 
 ```bash

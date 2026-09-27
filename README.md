@@ -116,6 +116,49 @@ sharpest. Hence:
 
 `scripts/ocr_stats.py` prints line heights and confidences per page of a session.
 
+## Tips for better scans
+
+What has proven itself while scanning whole books. Most errors in the export do not
+come from text recognition but from missing pixels, a curved gutter, or pages that give
+the app nothing to go by.
+
+**Before the first page turn**
+
+- **Cover first.** The first page provides the title suggestion for session and export.
+- **Scan the table of contents.** The app recognizes headings partly because they appear
+  in the contents; without it, only size and capitals are left to go by.
+- **Keep page numbers in the image.** They drive the page order check and the markers
+  `<!-- Seite 12, Scan 10 -->`. Cropping the top or bottom loses both.
+- **Think in line height, not megapixels.** Below about 20 px line height body text gets
+  unreliable; Desk View brings paperback text to about 8 px, the iPhone scan to about
+  60 px. After the first pages, `scripts/ocr_stats.py` tells you where you stand.
+
+**While scanning**
+
+- **Press the book flat, hold it at the edges.** Near the gutter of curved pages lines go
+  missing, and that cannot be repaired afterwards. Hands at the edges do not disturb auto
+  capture; they only hide text when they rest on the page.
+- **Double or single pages, either works.** Double pages are split at the gutter and
+  orientation is read from the text, so skewed or upside down is fine. With light-colored
+  books or spiral binding the gutter search can miss; choose Capture > Split Double Pages
+  > "In the Middle" or "Don't Split".
+- **Hold still briefly after turning.** Auto capture waits for one and a half seconds of
+  stillness, then checks that a new page really lies there. When switched on, text
+  recognition loads once for up to 25 s; wait that long before the first page.
+- **Listen for the sound.** With the camera, a sound tells you right away when the page
+  just captured does not fit the sequence (skipped, duplicate, turned back). Turn back
+  then, instead of opening the book again later.
+
+**Afterwards**
+
+- **Work through the triangles in the grid.** They mark missing, duplicate and swapped
+  pages; a click in the source bar jumps to the last flagged one.
+- **Rescan blurry pages, do not re-sort.** Hover the thumbnail, "Rescan", capture again;
+  the app suggests the better recognized version.
+- **Search the Markdown for `unsicher`.** Lines with low recognition confidence appear
+  there as a comment before the paragraph; these are the candidates for a rescan.
+- **Duplicate scans need no deleting.** The export detects and skips them.
+
 ## Build and run
 
 ```bash
