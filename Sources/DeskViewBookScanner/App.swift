@@ -49,7 +49,7 @@ struct DeskViewBookScannerApp: App {
                         .disabled(model.iPhoneWaiting)
                 }
                 Section(L("Dateien")) {
-                    Button(L("Bilder oder PDF importieren…")) { model.importFiles() }
+                    Button(L("Bilder, PDF oder Video importieren…")) { model.importFiles() }
                         .keyboardShortcut("i", modifiers: [.command, .shift])
                 }
                 Section(L("Kamera")) {

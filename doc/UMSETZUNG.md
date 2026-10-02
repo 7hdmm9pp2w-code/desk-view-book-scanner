@@ -228,3 +228,14 @@ vom Konzept abwich und den Grund. Neueste Einträge unten.
   bei 0,4 s je Prüfung. Die Prüfung der Seitenfolge liest sie weiter auf den erfassten
   Seiten. Der Mitschnitt speichert seitdem Bilder in voller Auflösung und alle Zeilen mit
   Lage, auch reine Zahlen.
+- **Videoimport (02.10.2026):** Über Continuity Camera gibt das iPhone 16 Pro unter
+  macOS 27 höchstens 1920 × 1440 heraus, auch über `AVCapturePhotoOutput`: Jedes
+  Format meldet als größtes Foto seine Videogröße, ein Testfoto kam mit 1920 × 1080
+  (`scripts/probe_continuity_photo.swift`). In der Kamera-App filmt es 4K. Darum nimmt
+  der Dateiimport jetzt Videos: `VideoPageExtractor` liest sie mit `AVAssetReader` in
+  YUV, der Auslöser sieht nur die Helligkeitsebene (Blockmittel wie `grayThumbnail`),
+  in Farbe und aufrecht (Drehung aus `preferredTransform`) werden nur die ruhigen Bilder
+  umgerechnet. Anders als live gilt der Videoanfang als Ende einer Bewegung, und am Ende
+  reicht eine halbe Sekunde Ruhe für die letzte Seite. Tempo im Release-Build: 2 min
+  Video mit 3066 × 2028 bei 54 fps in 8,8 s; das reine Dekodieren läuft 17-fach schneller
+  als Echtzeit. An einem echten Buchvideo noch nicht gemessen.

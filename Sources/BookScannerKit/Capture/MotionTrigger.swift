@@ -77,6 +77,13 @@ public struct MotionTrigger: Sendable {
         stillSince = nil
     }
 
+    /// Als ginge gerade eine Bewegung zu Ende: Die nächste Ruhe wird gemeldet. Für den
+    /// Anfang eines Videos, in dem die erste Seite schon still daliegt.
+    public mutating func assumeMotion() {
+        state = .moving
+        stillSince = nil
+    }
+
     public mutating func reset() {
         state = .idle
         previous = nil

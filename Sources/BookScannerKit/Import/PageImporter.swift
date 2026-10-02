@@ -10,7 +10,7 @@ public enum ImportError: Error, LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .unsupportedFile(let url): return "\(url.lastPathComponent) ist weder Bild noch PDF."
+        case .unsupportedFile(let url): return "\(url.lastPathComponent) ist weder Bild noch PDF noch Video."
         case .cannotOpenPDF(let url): return "\(url.lastPathComponent) lässt sich nicht als PDF öffnen."
         }
     }

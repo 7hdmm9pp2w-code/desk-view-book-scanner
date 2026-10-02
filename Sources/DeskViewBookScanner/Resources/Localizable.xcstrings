@@ -322,22 +322,22 @@
         }
       }
     },
-    "Bilder oder PDF importieren…": {
+    "Bilder, PDF oder Video importieren…": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Import Images or PDF…"
+            "value": "Import Images, PDF or Video…"
           }
         }
       }
     },
-    "Bilder oder PDF-Scans wählen; die Seiten werden in dieser Reihenfolge angehängt.": {
+    "Bilder, PDF-Scans oder ein Video vom Umblättern wählen; die Seiten werden in dieser Reihenfolge angehängt.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose images or PDF scans; pages are appended in this order."
+            "value": "Choose images, PDF scans or a video of page turning; pages are appended in this order."
           }
         }
       }
@@ -992,12 +992,12 @@
         }
       }
     },
-    "PDFs und Bilder aus Notizen, vFlat oder Fotos werden Seiten dieser Session.": {
+    "PDFs und Bilder aus Notizen, vFlat oder Fotos werden Seiten dieser Session, aus einem Video vom Umblättern jede neue Seite.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "PDFs and images from Notes, vFlat or Photos become pages of this session."
+            "value": "PDFs and images from Notes, vFlat or Photos become pages of this session; from a video of page turning, every new page."
           }
         }
       }
@@ -1398,6 +1398,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Page turn detected, hold the book still for a moment"
+          }
+        }
+      }
+    },
+    "Video %lld Prozent, %lld Seiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Video %lld percent, %lld pages"
           }
         }
       }

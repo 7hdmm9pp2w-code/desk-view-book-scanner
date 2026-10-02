@@ -141,6 +141,8 @@ struct StatusBar: View {
                 switch status {
                 case .importing(let done, let total):
                     Text(L("Import \(done) von \(total)")).monospacedDigit()
+                case .importingVideo(let percent, let pages):
+                    Text(L("Video \(percent) Prozent, \(pages) Seiten")).monospacedDigit()
                 case .recognizing(let done, let total):
                     Text(L("Texterkennung \(done) von \(total)")).monospacedDigit()
                 case .writing(let done, let total):
@@ -194,7 +196,7 @@ struct StatusBar: View {
     private var primaryTitle: String {
         switch model.captureSource {
         case .iPhone: return model.iPhoneWaiting ? L("Warte auf das iPhone…") : L("Mit iPhone scannen")
-        case .files: return L("Bilder oder PDF importieren…")
+        case .files: return L("Bilder, PDF oder Video importieren…")
         case .camera: return model.isCapturing ? L("Wird erfasst…") : L("Seite erfassen")
         }
     }

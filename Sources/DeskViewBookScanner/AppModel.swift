@@ -75,6 +75,8 @@ final class AppModel {
 
     enum ExportStatus: Equatable {
         case importing(done: Int, total: Int)
+        /// Video wird gelesen: Anteil in Prozent, bisher gefundene Seiten.
+        case importingVideo(percent: Int, pages: Int)
         case recognizing(done: Int, total: Int)
         case writing(done: Int, total: Int)
     }

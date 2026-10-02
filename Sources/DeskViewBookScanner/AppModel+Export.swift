@@ -48,13 +48,14 @@ extension AppModel {
 
     // MARK: Import
 
-    /// Bilder und PDFs (Notizen, vFlat, Fotos) als Seiten anhängen.
+    /// Bilder und PDFs (Notizen, vFlat, Fotos) als Seiten anhängen, aus Videos die
+    /// Seiten nach jedem Umblättern.
     func importFiles() {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = PageImporter.supportedTypes
+        panel.allowedContentTypes = PageImporter.supportedTypes + VideoPageExtractor.supportedTypes
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
-        panel.message = L("Bilder oder PDF-Scans wählen; die Seiten werden in dieser Reihenfolge angehängt.")
+        panel.message = L("Bilder, PDF-Scans oder ein Video vom Umblättern wählen; die Seiten werden in dieser Reihenfolge angehängt.")
         guard panel.runModal() == .OK, !panel.urls.isEmpty else { return }
         importFiles(panel.urls)
     }
@@ -64,36 +65,48 @@ extension AppModel {
         // Der Öffnen-Dialog liefert die Auswahlreihenfolge; Seiten gehören nach Dateinamen
         // sortiert, mit Zahlen numerisch („Aufnahme-9" vor „Aufnahme-10").
         let files = urls
-            .filter { PageImporter.isSupported($0) }
+            .filter { PageImporter.isSupported($0) || VideoPageExtractor.isSupported($0) }
             .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
         guard !files.isEmpty else { return }
         Task {
             do {
                 let store = try await ensureSession()
+                // Ein Video verrät seine Seitenzahl erst beim Durchlesen; es hat eigenen Fortschritt.
                 var total = 0
-                for url in files { total += try PageImporter.pageCount(of: url) }
+                for url in files where !VideoPageExtractor.isSupported(url) { total += try PageImporter.pageCount(of: url) }
                 var done = 0
-                exportStatus = .importing(done: 0, total: total)
+                exportStatus = total > 0 ? .importing(done: 0, total: total) : .importingVideo(percent: 0, pages: 0)
                 let target = takeRescanTarget()
                 var replacements: [CGImage] = []
+
+                /// Bereitet ein Bild auf und hängt es an, oder sammelt es fürs Nachscannen.
+                @MainActor func add(_ image: CGImage) async throws {
+                    let settings = await store.document.settings
+                    let prepared = await processor.prepare(image, settings: settings)
+                    if target != nil {
+                        replacements.append(contentsOf: prepared)
+                    } else {
+                        for image in prepared {
+                            let page = try await store.addPage(image)
+                            selectedPageID = page.id
+                            recognizeText(for: page)
+                        }
+                    }
+                    pages = await store.orderedPages
+                }
+
                 for url in files {
+                    if VideoPageExtractor.isSupported(url) {
+                        try await importVideo(url) { try await add($0) }
+                        exportStatus = total > done ? .importing(done: done, total: total) : nil
+                        continue
+                    }
                     let count = try PageImporter.pageCount(of: url)
                     for index in 0..<count {
                         let image = try await Task.detached(priority: .userInitiated) {
                             try PageImporter.image(at: index, from: url)
                         }.value
-                        let settings = await store.document.settings
-                        let prepared = await processor.prepare(image, settings: settings)
-                        if target != nil {
-                            replacements.append(contentsOf: prepared)
-                        } else {
-                            for image in prepared {
-                                let page = try await store.addPage(image)
-                                selectedPageID = page.id
-                                recognizeText(for: page)
-                            }
-                        }
-                        pages = await store.orderedPages
+                        try await add(image)
                         done += 1
                         exportStatus = .importing(done: done, total: total)
                     }
@@ -109,6 +122,25 @@ extension AppModel {
             } catch {
                 exportStatus = nil
                 lastError = error.localizedDescription
+            }
+        }
+    }
+
+    /// Liest das Video durch und gibt jede neue Seite an `add`, Fortschritt in der Leiste.
+    private func importVideo(_ url: URL, add: @escaping @MainActor (CGImage) async throws -> Void) async throws {
+        final class Count: @unchecked Sendable { var pages = 0; var percent = 0 }
+        let count = Count()
+        exportStatus = .importingVideo(percent: 0, pages: 0)
+        try await VideoPageExtractor().extractPages(from: url, progress: { [weak self] share in
+            await MainActor.run {
+                count.percent = Int(share * 100)
+                self?.exportStatus = .importingVideo(percent: count.percent, pages: count.pages)
+            }
+        }) { [weak self] image in
+            try await add(image)
+            await MainActor.run {
+                count.pages += 1
+                self?.exportStatus = .importingVideo(percent: count.percent, pages: count.pages)
             }
         }
     }
