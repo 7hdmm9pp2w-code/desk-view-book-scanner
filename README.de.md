@@ -142,7 +142,7 @@ die SHA-256; `--without-pandoc` baut ohne.
 - `BookScannerKit`: Aufnahme, Session, OCR, Drehen und Teilen, Strukturierung, Export.
   Ohne UI, voll getestet.
 - `DeskViewBookScanner`: die SwiftUI-App.
-- `scripts/`: Pandoc-Download, Icon, OCR-Statistik.
+- `scripts/`: Pandoc-Download, Icon, OCR-Statistik, Prüfung der Continuity-Fotogröße.
 
 Wie die App innen entscheidet (Falzsuche, Auto-Auslöser, Absätze und Überschriften),
 steht im [Konzept](doc/KONZEPT.md) und im [Umsetzungsprotokoll](doc/UMSETZUNG.md).
