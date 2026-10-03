@@ -96,7 +96,8 @@ body text is reliable, below 12 px it is guesswork. Measured, not estimated:
   recovered. Hands at the edges do not disturb auto capture.
 - **Hold still briefly after turning.** Auto capture waits for one and a half seconds of
   stillness. When first switched on, text recognition takes up to 25 s to load.
-- **Film with the iPhone instead of taking photos.** Through Continuity Camera the iPhone
+- **Film with the iPhone instead of taking photos.** Under Files, “Film a Book with the
+  iPhone…” walks through it step by step. Through Continuity Camera the iPhone
   gives out at most 1920 × 1440, photos included (`scripts/probe_continuity_photo.swift`).
   In the Camera app it films 4K: iPhone above the book, 4K at 24 or 30 fps, turn page by
   page, keep filming briefly after the last one. AirDrop the video to the Mac and import

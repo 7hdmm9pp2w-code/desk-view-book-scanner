@@ -48,8 +48,14 @@ struct StatusBar: View {
             Text(L("Dokumentenscanner auf dem iPhone, vom Mac ausgelöst."))
                 .foregroundStyle(.secondary)
         case .files:
-            Text(L("Scans aus Notizen, vFlat oder Fotos, PDF oder Bilder."))
-                .foregroundStyle(.secondary)
+            HStack(spacing: 10) {
+                Text(L("PDF, Bilder oder ein Video vom Umblättern."))
+                    .foregroundStyle(.secondary)
+                Button(L("Buch mit dem iPhone filmen…")) { model.videoGuidePresented = true }
+                    .buttonStyle(.link)
+                    .help(L("Anleitung: das Buch in 4K filmen und das Video importieren"))
+            }
+            .lineLimit(1)
         case .camera:
             HStack(spacing: 10) {
                 cameraPicker
@@ -212,7 +218,7 @@ struct StatusBar: View {
     private var primaryHelp: String {
         switch model.captureSource {
         case .iPhone: return L("Öffnet den Dokumentenscanner auf dem iPhone; die Seiten landen in dieser Session (Leertaste oder ⇧⌘S).")
-        case .files: return L("Scans aus Notizen, vFlat oder Fotos als Seiten anhängen (⇧⌘I)")
+        case .files: return L("Scans aus Notizen, vFlat oder Fotos oder ein Video vom Umblättern als Seiten anhängen (⇧⌘I)")
         case .camera: return L("Bild aus der gewählten Kamera erfassen (Leertaste; \(HotKey.captureDisplayName) auch aus anderen Apps)")
         }
     }

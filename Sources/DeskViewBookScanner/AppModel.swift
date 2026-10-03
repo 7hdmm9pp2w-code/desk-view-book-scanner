@@ -71,6 +71,10 @@ final class AppModel {
     var sessionArchived = false
     var sidebarThumbnails: [URL: CGImage] = [:]
     var lastError: String?
+    /// Anleitung „Buch mit dem iPhone filmen" ist offen.
+    var videoGuidePresented = false
+    /// Ergebnis der zuletzt importierten Videos, bis die Meldung geschlossen ist.
+    var videoReports: [VideoImportReport] = []
     var selectedPageID: UUID?
 
     enum ExportStatus: Equatable {

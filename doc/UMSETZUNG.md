@@ -238,4 +238,8 @@ vom Konzept abwich und den Grund. Neueste Einträge unten.
   umgerechnet. Anders als live gilt der Videoanfang als Ende einer Bewegung, und am Ende
   reicht eine halbe Sekunde Ruhe für die letzte Seite. Tempo im Release-Build: 2 min
   Video mit 3066 × 2028 bei 54 fps in 8,8 s; das reine Dekodieren läuft 17-fach schneller
-  als Echtzeit. An einem echten Buchvideo noch nicht gemessen.
+  als Echtzeit. An einem echten Buchvideo noch nicht gemessen. Anleitung „Buch mit dem
+  iPhone filmen" (`VideoGuide`) im leeren Raster und in der Leiste bei Dateien und im
+  Menü Aufnahme: vier Schritte, Import aus Downloads (dort legt AirDrop ab) oder per
+  Ziehen. Nach dem Import meldet die App Seiten, Länge und Auflösung und rät bei unter
+  4K, null Seiten oder übersprungenen Seiten (`VideoImportReport`).

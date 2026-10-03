@@ -109,10 +109,13 @@ private final class Pages: @unchecked Sendable {
         #expect(!PageImporter.isSupported(url))
         let pages = Pages()
         let progress = Pages()
-        try await VideoPageExtractor().extractPages(from: url, progress: { _ in progress.append(makeTestImage(width: 1, height: 1)) }) {
+        let report = try await VideoPageExtractor().extractPages(from: url, progress: { _ in progress.append(makeTestImage(width: 1, height: 1)) }) {
             pages.append($0)
         }
         #expect(pages.all.count == 3)
+        #expect(report.pages == 3 && report.skippedKnownPages == 1)
+        #expect(report.pixelWidth == 640 && report.pixelHeight == 480 && report.isBelow4K)
+        #expect(abs(report.duration - 11.5) < 0.2)
         #expect(pages.all.allSatisfy { $0 == (640, 480) })
         #expect(progress.all.count > 2)
     }
@@ -125,8 +128,9 @@ private final class Pages: @unchecked Sendable {
         try await writeVideo([.page(seed: 5, seconds: 2)], to: url, transform: CGAffineTransform(rotationAngle: .pi / 2))
 
         let pages = Pages()
-        try await VideoPageExtractor().extractPages(from: url) { pages.append($0) }
+        let report = try await VideoPageExtractor().extractPages(from: url) { pages.append($0) }
         #expect(pages.all.count == 1)
+        #expect(report.pixelWidth == 480 && report.pixelHeight == 640)
         #expect(pages.all.first.map { $0 == (480, 640) } == true)
     }
 

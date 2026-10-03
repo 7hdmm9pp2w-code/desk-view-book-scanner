@@ -49,6 +49,15 @@ struct PageGrid: View {
                     .controlSize(.large)
                     .disabled(model.iPhoneWaiting || model.exportStatus != nil)
                     .padding(.top, 4)
+                    if model.captureSource == .files {
+                        Button {
+                            model.videoGuidePresented = true
+                        } label: {
+                            Label(L("Buch mit dem iPhone filmen…"), systemImage: "video")
+                                .frame(width: 240)
+                        }
+                        .controlSize(.large)
+                    }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {

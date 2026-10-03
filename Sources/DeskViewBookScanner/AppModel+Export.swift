@@ -60,6 +60,18 @@ extension AppModel {
         importFiles(panel.urls)
     }
 
+    /// Aus der Anleitung: nur Videos, im Ordner Downloads, wo AirDrop sie ablegt.
+    func importVideoFromGuide() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = VideoPageExtractor.supportedTypes
+        panel.allowsMultipleSelection = true
+        panel.canChooseDirectories = false
+        panel.directoryURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+        panel.message = L("Video vom Umblättern wählen; mehrere werden nach Namen sortiert nacheinander angehängt.")
+        guard panel.runModal() == .OK, !panel.urls.isEmpty else { return }
+        importFiles(panel.urls)
+    }
+
     func importFiles(_ urls: [URL]) {
         guard exportStatus == nil else { return }
         // Der Öffnen-Dialog liefert die Auswahlreihenfolge; Seiten gehören nach Dateinamen
@@ -78,6 +90,7 @@ extension AppModel {
                 exportStatus = total > 0 ? .importing(done: 0, total: total) : .importingVideo(percent: 0, pages: 0)
                 let target = takeRescanTarget()
                 var replacements: [CGImage] = []
+                var reports: [VideoImportReport] = []
 
                 /// Bereitet ein Bild auf und hängt es an, oder sammelt es fürs Nachscannen.
                 @MainActor func add(_ image: CGImage) async throws {
@@ -97,7 +110,7 @@ extension AppModel {
 
                 for url in files {
                     if VideoPageExtractor.isSupported(url) {
-                        try await importVideo(url) { try await add($0) }
+                        reports.append(try await importVideo(url) { try await add($0) })
                         exportStatus = total > done ? .importing(done: done, total: total) : nil
                         continue
                     }
@@ -118,6 +131,7 @@ extension AppModel {
                 }
                 exportStatus = nil
                 lastError = nil
+                videoReports = reports
                 refreshSummaries()
             } catch {
                 exportStatus = nil
@@ -127,11 +141,11 @@ extension AppModel {
     }
 
     /// Liest das Video durch und gibt jede neue Seite an `add`, Fortschritt in der Leiste.
-    private func importVideo(_ url: URL, add: @escaping @MainActor (CGImage) async throws -> Void) async throws {
+    private func importVideo(_ url: URL, add: @escaping @MainActor (CGImage) async throws -> Void) async throws -> VideoImportReport {
         final class Count: @unchecked Sendable { var pages = 0; var percent = 0 }
         let count = Count()
         exportStatus = .importingVideo(percent: 0, pages: 0)
-        try await VideoPageExtractor().extractPages(from: url, progress: { [weak self] share in
+        return try await VideoPageExtractor().extractPages(from: url, progress: { [weak self] share in
             await MainActor.run {
                 count.percent = Int(share * 100)
                 self?.exportStatus = .importingVideo(percent: count.percent, pages: count.pages)
@@ -143,6 +157,26 @@ extension AppModel {
                 self?.exportStatus = .importingVideo(percent: count.percent, pages: count.pages)
             }
         }
+    }
+
+    /// Rückmeldung nach dem Videoimport: was gefunden wurde und was beim nächsten Mal hilft.
+    static func describe(_ reports: [VideoImportReport]) -> String {
+        reports.map { report in
+            let minutes = Int(report.duration) / 60, seconds = Int(report.duration) % 60
+            let length = String(format: "%d:%02d", minutes, seconds)
+            var lines = [L("„\(report.fileName)“: \(report.pages) Seiten aus \(length) min Video, \(report.pixelWidth) × \(report.pixelHeight).")]
+            if report.pages == 0 {
+                lines.append(L("Keine ruhige Seite gefunden. iPhone fest montieren und nach dem Umblättern jeweils zwei Sekunden stillhalten."))
+            }
+            if report.isBelow4K {
+                lines.append(L("Das Video ist kleiner als 4K; für Fließtext in der Kamera-App 4K wählen."))
+            }
+            if report.skippedKnownPages > 0 {
+                lines.append(L("\(report.skippedKnownPages)-mal lag eine schon erfasste Seite still und wurde übersprungen. Fehlt doch eine, zeigt die Prüfung der Seitenzahlen die Lücke."))
+            }
+            return lines.joined(separator: " ")
+        }
+        .joined(separator: "\n\n")
     }
 
     // MARK: Seiten bearbeiten

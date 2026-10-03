@@ -76,6 +76,21 @@ struct SessionWindow: View {
                 .disabled(model.sessionDirectory == nil)
             }
         }
+        .sheet(isPresented: Binding(get: { model.videoGuidePresented }, set: { model.videoGuidePresented = $0 })) {
+            VideoGuide().environment(model)
+        }
+        .alert(
+            L("Video importiert"),
+            isPresented: Binding(get: { !model.videoReports.isEmpty }, set: { if !$0 { model.videoReports = [] } })
+        ) {
+            Button(L("OK")) { model.videoReports = [] }
+            Button(L("Anleitung zeigen")) {
+                model.videoReports = []
+                model.videoGuidePresented = true
+            }
+        } message: {
+            Text(AppModel.describe(model.videoReports))
+        }
         .onAppear { titleDraft = model.sessionTitle }
         .onChange(of: model.sessionTitle) { _, title in titleDraft = title }
         .onChange(of: model.suggestedTitle) { _, suggestion in

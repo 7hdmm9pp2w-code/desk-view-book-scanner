@@ -18,6 +18,30 @@ public enum VideoImportError: Error, LocalizedError {
     }
 }
 
+/// Was beim Lesen eines Videos herauskam, für die Rückmeldung nach dem Import.
+public struct VideoImportReport: Sendable, Equatable {
+    public var fileName: String
+    /// Größe der Seitenbilder, aufrecht wie im Video gemeint.
+    public var pixelWidth: Int
+    public var pixelHeight: Int
+    public var duration: TimeInterval
+    public var pages: Int
+    /// So oft lag nach einer Bewegung eine Seite still, die schon erfasst war.
+    public var skippedKnownPages: Int
+
+    public init(fileName: String, pixelWidth: Int, pixelHeight: Int, duration: TimeInterval, pages: Int, skippedKnownPages: Int) {
+        self.fileName = fileName
+        self.pixelWidth = pixelWidth
+        self.pixelHeight = pixelHeight
+        self.duration = duration
+        self.pages = pages
+        self.skippedKnownPages = skippedKnownPages
+    }
+
+    /// Unter 4K: Für Fließtext zu grob, wie Continuity Camera und Desk View.
+    public var isBelow4K: Bool { max(pixelWidth, pixelHeight) < 3000 }
+}
+
 /// Seiten aus einem Video, in dem umgeblättert wird, etwa mit dem iPhone in 4K von oben
 /// gefilmt. Das iPhone liefert über Continuity Camera höchstens 1920 × 1440; in der
 /// eigenen Kamera-App filmt es 3840 × 2160.
@@ -52,17 +76,25 @@ public struct VideoPageExtractor: Sendable {
 
     /// Ruft `handler` für jede neue Seite auf, aufrecht wie im Video gemeint und in voller
     /// Auflösung. `progress` bekommt den Anteil der gelesenen Videozeit (0…1).
+    @discardableResult
     public func extractPages(
         from url: URL,
         progress: @Sendable (Double) async -> Void = { _ in },
         handler: @Sendable (CGImage) async throws -> Void
-    ) async throws {
+    ) async throws -> VideoImportReport {
         let asset = AVURLAsset(url: url)
         guard let track = try await asset.loadTracks(withMediaType: .video).first else {
             throw VideoImportError.noVideoTrack(url)
         }
         let duration = try await CMTimeGetSeconds(asset.load(.duration))
         let orientation = Self.orientation(of: try await track.load(.preferredTransform))
+        let natural = try await track.load(.naturalSize)
+        let sideways = [.left, .right].contains(orientation)
+        var report = VideoImportReport(
+            fileName: url.lastPathComponent,
+            pixelWidth: Int(sideways ? natural.height : natural.width),
+            pixelHeight: Int(sideways ? natural.width : natural.height),
+            duration: duration, pages: 0, skippedKnownPages: 0)
 
         let reader = try AVAssetReader(asset: asset)
         let output = AVAssetReaderTrackOutput(track: track, outputSettings: [
@@ -93,9 +125,10 @@ public struct VideoPageExtractor: Sendable {
             guard let page = context.createCGImage(image, from: image.extent) else { return }
             let lines = (try? await recognizer.recognize(page)) ?? []
             let snapshot = PageSnapshot(frame: Self.lumaFrame(buffer, targetWidth: 320), lines: lines.map(\.text))
-            guard judge.isNewPage(snapshot) else { return }
+            guard judge.isNewPage(snapshot) else { report.skippedKnownPages += 1; return }
             judge.remember(snapshot)
             try await handler(page)
+            report.pages += 1
         }
 
         while let sample = output.copyNextSampleBuffer() {
@@ -131,6 +164,7 @@ public struct VideoPageExtractor: Sendable {
             try await take(last.buffer)
         }
         await progress(1)
+        return report
     }
 
     /// Verkleinertes Graubild aus der Helligkeitsebene, jeder Bildpunkt der Mittelwert

@@ -97,7 +97,8 @@ Fließtext zuverlässig, unter 12 px wird geraten. Gemessen, nicht geschätzt:
   sich nicht zurückholen. Hände am Rand stören den Auto-Auslöser nicht.
 - **Nach dem Umblättern kurz stillhalten.** Der Auto-Auslöser wartet anderthalb
   Sekunden Ruhe. Beim ersten Einschalten lädt die Texterkennung bis zu 25 s.
-- **Mit dem iPhone filmen statt fotografieren.** Über Continuity Camera gibt das iPhone
+- **Mit dem iPhone filmen statt fotografieren.** Die App leitet unter Dateien mit „Buch
+  mit dem iPhone filmen…" Schritt für Schritt an. Über Continuity Camera gibt das iPhone
   höchstens 1920 × 1440 heraus, auch für Fotos (`scripts/probe_continuity_photo.swift`).
   In der Kamera-App filmt es 4K: iPhone über dem Buch, 4K mit 24 oder 30 fps, Seite für
   Seite umblättern, nach der letzten Seite kurz weiterfilmen. Das Video per AirDrop an
