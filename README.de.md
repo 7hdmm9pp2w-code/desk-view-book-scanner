@@ -83,6 +83,7 @@ Fließtext zuverlässig, unter 12 px wird geraten. Gemessen, nicht geschätzt:
 |---|---|---|
 | iPhone-Dokumentenscanner | ca. 1700 × 2700 pro Seite | Fließtext, der empfohlene Weg |
 | 4K-Kamera über dem Buch (z. B. Insta360 Link) | 3840 × 2160 | Fließtext, freihändig mit Auto-Auslöser |
+| iPhone-Video in 4K von oben, danach importiert | 3840 × 2160 | Fließtext, freihändig; am Buch noch nicht gemessen |
 | Desk View (Mac- oder iPhone-Kamera von oben), iPhone als Webcam | 1920 × 1440 | Umschläge, Überschriften, Großdruck |
 
 - **Desk View: Buch an die Tastaturkante, Trapez eng ziehen.** Desk View entzerrt den
@@ -96,6 +97,14 @@ Fließtext zuverlässig, unter 12 px wird geraten. Gemessen, nicht geschätzt:
   sich nicht zurückholen. Hände am Rand stören den Auto-Auslöser nicht.
 - **Nach dem Umblättern kurz stillhalten.** Der Auto-Auslöser wartet anderthalb
   Sekunden Ruhe. Beim ersten Einschalten lädt die Texterkennung bis zu 25 s.
+- **Mit dem iPhone filmen statt fotografieren.** Die App leitet unter Dateien mit „Buch
+  mit dem iPhone filmen…" Schritt für Schritt an. Über Continuity Camera gibt das iPhone
+  höchstens 1920 × 1440 heraus, auch für Fotos (`scripts/probe_continuity_photo.swift`).
+  In der Kamera-App filmt es 4K: iPhone über dem Buch, 4K mit 24 oder 30 fps, Seite für
+  Seite umblättern, nach der letzten Seite kurz weiterfilmen. Das Video per AirDrop an
+  den Mac und unter Dateien importieren (⇧⌘I); die App nimmt wie der Auto-Auslöser jede
+  neue Seite nach dem Umblättern. 200 Seiten sind rund 7 Minuten und 1 GB Video, das
+  danach weg kann; gelesen ist es in etwa einer Minute.
 - **Helle Bücher, Spiralbindung:** Falzsuche kann danebenliegen, dann unter Aufnahme >
   Doppelseiten teilen „In der Mitte" oder „Nicht teilen".
 - **Nach `unsicher` im Markdown suchen.** Das sind die Kandidaten fürs Nachscannen.
@@ -107,7 +116,7 @@ Fließtext zuverlässig, unter 12 px wird geraten. Gemessen, nicht geschätzt:
 |---|---|
 | ⇧⌘S | Mit dem iPhone scannen |
 | ⌥⌘S | Seite mit der Kamera erfassen (im Seitenraster auch Leertaste) |
-| ⇧⌘I | Bilder oder PDF importieren |
+| ⇧⌘I | Bilder, PDF oder Video importieren |
 | ⇧⌘R | Seite nachscannen |
 | ⌘T, ⌘L, ⌘R | Seite teilen, nach links, nach rechts drehen |
 | ⌘⌫, ⇧⌘Z | Seite löschen, zuletzt gelöschte zurückholen |

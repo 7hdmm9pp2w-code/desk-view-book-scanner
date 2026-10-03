@@ -43,6 +43,11 @@ in der Oberfläche als Segmentwahl „iPhone · Dateien · Kamera":
 2. **Dateien** (gebaut): PDFs und Bilder aus Notizen, vFlat oder der Fotos-App, ⇧⌘I.
    PDF-Seiten werden in der Auflösung ihres größten eingebetteten Bildes gerendert,
    EXIF-Ausrichtung wird angewandt, Dateien werden natürlich nach Namen sortiert.
+   Videos vom Umblättern (gebaut, `VideoPageExtractor`): Bild für Bild dekodiert, rund
+   vier Bilder pro Sekunde durch `MotionTrigger` und `PageTurnJudge` wie beim
+   Auto-Auslöser; der Anfang zählt als Ende einer Bewegung, am Ende reicht eine halbe
+   Sekunde Ruhe. Gedacht fürs iPhone, das in der Kamera-App 4K filmt, über Continuity
+   aber nur 1920 × 1440 liefert.
 3. **Kamera** (gebaut, ersetzt den Screenshot des Desk-View-Fensters): jede Kamera, die
    AVFoundation sieht (Desk View, iPhone als Continuity-Kamera, extern, eingebaut), im
    größten Videoformat, Einzelbild aus dem Live-Feed. Desk View ist darin nur ein Gerät
@@ -196,7 +201,7 @@ Quelle ──────► Erfassung ─────► Verarbeitung ──►
   Quelle, bei der Kamera Geräteauswahl und der Schalter für den Auto-Auslöser; in der
   Mitte Fortschritt (Import, Texterkennung, Export, Warten aufs iPhone) oder Hinweise zur
   Seitenfolge; rechts Seitenzähler und der eine Hauptknopf der Quelle („Mit iPhone
-  scannen" ⇧⌘S, „Bilder oder PDF importieren…" ⇧⌘I, „Seite erfassen" ⌥⌘S). Der
+  scannen" ⇧⌘S, „Bilder, PDF oder Video importieren…" ⇧⌘I, „Seite erfassen" ⌥⌘S). Der
   Leerzustand zeigt die gewählte Quelle mit ihrem Knopf.
 - Darunter Thumbnail-Raster mit Drag-and-drop und Nachscannen-Knopf beim Überfahren,
   rechts Detailansicht mit erkanntem Text, Kamera-Vorschau oder Nachscan-Vergleich.

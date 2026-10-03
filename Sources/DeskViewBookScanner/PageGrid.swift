@@ -9,7 +9,7 @@ struct PageGrid: View {
     private var emptyDescription: String {
         switch model.captureSource {
         case .iPhone: return L("Der Dokumentenscanner des iPhones liefert die Seiten, ausgelöst vom Mac. Quelle oben wechseln für Dateien oder Desk View.")
-        case .files: return L("PDFs und Bilder aus Notizen, vFlat oder Fotos werden Seiten dieser Session.")
+        case .files: return L("PDFs und Bilder aus Notizen, vFlat oder Fotos werden Seiten dieser Session, aus einem Video vom Umblättern jede neue Seite.")
         case .camera: return L("Eine Kamera über dem Buch, 4K reicht für Fließtext. Mit dem Schalter „Beim Umblättern auslösen“ erfasst die App jede neue Seite von selbst.")
         }
     }
@@ -17,7 +17,7 @@ struct PageGrid: View {
     private var emptyButtonTitle: String {
         switch model.captureSource {
         case .iPhone: return L("Mit iPhone scannen")
-        case .files: return L("Bilder oder PDF importieren…")
+        case .files: return L("Bilder, PDF oder Video importieren…")
         case .camera: return L("Seite erfassen")
         }
     }
@@ -49,6 +49,15 @@ struct PageGrid: View {
                     .controlSize(.large)
                     .disabled(model.iPhoneWaiting || model.exportStatus != nil)
                     .padding(.top, 4)
+                    if model.captureSource == .files {
+                        Button {
+                            model.videoGuidePresented = true
+                        } label: {
+                            Label(L("Buch mit dem iPhone filmen…"), systemImage: "video")
+                                .frame(width: 240)
+                        }
+                        .controlSize(.large)
+                    }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {

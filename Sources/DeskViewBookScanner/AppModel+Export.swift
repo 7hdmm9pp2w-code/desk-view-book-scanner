@@ -48,13 +48,26 @@ extension AppModel {
 
     // MARK: Import
 
-    /// Bilder und PDFs (Notizen, vFlat, Fotos) als Seiten anhängen.
+    /// Bilder und PDFs (Notizen, vFlat, Fotos) als Seiten anhängen, aus Videos die
+    /// Seiten nach jedem Umblättern.
     func importFiles() {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = PageImporter.supportedTypes
+        panel.allowedContentTypes = PageImporter.supportedTypes + VideoPageExtractor.supportedTypes
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
-        panel.message = L("Bilder oder PDF-Scans wählen; die Seiten werden in dieser Reihenfolge angehängt.")
+        panel.message = L("Bilder, PDF-Scans oder ein Video vom Umblättern wählen; die Seiten werden in dieser Reihenfolge angehängt.")
+        guard panel.runModal() == .OK, !panel.urls.isEmpty else { return }
+        importFiles(panel.urls)
+    }
+
+    /// Aus der Anleitung: nur Videos, im Ordner Downloads, wo AirDrop sie ablegt.
+    func importVideoFromGuide() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = VideoPageExtractor.supportedTypes
+        panel.allowsMultipleSelection = true
+        panel.canChooseDirectories = false
+        panel.directoryURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+        panel.message = L("Video vom Umblättern wählen; mehrere werden nach Namen sortiert nacheinander angehängt.")
         guard panel.runModal() == .OK, !panel.urls.isEmpty else { return }
         importFiles(panel.urls)
     }
@@ -64,36 +77,49 @@ extension AppModel {
         // Der Öffnen-Dialog liefert die Auswahlreihenfolge; Seiten gehören nach Dateinamen
         // sortiert, mit Zahlen numerisch („Aufnahme-9" vor „Aufnahme-10").
         let files = urls
-            .filter { PageImporter.isSupported($0) }
+            .filter { PageImporter.isSupported($0) || VideoPageExtractor.isSupported($0) }
             .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
         guard !files.isEmpty else { return }
         Task {
             do {
                 let store = try await ensureSession()
+                // Ein Video verrät seine Seitenzahl erst beim Durchlesen; es hat eigenen Fortschritt.
                 var total = 0
-                for url in files { total += try PageImporter.pageCount(of: url) }
+                for url in files where !VideoPageExtractor.isSupported(url) { total += try PageImporter.pageCount(of: url) }
                 var done = 0
-                exportStatus = .importing(done: 0, total: total)
+                exportStatus = total > 0 ? .importing(done: 0, total: total) : .importingVideo(percent: 0, pages: 0)
                 let target = takeRescanTarget()
                 var replacements: [CGImage] = []
+                var reports: [VideoImportReport] = []
+
+                /// Bereitet ein Bild auf und hängt es an, oder sammelt es fürs Nachscannen.
+                @MainActor func add(_ image: CGImage) async throws {
+                    let settings = await store.document.settings
+                    let prepared = await processor.prepare(image, settings: settings)
+                    if target != nil {
+                        replacements.append(contentsOf: prepared)
+                    } else {
+                        for image in prepared {
+                            let page = try await store.addPage(image)
+                            selectedPageID = page.id
+                            recognizeText(for: page)
+                        }
+                    }
+                    pages = await store.orderedPages
+                }
+
                 for url in files {
+                    if VideoPageExtractor.isSupported(url) {
+                        reports.append(try await importVideo(url) { try await add($0) })
+                        exportStatus = total > done ? .importing(done: done, total: total) : nil
+                        continue
+                    }
                     let count = try PageImporter.pageCount(of: url)
                     for index in 0..<count {
                         let image = try await Task.detached(priority: .userInitiated) {
                             try PageImporter.image(at: index, from: url)
                         }.value
-                        let settings = await store.document.settings
-                        let prepared = await processor.prepare(image, settings: settings)
-                        if target != nil {
-                            replacements.append(contentsOf: prepared)
-                        } else {
-                            for image in prepared {
-                                let page = try await store.addPage(image)
-                                selectedPageID = page.id
-                                recognizeText(for: page)
-                            }
-                        }
-                        pages = await store.orderedPages
+                        try await add(image)
                         done += 1
                         exportStatus = .importing(done: done, total: total)
                     }
@@ -105,12 +131,52 @@ extension AppModel {
                 }
                 exportStatus = nil
                 lastError = nil
+                videoReports = reports
                 refreshSummaries()
             } catch {
                 exportStatus = nil
                 lastError = error.localizedDescription
             }
         }
+    }
+
+    /// Liest das Video durch und gibt jede neue Seite an `add`, Fortschritt in der Leiste.
+    private func importVideo(_ url: URL, add: @escaping @MainActor (CGImage) async throws -> Void) async throws -> VideoImportReport {
+        final class Count: @unchecked Sendable { var pages = 0; var percent = 0 }
+        let count = Count()
+        exportStatus = .importingVideo(percent: 0, pages: 0)
+        return try await VideoPageExtractor().extractPages(from: url, progress: { [weak self] share in
+            await MainActor.run {
+                count.percent = Int(share * 100)
+                self?.exportStatus = .importingVideo(percent: count.percent, pages: count.pages)
+            }
+        }) { [weak self] image in
+            try await add(image)
+            await MainActor.run {
+                count.pages += 1
+                self?.exportStatus = .importingVideo(percent: count.percent, pages: count.pages)
+            }
+        }
+    }
+
+    /// Rückmeldung nach dem Videoimport: was gefunden wurde und was beim nächsten Mal hilft.
+    static func describe(_ reports: [VideoImportReport]) -> String {
+        reports.map { report in
+            let minutes = Int(report.duration) / 60, seconds = Int(report.duration) % 60
+            let length = String(format: "%d:%02d", minutes, seconds)
+            var lines = [L("„\(report.fileName)“: \(report.pages) Seiten aus \(length) min Video, \(report.pixelWidth) × \(report.pixelHeight).")]
+            if report.pages == 0 {
+                lines.append(L("Keine ruhige Seite gefunden. iPhone fest montieren und nach dem Umblättern jeweils zwei Sekunden stillhalten."))
+            }
+            if report.isBelow4K {
+                lines.append(L("Das Video ist kleiner als 4K; für Fließtext in der Kamera-App 4K wählen."))
+            }
+            if report.skippedKnownPages > 0 {
+                lines.append(L("\(report.skippedKnownPages)-mal lag eine schon erfasste Seite still und wurde übersprungen. Fehlt doch eine, zeigt die Prüfung der Seitenzahlen die Lücke."))
+            }
+            return lines.joined(separator: " ")
+        }
+        .joined(separator: "\n\n")
     }
 
     // MARK: Seiten bearbeiten

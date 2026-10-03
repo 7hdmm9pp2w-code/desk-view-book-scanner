@@ -82,6 +82,7 @@ body text is reliable, below 12 px it is guesswork. Measured, not estimated:
 |---|---|---|
 | iPhone document scanner | about 1700 × 2700 per page | body text, the recommended way |
 | 4K camera above the book (e.g. Insta360 Link) | 3840 × 2160 | body text, hands-free with auto capture |
+| iPhone 4K video from above, imported afterwards | 3840 × 2160 | body text, hands-free; not yet measured on a book |
 | Desk View (Mac or iPhone camera looking down), iPhone as a webcam | 1920 × 1440 | covers, headings, large print |
 
 - **Desk View: book at the keyboard edge, trapezoid tight.** Desk View dewarps the edge
@@ -95,6 +96,14 @@ body text is reliable, below 12 px it is guesswork. Measured, not estimated:
   recovered. Hands at the edges do not disturb auto capture.
 - **Hold still briefly after turning.** Auto capture waits for one and a half seconds of
   stillness. When first switched on, text recognition takes up to 25 s to load.
+- **Film with the iPhone instead of taking photos.** Under Files, “Film a Book with the
+  iPhone…” walks through it step by step. Through Continuity Camera the iPhone
+  gives out at most 1920 × 1440, photos included (`scripts/probe_continuity_photo.swift`).
+  In the Camera app it films 4K: iPhone above the book, 4K at 24 or 30 fps, turn page by
+  page, keep filming briefly after the last one. AirDrop the video to the Mac and import
+  it under Files (⇧⌘I); like auto capture, the app takes every new page after a turn.
+  200 pages are about 7 minutes and 1 GB of video, which can go afterwards; reading it
+  takes about a minute.
 - **Light-colored books, spiral binding:** the gutter search can miss; choose Capture >
   Split Double Pages > "In the Middle" or "Don't Split".
 - **Search the Markdown for `unsicher`.** Those are the candidates for a rescan.
@@ -106,7 +115,7 @@ body text is reliable, below 12 px it is guesswork. Measured, not estimated:
 |---|---|
 | ⇧⌘S | Scan with the iPhone |
 | ⌥⌘S | Capture a page with the camera (Space in the page grid, too) |
-| ⇧⌘I | Import images or PDF |
+| ⇧⌘I | Import images, PDF or video |
 | ⇧⌘R | Rescan page |
 | ⌘T, ⌘L, ⌘R | Split page, rotate left, rotate right |
 | ⌘⌫, ⇧⌘Z | Delete page, restore the last deleted one |

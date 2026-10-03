@@ -2,6 +2,96 @@
   "sourceLanguage": "de",
   "version": "1.0",
   "strings": {
+    "%lld-mal lag eine schon erfasste Seite still und wurde übersprungen. Fehlt doch eine, zeigt die Prüfung der Seitenzahlen die Lücke.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld times a page that was already captured lay still and was skipped. If one is missing after all, the page number check shows the gap."
+          }
+        }
+      }
+    },
+    "Anleitung zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Guide"
+          }
+        }
+      }
+    },
+    "Anleitung: das Buch in 4K filmen und das Video importieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guide: film the book in 4K and import the video"
+          }
+        }
+      }
+    },
+    "Das Video ist kleiner als 4K; für Fließtext in der Kamera-App 4K wählen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The video is smaller than 4K; for body text choose 4K in the Camera app."
+          }
+        }
+      }
+    },
+    "Keine ruhige Seite gefunden. iPhone fest montieren und nach dem Umblättern jeweils zwei Sekunden stillhalten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No still page found. Mount the iPhone firmly and hold still for two seconds after each turn."
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "PDF, Bilder oder ein Video vom Umblättern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF, images or a video of page turning."
+          }
+        }
+      }
+    },
+    "Video importiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Video Imported"
+          }
+        }
+      }
+    },
+    "„%@“: %lld Seiten aus %@ min Video, %lld × %lld.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”: %lld pages from %@ min of video, %lld × %lld."
+          }
+        }
+      }
+    },
     "%@ an Bildern, Text und Exporten wandern in den Papierkorb von macOS und lassen sich dort zurückholen.": {
       "localizations": {
         "en": {
@@ -158,6 +248,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "(needs Pandoc, see Settings)"
+          }
+        }
+      }
+    },
+    "4K einstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set 4K"
           }
         }
       }
@@ -322,22 +422,22 @@
         }
       }
     },
-    "Bilder oder PDF importieren…": {
+    "Bilder, PDF oder Video importieren…": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Import Images or PDF…"
+            "value": "Import Images, PDF or Video…"
           }
         }
       }
     },
-    "Bilder oder PDF-Scans wählen; die Seiten werden in dieser Reihenfolge angehängt.": {
+    "Bilder, PDF-Scans oder ein Video vom Umblättern wählen; die Seiten werden in dieser Reihenfolge angehängt.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose images or PDF scans; pages are appended in this order."
+            "value": "Choose images, PDF scans or a video of page turning; pages are appended in this order."
           }
         }
       }
@@ -362,6 +462,26 @@
         }
       }
     },
+    "Buch mit dem iPhone filmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Film a Book with the iPhone"
+          }
+        }
+      }
+    },
+    "Buch mit dem iPhone filmen…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Film a Book with the iPhone…"
+          }
+        }
+      }
+    },
     "Das Fenster ist nicht bereit für den iPhone-Scan.": {
       "localizations": {
         "en": {
@@ -378,6 +498,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The shortcut could not be registered; another app probably uses it."
+          }
+        }
+      }
+    },
+    "Das iPhone filmt in 4K, doppelt so scharf wie als Webcam. Die App findet danach im Video jede neue Seite.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The iPhone films in 4K, twice as sharp as when used as a webcam. The app then finds every new page in the video."
           }
         }
       }
@@ -582,6 +712,26 @@
         }
       }
     },
+    "Fehlt eine Seite, mit ⇧⌘R nachscannen; die Prüfung der Seitenzahlen zeigt Lücken.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If a page is missing, rescan it with ⇧⌘R; the page number check shows gaps."
+          }
+        }
+      }
+    },
+    "Filmen und umblättern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Film and turn pages"
+          }
+        }
+      }
+    },
     "Foto mit dem iPhone aufnehmen": {
       "localizations": {
         "en": {
@@ -682,6 +832,26 @@
         }
       }
     },
+    "In eine Halterung oder ein Stativ, die Kamera senkrecht nach unten. Die Doppelseite soll das Bild quer ausfüllen. Gleichmäßiges Licht, kein Schatten vom iPhone auf dem Buch.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In a mount or on a tripod, camera pointing straight down. The spread should fill the frame in landscape. Even light, no shadow of the iPhone on the book."
+          }
+        }
+      }
+    },
+    "Jede Seite etwa zwei Sekunden ruhig zeigen, dann zügig umblättern. Hände am Rand stören nicht. Nach der letzten Seite eine Sekunde weiterfilmen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show each page still for about two seconds, then turn briskly. Hands at the edges are fine. Keep filming for a second after the last page."
+          }
+        }
+      }
+    },
     "Kamera": {
       "localizations": {
         "en": {
@@ -708,6 +878,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose Camera"
+          }
+        }
+      }
+    },
+    "Kamera-App, Modus Video, oben rechts 4K und 24 oder 30 fps wählen. Lange auf das Buch tippen sperrt Schärfe und Belichtung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera app, Video mode, choose 4K and 24 or 30 fps at the top right. Touch and hold on the book to lock focus and exposure."
           }
         }
       }
@@ -962,6 +1142,16 @@
         }
       }
     },
+    "Oder das Video hierher ziehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Or drag the video here"
+          }
+        }
+      }
+    },
     "Ohne Pandoc schreibt die App Markdown selbst, mit einfacherer Struktur. Pandoc liefert bessere Ergebnisse und zusätzlich Word und EPUB. Installation: brew install pandoc": {
       "localizations": {
         "en": {
@@ -992,12 +1182,12 @@
         }
       }
     },
-    "PDFs und Bilder aus Notizen, vFlat oder Fotos werden Seiten dieser Session.": {
+    "PDFs und Bilder aus Notizen, vFlat oder Fotos werden Seiten dieser Session, aus einem Video vom Umblättern jede neue Seite.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "PDFs and images from Notes, vFlat or Photos become pages of this session."
+            "value": "PDFs and images from Notes, vFlat or Photos become pages of this session; from a video of page turning, every new page."
           }
         }
       }
@@ -1038,6 +1228,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Empty the trash of %lld sessions?"
+          }
+        }
+      }
+    },
+    "Per AirDrop, es landet im Ordner Downloads. 200 Seiten sind rund 7 Minuten und 1 GB; nach dem Import kann das Video weg.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Via AirDrop, it lands in the Downloads folder. 200 pages are about 7 minutes and 1 GB; after the import the video can go."
           }
         }
       }
@@ -1112,12 +1312,12 @@
         }
       }
     },
-    "Scans aus Notizen, vFlat oder Fotos als Seiten anhängen (⇧⌘I)": {
+    "Scans aus Notizen, vFlat oder Fotos oder ein Video vom Umblättern als Seiten anhängen (⇧⌘I)": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Append scans from Notes, vFlat or Photos as pages (⇧⌘I)"
+            "value": "Append scans from Notes, vFlat or Photos, or a video of page turning, as pages (⇧⌘I)"
           }
         }
       }
@@ -1128,6 +1328,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Scans from Notes, vFlat or Photos, PDF or images."
+          }
+        }
+      }
+    },
+    "Schließen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
           }
         }
       }
@@ -1402,6 +1612,46 @@
         }
       }
     },
+    "Video %lld Prozent, %lld Seiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Video %lld percent, %lld pages"
+          }
+        }
+      }
+    },
+    "Video an den Mac": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Video to the Mac"
+          }
+        }
+      }
+    },
+    "Video importieren…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import Video…"
+          }
+        }
+      }
+    },
+    "Video vom Umblättern wählen; mehrere werden nach Namen sortiert nacheinander angehängt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a video of page turning; several are appended one after another, sorted by name."
+          }
+        }
+      }
+    },
     "Vom iPhone kam nichts an.": {
       "localizations": {
         "en": {
@@ -1488,6 +1738,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "iPhone"
+          }
+        }
+      }
+    },
+    "iPhone über das Buch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone above the book"
           }
         }
       }

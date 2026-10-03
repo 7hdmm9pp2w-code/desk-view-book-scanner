@@ -49,8 +49,9 @@ struct DeskViewBookScannerApp: App {
                         .disabled(model.iPhoneWaiting)
                 }
                 Section(L("Dateien")) {
-                    Button(L("Bilder oder PDF importieren…")) { model.importFiles() }
+                    Button(L("Bilder, PDF oder Video importieren…")) { model.importFiles() }
                         .keyboardShortcut("i", modifiers: [.command, .shift])
+                    Button(L("Buch mit dem iPhone filmen…")) { model.videoGuidePresented = true }
                 }
                 Section(L("Kamera")) {
                     Button(L("Seite erfassen")) { model.capturePage() }
